@@ -91,14 +91,15 @@ public class sample1_3 extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setServoTime(1250);
+                robot.mLift.setServoTime(500);
+
                 robot.mLift.setPivotPos(1);
                 return false;
             }
         }
 
         public Action pivotDownSlow() {
-            return new PivotDown();
+            return new PivotDownSlow();
         }
 
         public class PivotUp implements Action {
@@ -220,14 +221,14 @@ public class sample1_3 extends LinearOpMode {
         int visionOutputPosition = 1;
 
         TrajectoryActionBuilder traj = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(new Vector2d(54.5, 54.5), Math.toRadians(45))
+                .strafeToLinearHeading(new Vector2d(54, 54), Math.toRadians(45))
                 .stopAndAdd(
                         new SequentialAction(
                                 controller.liftUp(),
                                 controller.pivotDown()
                         )
                 )
-                .waitSeconds(0.4)
+                .waitSeconds(0.75)
                 .stopAndAdd(controller.openClaw())
                 .waitSeconds(0.1)
                 .stopAndAdd(
@@ -238,7 +239,7 @@ public class sample1_3 extends LinearOpMode {
                 )
                 .waitSeconds(0.2)
                 .stopAndAdd(controller.liftDown())
-                .strafeToLinearHeading(new Vector2d(50, 50.5-(17.3/2)), Math.toRadians(-90))
+                .strafeToLinearHeading(new Vector2d(49, 50.5-(17.3/2)), Math.toRadians(-90))
                 .stopAndAdd(
                         new SequentialAction(
                                 controller.openClaw(),
@@ -246,7 +247,7 @@ public class sample1_3 extends LinearOpMode {
                         )
 
                 )
-                .waitSeconds(1.25)
+                .waitSeconds(0.6)
                 .stopAndAdd(
                         controller.closeClaw()
                 )
@@ -268,7 +269,7 @@ public class sample1_3 extends LinearOpMode {
                                 controller.pivotDown()
                         )
                 )
-                .waitSeconds(0.5)
+                .waitSeconds(0.75)
                 .stopAndAdd(controller.openClaw())
                 .waitSeconds(0.1)
                 .stopAndAdd(
@@ -287,7 +288,7 @@ public class sample1_3 extends LinearOpMode {
                         )
 
                 )
-                .waitSeconds(1.25)
+                .waitSeconds(0.6)
                 .stopAndAdd(
                         controller.closeClaw()
                 )
@@ -309,7 +310,7 @@ public class sample1_3 extends LinearOpMode {
                                 controller.pivotDown()
                         )
                 )
-                .waitSeconds(0.5)
+                .waitSeconds(0.75)
                 .stopAndAdd(controller.openClaw())
                 .waitSeconds(0.1)
                 .waitSeconds(0.1)
@@ -330,7 +331,7 @@ public class sample1_3 extends LinearOpMode {
                         new AngularVelConstraint(Math.PI)
                 )))
                 .stopAndAdd(controller.armUp())
-                .strafeToLinearHeading(new Vector2d(61, 54.5-(17.3/2)), Math.toRadians(-90))
+                .strafeToLinearHeading(new Vector2d(60.5, 53.5-(17.3/2)), Math.toRadians(-90))
                 .stopAndAdd(
                         new SequentialAction(
                                 controller.openClaw(),
@@ -338,7 +339,7 @@ public class sample1_3 extends LinearOpMode {
                         )
 
                 )
-                .waitSeconds(1.25)
+                .waitSeconds(0.6)
                 .stopAndAdd(
                         controller.closeClaw()
                 )
@@ -361,7 +362,7 @@ public class sample1_3 extends LinearOpMode {
                                 controller.pivotDown()
                         )
                 )
-                .waitSeconds(0.5)
+                .waitSeconds(0.75)
                 .stopAndAdd(controller.openClaw())
                 .waitSeconds(0.1)
                 .stopAndAdd(

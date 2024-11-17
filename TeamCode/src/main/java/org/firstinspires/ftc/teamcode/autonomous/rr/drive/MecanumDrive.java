@@ -56,7 +56,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Config
-public final class MecanumDrive {
+public class MecanumDrive {
     public static class Params {
         // IMU orientation
         // TODO: fill in these values based on
@@ -67,9 +67,9 @@ public final class MecanumDrive {
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
-        public double inPerTick = 0.00292800628;
-        public double lateralInPerTick = 0.00231;
-        public double trackWidthTicks = 4283.209099582045;
+        public double inPerTick = 1; // SparkFun OTOS Note: you can probably leave this at 1
+        public double lateralInPerTick = inPerTick;
+        public double trackWidthTicks = 0;
 
         // feedforward paramet  ers (in tick units)
         public double kS = 1.23;
@@ -119,7 +119,7 @@ public final class MecanumDrive {
     public final Localizer localizer;
     public Pose2d pose;
 
-    private final LinkedList<Pose2d> poseHistory = new LinkedList<>();
+    public final LinkedList<Pose2d> poseHistory = new LinkedList<>();
 
     private final DownsampledWriter estimatedPoseWriter = new DownsampledWriter("ESTIMATED_POSE", 50_000_000);
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
@@ -130,7 +130,7 @@ public final class MecanumDrive {
         public final Encoder leftFront, leftBack, rightBack, rightFront;
         public final IMU imu;
 
-        private int lastLeftFrontPos, lastLeftBackPos, lastRightBackPos, lastRightFrontPos;
+        private double lastLeftFrontPos, lastLeftBackPos, lastRightBackPos, lastRightFrontPos;
         private Rotation2d lastHeading;
         private boolean initialized;
 
@@ -242,7 +242,7 @@ public final class MecanumDrive {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick);
+        localizer = new DriveLocalizer();
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
