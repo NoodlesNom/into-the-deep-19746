@@ -12,12 +12,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
 
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDrive;
-import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDrive;
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.TankDrive;
+import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.PinpointDrive;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.ThreeDeadWheelLocalizer;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.TwoDeadWheelLocalizer;
 import org.firstinspires.ftc.teamcode.*;
-import org.firstinspires.ftc.teamcode.autonomous.rr.tuning.LocalizationTest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
