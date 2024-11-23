@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.autonomous.rr.localizer;
 
 
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.ftc.FlightRecorder;
@@ -21,6 +22,7 @@ import org.firstinspires.ftc.teamcode.autonomous.rr.messages.PoseMessage;
  * Portions of this code made and released under the MIT License by Gobilda (Base 10 Assets, LLC)
  * Unless otherwise noted, comments are from Gobilda
  */
+@Config
 public class PinpointDrive extends MecanumDrive {
     public static class Params {
         /*
@@ -33,8 +35,9 @@ public class PinpointDrive extends MecanumDrive {
          */
         //These are tuned for 3110-0002-0001 Product Insight #1
         // RR localizer note: These units are inches, presets are converted from mm (which is why they are inexact)
-        public double xOffset = 6.4375;
-        public double yOffset = -7.694882;
+
+        public  double xOffset = 6.4375;
+        public  double yOffset = -7.694882;
 
         /*
         Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
@@ -54,7 +57,7 @@ public class PinpointDrive extends MecanumDrive {
         you move the robot to the left.
          */
         public GoBildaPinpointDriver.EncoderDirection xDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
-        public GoBildaPinpointDriver.EncoderDirection yDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+        public GoBildaPinpointDriver.EncoderDirection yDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
     }
 
     public static Params PARAMS = new Params();
