@@ -72,9 +72,9 @@ public class MecanumDrive {
         public double trackWidthTicks = 13.441437;
 
         // feedforward paramet  ers (in tick units)
-        public double kS = 0.79;
+        public double kS = 0.8;
         public double kV = 0.1272461710128284;
-        public double kA = 0.03;
+        public double kA = 0.032;
 
         // path profile parameters (in inches)
         public double maxWheelVel = 50;
@@ -86,13 +86,13 @@ public class MecanumDrive {
         public double maxAngAccel = Math.PI;
 
         // path controller gains
-        public double axialGain = 8;
-        public double lateralGain = 8;
+        public double axialGain = 10;
+        public double lateralGain = 10;
         public double headingGain = 10; // shared with turn
 
-        public double axialVelGain = 1.1;
-        public double lateralVelGain = 1.1;
-        public double headingVelGain = 1.2; // shared with turn
+        public double axialVelGain = 0;
+        public double lateralVelGain = 0;
+        public double headingVelGain = 0 ; // shared with turn
     }
 
     public static Params PARAMS = new Params();
