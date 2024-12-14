@@ -67,12 +67,9 @@ public class GFMovement
         state_turning_prof = gunningIt;
     }
 
-    public static class movementResult
-    {
+    public static class movementResult{
         public double turnDelta_rad;
-
-        public movementResult(double turnDelta_rad)
-        {
+        public movementResult(double turnDelta_rad){
             this.turnDelta_rad = turnDelta_rad;
         }
     }
@@ -112,6 +109,106 @@ public class GFMovement
     {
         voltage = v;
     }
+
+    public static final double smallAdjustSpeed = 0.135;
+    //this is used for the last 10 degrees of turning with a point speed of 0.15 to remain just barely unstable
+    public static String turnCurveVisual =
+            "                   1" +
+                    "                    " +
+                    "                    " +
+                    "                    " +
+                    "                    " +
+                    "1                   " +
+                    "                    " +
+                    "                    " +
+                    "                    ";
+
+
+
+
+
+    public static void goToPosition(double targetX, double targetY, double point_angle, double movement_speed, double point_speed) {
+        //get our distance away from the point
+        double distanceToPoint = Math.sqrt(Math.pow(targetX-worldXPosition,2) + Math.pow(targetY-worldYPosition,2));
+
+        double angleToPoint = Math.atan2(targetY-worldYPosition,targetX-worldXPosition);
+        double deltaAngleToPoint = AngleWrap(angleToPoint-(worldAngle_rad-Math.toRadians(90)));
+        //x and y components required to move toward the next point (with angle correction)
+        double relative_x_to_point = Math.cos(deltaAngleToPoint) * distanceToPoint;
+        double relative_y_to_point = Math.sin(deltaAngleToPoint) * distanceToPoint;
+
+        double relative_abs_x = Math.abs(relative_x_to_point);
+        double relative_abs_y = Math.abs(relative_y_to_point);
+
+
+        //preserve the shape (ratios) of our intended movement direction but scale it by movement_speed
+        double movement_x_power = (relative_x_to_point / (relative_abs_y+relative_abs_x)) * movement_speed;
+        double movement_y_power = (relative_y_to_point / (relative_abs_y+relative_abs_x)) * movement_speed;
+
+        //every movement has two states, the fast "gunning" section and the slow refining part. turn this var off when close to target
+        if(state_movement_y_prof == profileStates.gunningIt) {
+            if(relative_abs_y < Math.abs(Constants.ySlipDistanceFor1CMPS * yVel * 2) || relative_abs_y < 3){
+                state_movement_y_prof = state_movement_y_prof.next();
+            }
+        }
+        if(state_movement_y_prof == profileStates.slipping){
+            movement_y_power = 0;
+            if(Math.abs(yVel) <  0.03){
+                state_movement_y_prof = state_movement_y_prof.next();
+            }
+        }
+        if(state_movement_y_prof == profileStates.fineAdjustment){
+            movement_y_power = Range.clip(((relative_y_to_point/8.0) * 0.15),-0.15,0.15);
+        }
+
+        if(state_movement_x_prof == profileStates.gunningIt) {
+            if(relative_abs_x < Math.abs(Constants.ySlipDistanceFor1CMPS * yVel * 1.2) || relative_abs_x < 3){
+                state_movement_x_prof = state_movement_x_prof.next();
+            }
+        }
+        if(state_movement_x_prof == profileStates.slipping){
+            movement_x_power = 0;
+            if(Math.abs(yVel) < 0.03){
+                state_movement_x_prof = state_movement_x_prof.next();
+            }
+        }
+        if(state_movement_x_prof == profileStates.fineAdjustment){
+            movement_x_power = Range.clip(((relative_x_to_point/2.5) * smallAdjustSpeed),-smallAdjustSpeed,smallAdjustSpeed);
+        }
+
+        double rad_to_target = AngleWrap(point_angle-worldAngle_rad);
+        double turnPower = 0;
+
+        //every movement has two states, the fast "gunning" section and the slow refining part. turn this var off when close to target
+        if(state_turning_prof == profileStates.gunningIt) {
+            turnPower = rad_to_target > 0 ? point_speed : -point_speed;
+            if(Math.abs(rad_to_target) < Math.abs(Constants.turnSlipAmountFor1RPS * radVel * 1.2) || Math.abs(rad_to_target) < Math.toRadians(3.0)){
+                state_turning_prof = state_turning_prof.next();
+            }
+
+        }
+        if(state_turning_prof == profileStates.slipping){
+            if(Math.abs(Math.toDegrees(radVel)) < 60){
+                state_turning_prof = state_turning_prof.next();
+            }
+
+        }
+
+        if(state_turning_prof == profileStates.fineAdjustment){
+            //this is a var that will go from 0 to 1 in the course of 10 degrees from the target
+            turnPower = (rad_to_target/Math.toRadians(10)) * smallAdjustSpeed;
+            turnPower = Range.clip(turnPower,-smallAdjustSpeed,smallAdjustSpeed);
+        }
+
+        movement_turn = turnPower;
+        movement_x = movement_x_power;
+        movement_y = movement_y_power;
+
+        allComponentsMinPower();
+    }
+
+
+
 
     /**
      * Goes as fast as possible to a position
@@ -342,7 +439,7 @@ public class GFMovement
     /**
      * follows a set of points, while maintaining a following distance
      */
-    public static boolean followCurve(ArrayList<CurvePoint> allPoints, double followAngle, boolean allowSkipping){
+    public static boolean followCurve(ArrayList<CurvePoint> allPoints, double followAngle){
 
         //now we will extend the last line so that the pointing looks smooth at the end
         ArrayList<CurvePoint> pathExtended = (ArrayList<CurvePoint>) allPoints.clone();

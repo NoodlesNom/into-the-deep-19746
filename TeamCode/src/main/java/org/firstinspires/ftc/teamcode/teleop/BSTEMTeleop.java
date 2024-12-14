@@ -149,6 +149,11 @@ public class BSTEMTeleop extends OpMode {
         double driveInput = -gamepad1.left_stick_y;
         double strafeInput = -gamepad1.left_stick_x;
         double turnInput = -gamepad1.right_stick_x;
+        if (gamepad1.left_trigger>0.3){
+            driveInput*=0.4;
+            strafeInput*=0.4;
+            turnInput*=0.4;
+        }
         robot.mDrive.drive.setDrivePowers(new PoseVelocity2d(new Vector2d(driveInput, strafeInput), turnInput));
 
 

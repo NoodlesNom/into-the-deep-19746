@@ -94,10 +94,10 @@ public class Drive extends Subsystem {
 
     @Override
     public void writePeriodicOutputs() {
-        drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr);
+        drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr*0.8979);
         drive.leftBack.setPower(drive.mPeriodicIO.lr_pwr);
-        drive.rightBack.setPower(drive.mPeriodicIO.rr_pwr);
-        drive.rightFront.setPower(drive.mPeriodicIO.rf_pwr);
+        drive.rightBack.setPower(drive.mPeriodicIO.rr_pwr*0.8684);
+        drive.rightFront.setPower(drive.mPeriodicIO.rf_pwr*0.8696);
 
     }
 }

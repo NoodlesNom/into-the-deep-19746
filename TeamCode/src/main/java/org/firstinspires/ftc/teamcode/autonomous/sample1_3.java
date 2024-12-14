@@ -213,7 +213,7 @@ public class sample1_3 extends LinearOpMode {
     public void runOpMode() {
         timer = new ElapsedTime();
         robotController controller = new robotController();
-        Pose2d initialPose = new Pose2d(24+(17.3/2), 72-((14.9/2)), Math.toRadians(0));
+        Pose2d initialPose = new Pose2d(24+(17.3/2), 72-((14.9/2))-0.75, Math.toRadians(0));
         //claw is 1.5 inches to the right
         robot = new Robot(this, initialPose , hardwareMap);
         PinpointDrive drive = new PinpointDrive(this.hardwareMap, initialPose);
@@ -222,7 +222,7 @@ public class sample1_3 extends LinearOpMode {
         int visionOutputPosition = 1;
 
         TrajectoryActionBuilder traj = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(new Vector2d(53.5, 55.5), Math.toRadians(45))
+                .strafeToLinearHeading(new Vector2d(54, 55), Math.toRadians(45))
                 .stopAndAdd(
                         new SequentialAction(
                                 controller.liftUp(),
@@ -240,7 +240,7 @@ public class sample1_3 extends LinearOpMode {
                 )
                 .waitSeconds(0.2)
                 .stopAndAdd(controller.liftDown())
-                .strafeToLinearHeading(new Vector2d(49, 49-(17.3/2)), Math.toRadians(-90))
+                .strafeToLinearHeading(new Vector2d(49, 49.5-(17.3/2)), Math.toRadians(-90))
                 .stopAndAdd(
                         new SequentialAction(
                                 controller.openClaw(),
@@ -281,7 +281,7 @@ public class sample1_3 extends LinearOpMode {
                 )
                 .waitSeconds(0.2)
                 .stopAndAdd(controller.liftDown())
-                .strafeToLinearHeading(new Vector2d(59, 49-(17.3/2)), Math.toRadians(-90))
+                .strafeToLinearHeading(new Vector2d(59, 49.5-(17.3/2)), Math.toRadians(-90))
                 .stopAndAdd(
                         new SequentialAction(
                                 controller.openClaw(),
@@ -324,15 +324,15 @@ public class sample1_3 extends LinearOpMode {
                 .waitSeconds(0.2)
                 .stopAndAdd(controller.liftDown())
 
-                .strafeToLinearHeading(new Vector2d(72-(14.9/2), 49-(17.3/2)), Math.toRadians(-91))
+                .strafeToLinearHeading(new Vector2d(71-(14.9/2), 48-(17.3/2)), Math.toRadians(-91))
                 .stopAndAdd(controller.armDown())
                 .waitSeconds(0.5)
-                .strafeToLinearHeading(new Vector2d(61-(14.9/2), 49-(17.3/2)), Math.toRadians(-96),new MinVelConstraint(Arrays.asList(
+                .strafeToLinearHeading(new Vector2d(61-(14.9/2), 48-(17.3/2)), Math.toRadians(-96),new MinVelConstraint(Arrays.asList(
                         drive.kinematics.new WheelVelConstraint(30),
                         new AngularVelConstraint(Math.PI)
                 )))
                 .stopAndAdd(controller.armUp())
-                .strafeToLinearHeading(new Vector2d(60.5, 49-(17.3/2)), Math.toRadians(-90))
+                .strafeToLinearHeading(new Vector2d(61, 49-(17.3/2)), Math.toRadians(-90))
                 .stopAndAdd(
                         new SequentialAction(
                                 controller.openClaw(),
