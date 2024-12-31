@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.Subsystems;
+package org.firstinspires.ftc.teamcode.Subsystems.old;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -6,10 +6,11 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 
 
-public class Hang extends Subsystem {
+public class HangOld extends Subsystem {
 
     // Hardware
     private DcMotorEx screw; // RED C0
@@ -33,7 +34,7 @@ public class Hang extends Subsystem {
     // 1550 max
 
 
-    public Hang(HardwareMap map)
+    public HangOld(HardwareMap map)
     {
         mPeriodicIO = new PeriodicIO();
 

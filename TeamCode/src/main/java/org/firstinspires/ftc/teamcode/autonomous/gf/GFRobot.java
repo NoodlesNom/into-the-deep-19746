@@ -8,10 +8,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.Subsystems.Drive;
-import org.firstinspires.ftc.teamcode.Subsystems.GFDrive;
-import org.firstinspires.ftc.teamcode.Subsystems.Hang;
-import org.firstinspires.ftc.teamcode.Subsystems.Lift;
+import org.firstinspires.ftc.teamcode.Subsystems.old.HangOld;
+import org.firstinspires.ftc.teamcode.Subsystems.old.LiftOld;
 import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 
@@ -22,9 +20,9 @@ public class GFRobot {
 
     public GFDrive mDrive;
     //public Intake mIntake;
-    public Lift mLift;
+    public LiftOld mLift;
     //public Vision mVision;
-    public Hang mHang;
+    public HangOld mHang;
 
     private double prevCurrentTimer = 0.0;
     private double infoCurrent = 15.0;
@@ -55,8 +53,8 @@ public class GFRobot {
 
         mDrive = new GFDrive(opMode.hardwareMap);
         //mIntake = new Intake(opMode.hardwareMap);
-        mLift = new Lift(opMode.hardwareMap);
-        mHang = new Hang(opMode.hardwareMap);
+        mLift = new LiftOld(opMode.hardwareMap);
+        mHang = new HangOld(opMode.hardwareMap);
         //mVision = new Vision(opMode.hardwareMap);
         allHubs = opMode.hardwareMap.getAll(LynxModule.class);
 
@@ -77,8 +75,8 @@ public class GFRobot {
 
         //mDrive = new Drive(map, start);
         //mIntake = new Intake(opMode.hardwareMap);
-        mLift = new Lift(map);
-        mHang = new Hang(map);
+        mLift = new LiftOld(map);
+        mHang = new HangOld(map);
         //mVision = new Vision(opMode.hardwareMap);
         allHubs = map.getAll(LynxModule.class);
 
@@ -107,8 +105,8 @@ public class GFRobot {
 
         mDrive = new GFDrive(opMode.hardwareMap);
         //mIntake = new Intake(opMode.hardwareMap);
-        mLift = new Lift(opMode.hardwareMap);
-        mHang = new Hang(opMode.hardwareMap);
+        mLift = new LiftOld(opMode.hardwareMap);
+        mHang = new HangOld(opMode.hardwareMap);
         //mVision = new Vision(opMode.hardwareMap);
         allHubs = opMode.hardwareMap.getAll(LynxModule.class);
 

@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.autonomous.gf;
 
-import static org.firstinspires.ftc.teamcode.autonomous.gf.GFMath.AngleWrap;
 import static org.firstinspires.ftc.teamcode.autonomous.gf.GFMath.inToCM;
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -8,21 +7,10 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-import org.firstinspires.ftc.teamcode.autonomous.gf.Rotation2d;
-import org.firstinspires.ftc.teamcode.autonomous.gf.Translation2d;
-import org.firstinspires.ftc.teamcode.autonomous.gf.GFMath;
-import org.firstinspires.ftc.teamcode.autonomous.gf.DriveCharacterization;
 import org.firstinspires.ftc.teamcode.autonomous.rr.Drawing;
 import org.firstinspires.ftc.teamcode.util.BotLog;
-import org.firstinspires.ftc.teamcode.util.util;
-import org.firstinspires.ftc.teamcode.Subsystems.Drive;
 
-import java.util.ArrayList;
-import java.util.List;
 @Config
 @Autonomous(name="slip tuner")
 public class SlipTuner extends OldAutoMaster {
@@ -44,11 +32,11 @@ public class SlipTuner extends OldAutoMaster {
     private Vector2d endPos;
     private double speed = 0;
 
-    public static double targetAngularPow = .5;
-    public static double targetStraightPow = .5;
-    public static double targetStrafePow = .5;
+    public static double targetAngularPow = .8;
+    public static double targetStraightPow = .8;
+    public static double targetStrafePow = .8;
 
-    public static int accelTime = 2;
+    public static int accelTime = 1;
     public static int slipTime = 1;
 
     private double stateStartTime = 0;

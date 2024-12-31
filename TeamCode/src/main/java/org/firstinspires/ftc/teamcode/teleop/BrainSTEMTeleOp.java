@@ -16,7 +16,7 @@ package org.firstinspires.ftc.teamcode.teleop;//package org.firstinspires.ftc.te
 //import org.firstinspires.ftc.teamcode.buttons.ToggleButton;
 //import org.firstinspires.ftc.teamcode.Subsystems.BrainSTEMRobot;
 //import org.firstinspires.ftc.teamcode.Subsystems.Claw;
-//import org.firstinspires.ftc.teamcode.Subsystems.Lift;
+//import org.firstinspires.ftc.teamcode.Subsystems.old.Lift;
 //import org.firstinspires.ftc.teamcode.utils.SmoothDrive;
 //
 //@Photon

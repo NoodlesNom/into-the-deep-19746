@@ -382,7 +382,7 @@ public class sample1_3 extends LinearOpMode {
                 .stopAndAdd(
                         controller.hangStop()
                 )
-                .strafeToLinearHeading(new Vector2d(24, 8), Math.toRadians(-90));
+                .strafeToLinearHeading(new Vector2d(22, 8), Math.toRadians(-90));
 
 
 

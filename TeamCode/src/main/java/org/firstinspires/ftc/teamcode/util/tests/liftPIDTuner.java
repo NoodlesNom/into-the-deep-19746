@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
-import org.firstinspires.ftc.teamcode.Subsystems.Lift;
+import org.firstinspires.ftc.teamcode.Subsystems.old.LiftOld;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.StickyButton;
 
@@ -46,7 +46,7 @@ public class liftPIDTuner extends LinearOpMode {
     private StickyButton liftResetStickyButton = new StickyButton();
     private StickyButton liftModeStickyButton = new StickyButton();
 
-    private Lift lift;
+    private LiftOld lift;
     private ElapsedTime myTimer;
 
     private int liftTicks = 1;
@@ -78,7 +78,7 @@ public class liftPIDTuner extends LinearOpMode {
             liftPosIdx -= liftIdxDecStickyButton.getState() ? 1 : 0;
 
             // Bounds check
-            liftPosIdx = Range.clip(liftPosIdx, 0, Lift.LIFT_POS.MAX.getVal());
+            liftPosIdx = Range.clip(liftPosIdx, 0, LiftOld.LIFT_POS.MAX.getVal());
         }
         else
         {
@@ -102,7 +102,7 @@ public class liftPIDTuner extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        lift = new Lift(hardwareMap);
+        lift = new LiftOld(hardwareMap);
         myTimer = new ElapsedTime();
 
         lift.teleopInit();

@@ -2,57 +2,52 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.firstinspires.ftc.teamcode.util.BotLog;
-
-import java.util.concurrent.TimeUnit;
+import org.firstinspires.ftc.teamcode.util.MiniPID;
 
 public class Intake extends Subsystem {
 
     // Hardware
-    private DcMotorEx intake; // E3
-    private Servo extend;
-    private Servo iPivot; // C0
+    private DcMotorEx intake;
+    private DcMotorEx extendo;
+    private Servo pivot;
+    private ExtendoControlState mExtendoControlState;
+
+    private double tgtTicks;
+    private double pidTgtTicks;
+    private double PIDTime = 0.025;
+    //private double PIDTime = 0.05;    // "we need to look at the changes" -/@ coach todd
+    private double nextPID;
+    private int PIDCount = 0;
+    private int PIDSkipCount = 0;
+    private double prevPIDTime = 0.0;
+    private MiniPID pid;
+    private final double P = 0.0075 / 1 ;
+    private final double I = 0.0015 / 1;
+    private final double D = 0.045 / 1;
+    private final double F = 0.0002;
+    private double vF = F;
+    public final double MAX_LIFT_PWR = 1;
+    public final double MIN_LIFT_PWR = -0.6;
+    private Servo gate;
 
     // Hardware states
     private PeriodicIO mPeriodicIO;
-    private boolean mIsBrakeMode;
-    private boolean readVelocity;           //  0     1     2    3    4   5    6    7     8    9    10
-    private double[] intakePos = new double[] {0, 135.0/355, 180.0/355};
-    private double[] extendPos = new double[] {0, 60.0/300};
 
-    public enum INTAKE_POS
-    {
-        //Constants with values
-        STOWED(0),
-        PARALLEL(1),
-        INTAKING(2);
+    private double[] extendoPos = new double[] {0,50,150, 700};
 
-        //Instance variable
-        private final int val;
-
-        //Constructor to initialize the instance variable
-        INTAKE_POS(int v)
-        {
-            val = v;
-        }
-
-        public int getVal()
-        {
-            return val;
-        }
-    }
     public enum EXTEND_POS
     {
         //Constants with values
         STOWED(0),
-        INTAKING(1);
+        TRANSFER(1),
+        GETOUT(2),
+        INTAKING(3);
 
         //Instance variable
         private final int val;
@@ -68,27 +63,65 @@ public class Intake extends Subsystem {
             return val;
         }
     }
-
-    public enum IntakePosState
+    private double[] pivotPos = new double[] {0, 30.0/355, 180.0/355};
+    public enum PIVOT_POS
     {
-        STOWED,    // Current position request is STOWED or <500ms after change from STOWED requested
-        DEPLOYED   // >500ms after leaving STOWED
+        //Constants with values
+        STOWED(0),
+        INTAKING(1),
+        LAUNCH(2);
+
+        //Instance variable
+        private final int val;
+
+        //Constructor to initialize the instance variable
+        PIVOT_POS(int v)
+        {
+            val = v;
+        }
+
+        public int getVal()
+        {
+            return val;
+        }
     }
-    public enum ExtendPosState
+    private double[] gatePos = new double[] {0, 30.0/355, 90.0/355};
+    public enum GATE_POS
     {
-        STOWED,    // Current position request is STOWED or <500ms after change from STOWED requested
-        DEPLOYED   // >500ms after leaving STOWED
+        //Constants with values
+        CLAMP(0),
+        CATCH(1),
+        OPEN(2);
+
+        //Instance variable
+        private final int val;
+
+        //Constructor to initialize the instance variable
+        GATE_POS(int v)
+        {
+            val = v;
+        }
+
+        public int getVal()
+        {
+            return val;
+        }
     }
-
-
-    private Deadline IntakePosTimer = new Deadline(200, TimeUnit.MILLISECONDS);
-
-    private Deadline ExtendPosTimer = new Deadline(200, TimeUnit.MILLISECONDS);
 
     // Loop Time Tracker
     private ElapsedTime loopTimer = new ElapsedTime();
     private boolean debugLoopTime = false;
+    public enum ExtendoControlState
+    {
+        OPEN_LOOP,
+        PID_CONTROL
+    }
 
+    public enum ExtendoState
+    {
+        CLOSE_ENOUGH,
+        MOVING
+    }
 
     public Intake(HardwareMap map)
     {
@@ -96,37 +129,45 @@ public class Intake extends Subsystem {
 
         // motors
         intake = map.get(DcMotorEx.class, "intake");
-
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
-        intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        extend = map.get(Servo.class, "intake");
+        extendo = map.get(DcMotorEx.class, "extendo");
+        extendo.setDirection(DcMotorEx.Direction.REVERSE);
+        extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        extendo.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
+        pid = new MiniPID(P, I, D, F);
+        pid.reset();
+        pid.setOutputLimits(MIN_LIFT_PWR, MAX_LIFT_PWR);
+        pid.setOutputRampRate(1);
+        vF = F;
+        pid.setPID(P, I, D, vF);
+
+        nextPID = 0;
+
+        setExtendoOpenLoop(0);
         //intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         //intake.setVelocityPIDFCoefficients(10 * Math.PI, 3 * Math.PI, 0, 3 * Math.PI);
 
         // servos
-        iPivot = map.get(Servo.class, "iPivot");
+        pivot = map.get(Servo.class, "pivot");
 
-        setOpenLoop(0, false);
+        gate = map.get(Servo.class, "gate");
+
+        setIntakeOpenLoop(0);
     }
 
     @Override
     public void autoInit()
     {
-        readVelocity = false;
-        setBrakeMode(false);
-        setIntakePos(INTAKE_POS.STOWED.getVal());
-        setExtendPos(EXTEND_POS.STOWED.getVal());
+        setPivotPos(PIVOT_POS.STOWED.getVal());
     }
 
     @Override
     public void teleopInit()
     {
-        readVelocity = false;
-        setBrakeMode(false);
-        setExtendPos(EXTEND_POS.STOWED.getVal());
+
     }
 
     @Override
@@ -139,6 +180,14 @@ public class Intake extends Subsystem {
         }
 
         readPeriodicInputs(timestamp);
+        switch (mExtendoControlState)
+        {
+            case OPEN_LOOP:
+                break;
+            case PID_CONTROL:
+                updateExtendoPID(timestamp);
+                break;
+        }
         writePeriodicOutputs();
 
         if (debugLoopTime)
@@ -150,67 +199,122 @@ public class Intake extends Subsystem {
     @Override
     public void stop()
     {
-        setOpenLoop(0, false);
+        setIntakeOpenLoop(0);
+        setExtendoOpenLoop(0);
     }
 
-    public synchronized void setBrakeMode(boolean on)
+    public void setIntakeOpenLoop(double power)
     {
-        if (mIsBrakeMode != on)
-        {
-            mIsBrakeMode = on;
-            DcMotor.ZeroPowerBehavior mode = on ? DcMotor.ZeroPowerBehavior.BRAKE : DcMotor.ZeroPowerBehavior.FLOAT;
-
-            intake.setZeroPowerBehavior(mode);
-        }
-    }
-
-    public synchronized void setOpenLoop(double power, boolean brake)
-    {
-        setBrakeMode(brake);
         mPeriodicIO.intake_demand = power;
     }
 
-    public synchronized void setIntakePos(int pos)
+    public void setExtendoOpenLoop(double power)
     {
-        mPeriodicIO.intake_pos = pos;
-        //BotLog.logD(" Intake 1 :: ", "Pos %d, %5.2f", pos, intakePos[mPeriodicIO.intake_pos]  );
-    }
-
-    public synchronized void setExtendPos(int pos)
-    {
-        mPeriodicIO.extend_pos = pos;
-        //BotLog.logD(" Intake 1 :: ", "Pos %d, %5.2f", pos, intakePos[mPeriodicIO.intake_pos]  );
-    }
-
-    public IntakePosState getIntakePosState()
-    {
-        // Timer is active or we've requested movement
-        if((!IntakePosTimer.hasExpired()) || (mPeriodicIO.intake_pos == INTAKE_POS.STOWED.getVal()))
+        if (mExtendoControlState != ExtendoControlState.OPEN_LOOP)
         {
-            return IntakePosState.STOWED;
+            mExtendoControlState = ExtendoControlState.OPEN_LOOP;
+        }
+
+        mPeriodicIO.extendo_demand = power;
+    }
+
+    public  void setPivotPos(int pos)
+    {
+        mPeriodicIO.pivot_pos = pos;
+        //BotLog.logD(" Intake 1 :: ", "Pos %d, %5.2f", pos, intakePos[mPeriodicIO.pivot_pos]  );
+    }
+
+    public  void setExtendoPos(int tgtPosArg, double timestamp)
+    {
+        tgtPosArg = Math.min(tgtPosArg,(extendoPos.length-1));
+        double tgtPosArgTicks = extendoPos[tgtPosArg];
+
+        mExtendoControlState = ExtendoControlState.PID_CONTROL;
+        mPeriodicIO.extendo_pos = tgtPosArg;
+
+        if (tgtPosArgTicks != tgtTicks)
+        {
+            tgtTicks = tgtPosArgTicks;
+
+            PIDCount = 0;
+            PIDSkipCount = 0;
+            nextPID = timestamp;
+            pid.reset();
+            updateExtendoPID(timestamp);
+        }
+    }
+    private void updateExtendoPID(double timestamp)
+    {
+        mExtendoControlState = ExtendoControlState.PID_CONTROL;
+
+        // Time went backwards, or we had a gap larger than 25x expected
+        // Try to re-sync on the next call
+        if ((timestamp < prevPIDTime) ||  ((timestamp - prevPIDTime) > (PIDTime * 25.0)))
+        {
+            BotLog.logD("LIFTPID :: ", "Unexpected times %5.2f, %5.2f, %5.2f", timestamp, prevPIDTime, PIDTime);
+
+            nextPID = timestamp + PIDTime;
+            prevPIDTime = timestamp;
+
+            return;
+        }
+
+        if (nextPID < timestamp)
+        {
+            if (tgtTicks > 0.0)
+            {
+                // Leave this here just in case we don't come through 'update()' for this path.
+                readPeriodicInputs(timestamp);
+
+                double power;
+                double curPos = mPeriodicIO.lastExtendoTicks;
+
+                pidTgtTicks = tgtTicks;
+                PIDCount++;
+
+                if (PIDCount > 1)
+                {
+                    power = pid.getOutput(curPos, pidTgtTicks, ((timestamp - prevPIDTime) / PIDTime));
+                }
+                else
+                {
+                    power = vF * pidTgtTicks;
+                }
+
+                if((tgtTicks < 10.0) && (mPeriodicIO.lastExtendoTicks < 10.0))
+                {
+                    PIDCount = 0;
+                    PIDSkipCount = 0;
+                    pid.reset();
+                    power = 0.0;
+                }
+
+                // power = Range.clip(power, -MAX_LIFT_UP_PWR, MAX_LIFT_UP_PWR);
+                // We want to avoid an oscillation around '0' so we will ignore power < +/2.5%
+                if(Math.abs(power) < 0.025 )
+                {
+                    power = 0.0;
+                }
+                mPeriodicIO.extendo_demand = power;
+
+                prevPIDTime = timestamp;
+            }
+            else
+            {
+                mPeriodicIO.extendo_demand = 0.0;
+            }
+            nextPID = timestamp + PIDTime;
         }
         else
         {
-            return IntakePosState.DEPLOYED;
+            PIDSkipCount++;
         }
     }
 
-    public ExtendPosState getExtendPosState()
+    public  void setGatePos(int pos)
     {
-        // Timer is active or we've requested movement
-        if((!ExtendPosTimer.hasExpired()) || (mPeriodicIO.extend_pos == EXTEND_POS.STOWED.getVal()))
-        {
-            return ExtendPosState.STOWED;
-        }
-        else
-        {
-            return ExtendPosState.DEPLOYED;
-        }
-    }
-
-    public double getVelocity()
-    {
-        return mPeriodicIO.intake_velocity;
+        mPeriodicIO.gate_pos = pos;
+        //BotLog.logD(" Intake 1 :: ", "Pos %d, %5.2f", pos, intakePos[mPeriodicIO.pivot_pos]  );
     }
 
     public double getPower()
@@ -220,22 +324,35 @@ public class Intake extends Subsystem {
 
     public double getMotorCurrent()
     {
-        return intake.getCurrent(CurrentUnit.AMPS);
+        return mPeriodicIO.intake_current;
+    }
+    public Lift.LiftState getIntakeState()
+    {
+        if (closeEnough())
+        {
+            return Lift.LiftState.CLOSE_ENOUGH;
+        }
+        else
+        {
+            return Lift.LiftState.MOVING;
+        }
+    }
+    public boolean closeEnough()
+    {
+        return Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20 && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
     }
 
     //public void setReadVelocity(boolean on) { readVelocity = on; }
     // With deadwheels, we are reclaiming the intake encoder so no more velocity
-    public void setReadVelocity(boolean on)
-    {
-        readVelocity = false;
-    }
 
     public void readPeriodicInputs(double timestamp)
     {
-        if (readVelocity)
-        {
-            mPeriodicIO.intake_velocity = intake.getVelocity();
-        }
+        mPeriodicIO.intake_current = intake.getCurrent(CurrentUnit.AMPS);
+        mPeriodicIO.prevLastExtendoTicks = mPeriodicIO.lastExtendoTicks;
+        mPeriodicIO.prevLastExtendoVel = mPeriodicIO.lastExtendoVel;
+
+        mPeriodicIO.lastExtendoTicks = extendo.getCurrentPosition();
+        mPeriodicIO.lastExtendoVel = extendo.getVelocity();
     }
 
     public void writePeriodicOutputs()
@@ -247,25 +364,24 @@ public class Intake extends Subsystem {
             mPeriodicIO.prevIntake_demand = mPeriodicIO.intake_demand;
         }
 
-        if(mPeriodicIO.prevIntake_pos != mPeriodicIO.intake_pos) {
-            iPivot.setPosition(intakePos[mPeriodicIO.intake_pos]);
-            //BotLog.logD(" Intake 2 :: ", "Pos %d, %5.2f", mPeriodicIO.intake_pos, intakePos[mPeriodicIO.intake_pos]  );
-            if (mPeriodicIO.prevIntake_pos == INTAKE_POS.STOWED.getVal())
-            {
-                // We are leaving the STOWED position, wait 500ms before deployed
-                IntakePosTimer.reset();
-            }
-            mPeriodicIO.prevIntake_pos = mPeriodicIO.intake_pos;
+        if(mPeriodicIO.prevPivot_pos != mPeriodicIO.pivot_pos) {
+            pivot.setPosition(pivotPos[mPeriodicIO.pivot_pos]);
+            mPeriodicIO.prevPivot_pos = mPeriodicIO.pivot_pos;
         }
-        if(mPeriodicIO.prevExtend_pos != mPeriodicIO.extend_pos) {
-            extend.setPosition(extendPos[mPeriodicIO.extend_pos]);
-            //BotLog.logD(" Intake 2 :: ", "Pos %d, %5.2f", mPeriodicIO.intake_pos, intakePos[mPeriodicIO.intake_pos]  );
-            if (mPeriodicIO.prevExtend_pos == EXTEND_POS.STOWED.getVal())
-            {
-                // We are leaving the STOWED position, wait 500ms before deployed
-                ExtendPosTimer.reset();
-            }
-            mPeriodicIO.prevExtend_pos = mPeriodicIO.extend_pos;
+
+        if(mPeriodicIO.prevGate_pos != mPeriodicIO.gate_pos) {
+            gate.setPosition(gatePos[mPeriodicIO.gate_pos]);
+            mPeriodicIO.prevGate_pos = mPeriodicIO.gate_pos;
+        }
+        if(mPeriodicIO.prevExtend_pos != mPeriodicIO.extendo_pos) {
+
+            mPeriodicIO.prevExtend_pos = mPeriodicIO.extendo_pos;
+        }
+
+        if(mPeriodicIO.prevextendo_demand != mPeriodicIO.extendo_demand)
+        {
+            extendo.setPower(mPeriodicIO.extendo_demand);
+            mPeriodicIO.prevextendo_demand = mPeriodicIO.extendo_demand;
         }
     }
 
@@ -273,25 +389,33 @@ public class Intake extends Subsystem {
     public String getTelem(double time)
     {
         String output = "power :: " + mPeriodicIO.intake_demand + "\n";
-        output += "intake pos :: " + mPeriodicIO.intake_pos + "\n";
-        output += "extend pos :: " + mPeriodicIO.extend_pos + "\n";
+        output += "intake pos :: " + mPeriodicIO.pivot_pos + "\n";
+        output += "extend pos :: " + mPeriodicIO.extendo_pos + "\n";
 
 
         return output;
     }
 
     public static class PeriodicIO {
-        // INPUTS
-        public double intake_velocity = -1; // velocity of the intake in ticks/sec
+        public int pivot_pos;
+        public int gate_pos;
 
-        // OUTPUTS
-        public int intake_pos;
-        public int extend_pos;
+        public double intake_current;
+        public int extendo_pos;
+
+        public double lastExtendoTicks;
+        public double lastExtendoVel;
+
+        public double prevLastExtendoTicks;
+        public double prevLastExtendoVel;
+        public double extendo_demand;
+        public double prevextendo_demand;
         public double intake_demand;
 
-        public int prevIntake_pos = -1;
+        public int prevPivot_pos = -1;
+        public int prevGate_pos = -1;
         public int prevExtend_pos = -1;
-        public double prevIntake_demand = -1;
+        public double prevIntake_demand = -2;
 
     }
 }

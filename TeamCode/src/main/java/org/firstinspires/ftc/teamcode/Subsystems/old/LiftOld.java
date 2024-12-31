@@ -1,18 +1,35 @@
-package org.firstinspires.ftc.teamcode.Subsystems;
+package org.firstinspires.ftc.teamcode.Subsystems.old;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+import org.firstinspires.ftc.teamcode.Subsystems.Subsystem;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.MiniPID;
+import org.firstinspires.ftc.teamcode.util.TimedServo;
 
-public class Lift extends Subsystem {
+import java.util.concurrent.TimeUnit;
+
+public class LiftOld extends Subsystem {
 
     // Hardware
-    private DcMotorEx lift;
+    private DcMotorEx liftF;
+    private DcMotorEx liftB;
+
+    //private Servo gate;
+
+    private int servoTime= 250;
+    private ServoImplEx pivot;
+    private TimedServo pivotTimed;
+    
+    private ServoImplEx claw;
+
+    private ServoImplEx arm;
 
     // Control states
     private LiftControlState mLiftControlState;
@@ -52,7 +69,7 @@ public class Lift extends Subsystem {
     private final double F = 0.0002;
     private double vF = F;
     public final double MAX_LIFT_PWR = 1;
-    public final double MIN_LIFT_PWR = -1;
+    public final double MIN_LIFT_PWR = -0.6;
 
     // This are from Center Stage (no external encoder)
     //    private final double P = 0.0075 / 1.3;
@@ -97,6 +114,109 @@ public class Lift extends Subsystem {
         }
     }
 
+    // private double[] pivotPositions = new double[]{.46, .78}; // TELEOP PIVOTS
+    // private double[] pivotPositions = new double[]{.47, .78, .52}; // Regionals Gobilda Pivot
+    private double[] pivotPositions = new double[]{0.6,0.975, 0.45}; // Double Wide Axon Pivot
+
+    public enum PIVOT_POS
+    {
+        //Constants with values
+
+        DEPOSIT(0),
+        INTAKE(1),
+        AUTO(2);
+
+
+        //Instance variable
+        private final int val;
+
+        //Constructor to initialize the instance variable
+        PIVOT_POS(int v)
+        {
+            val = v;
+        }
+
+        public int getVal()
+        {
+            return val;
+        }
+    }
+    
+    private double[] clawPositions = new double[]{0, 60.0/180}; // Double Wide Axon Pivot
+
+    public enum CLAW_POS
+    {
+        //Constants with values
+        CLOSED(1),
+        OPEN(0);
+
+        //Instance variable
+        private final int val;
+
+        //Constructor to initialize the instance variable
+        CLAW_POS(int v)
+        {
+            val = v;
+        }
+
+        public int getVal()
+        {
+            return val;
+        }
+    }
+    public static double armDown = 120.0/180;
+    private double[] armPositions = new double[]{0, armDown}; // Double Wide Axon Pivot
+
+    public enum ARM_POS
+    {
+        //Constants with values
+        UP(0),
+        DOWN(1);
+
+        //Instance variable
+        private final int val;
+
+        //Constructor to initialize the instance variable
+        ARM_POS(int v)
+        {
+            val = v;
+        }
+
+        public int getVal()
+        {
+            return val;
+        }
+    }
+
+    private double[] GatePositions = new double[]{0, 90.0/150};
+
+    public enum GATE_POS
+    {
+        //Constants with values
+        OPEN(1),
+        CLOSED(0);
+
+        //Instance variable
+        private final int val;
+
+        //Constructor to initialize the instance variable
+        GATE_POS(int v)
+        {
+            val = v;
+        }
+
+        public int getVal()
+        {
+            return val;
+        }
+    }
+
+    private Deadline PivotTimer = new Deadline(550, TimeUnit.MILLISECONDS);
+    private Deadline ClawTimer = new Deadline(150, TimeUnit.MILLISECONDS);
+
+//    private Deadline GateCloseTimer = new Deadline(150, TimeUnit.MILLISECONDS);
+//    private Deadline GateOpenTimer = new Deadline(125, TimeUnit.MILLISECONDS);
+
     public enum LiftControlState
     {
         OPEN_LOOP,
@@ -117,22 +237,58 @@ public class Lift extends Subsystem {
 //    }
 
 
+    public enum LiftPivotState
+    {
+        MOVING,
+        INTAKE,
+        DEPOSIT
+    }
 
-    public Lift(HardwareMap map)
+    public enum LiftClawState
+    {
+        MOVING,
+        OPEN,
+        CLOSED
+    }
+
+
+
+    public LiftOld(HardwareMap map)
     {
         mPeriodicIO = new PeriodicIO();
 
-        lift = map.get(DcMotorEx.class, "lift");
+        liftF = map.get(DcMotorEx.class, "liftF");
+        liftB = map.get(DcMotorEx.class, "liftB");
 
         //gate = map.get(Servo.class, "gate");
-        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        liftF.setDirection(DcMotor.Direction.REVERSE);
+        liftB.setDirection(DcMotor.Direction.FORWARD);
+
+        liftF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        liftF.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        liftF.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        liftB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        pivot = map.get(ServoImplEx.class, "pivot");
+        pivot.setDirection(ServoImplEx.Direction.REVERSE);
+        pivotTimed = new TimedServo(pivot, new ElapsedTime());
+
+        
+        claw = map.get(ServoImplEx.class, "claw");
+        claw.setDirection(ServoImplEx.Direction.REVERSE);
+
+
+        arm = map.get(ServoImplEx.class, "arm");
 
         pid = new MiniPID(P, I, D, F);
         pid.reset();
-        pid.setOutputLimits(MIN_LIFT_PWR, MAX_LIFT_PWR);
-        pid.setOutputRampRate(1);
+        pid.setOutputLimits(MIN_LIFT_PWR*0.9, MAX_LIFT_PWR*0.9);
+        pid.setOutputRampRate(0.35);
         vF = F;
         pid.setPID(P, I, D, vF);
 
@@ -144,7 +300,12 @@ public class Lift extends Subsystem {
     @Override
     public void autoInit()
     {
-        //zeroLift()
+        //zeroLift();
+        setPivotPos(2);
+
+        setClawPos(1);
+
+        setArmPos(ARM_POS.UP.getVal());
         //setGatePos(GATE_POS.CLOSED.getVal()); // closed
 
         pid.setOutputLimits(MIN_LIFT_PWR, MAX_LIFT_PWR);
@@ -154,8 +315,27 @@ public class Lift extends Subsystem {
     @Override
     public void teleopInit()
     {
+        //zeroLift();
+        setPivotPos(PIVOT_POS.DEPOSIT.getVal());
+
+        setClawPos(1);
+
+        setArmPos(ARM_POS.UP.getVal());
+
+        //setGatePos(GATE_POS.OPEN.getVal()); // closed
+
 
         pid.setOutputLimits(MIN_LIFT_PWR /*+ .05*/, MAX_LIFT_PWR);
+
+        PivotTimer.reset();
+        PivotTimer.cancel();
+
+        ClawTimer.reset();
+        ClawTimer.cancel();
+
+        //GateCloseTimer.reset();
+        //GateCloseTimer.cancel();
+
 
     }
 
@@ -213,12 +393,14 @@ public class Lift extends Subsystem {
             // wait for .25 second
         }
 
-        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftF.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        liftB.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftF.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        liftB.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    public  void setTargetPos(int tgtPosArg, double timestamp)
+    public void setTargetPos(int tgtPosArg, double timestamp)
     {
         tgtPosArg = Math.min(tgtPosArg,(liftPositions.length-1));
         double tgtPosArgTicks = liftPositions[tgtPosArg];
@@ -254,7 +436,7 @@ public class Lift extends Subsystem {
         }
     }
 
-    public  void setOpenLoop(double power)
+    public void setOpenLoop(double power)
     {
         if (mLiftControlState != LiftControlState.OPEN_LOOP)
         {
@@ -332,28 +514,38 @@ public class Lift extends Subsystem {
         }
     }
 
+    public double getFCurrent()
+    {
+        return(liftF.getCurrent(CurrentUnit.AMPS));
+    }
+
+    public double getBCurrent()
+    {
+        return(liftB.getCurrent(CurrentUnit.AMPS));
+    }
 
     public double getMotorCurrent()
     {
-        return(lift.getCurrent(CurrentUnit.AMPS));
+        return(getFCurrent() + getBCurrent());
     }
 
-    public  void setPivotPos(int pos)
+
+    public void setPivotPos(int pos)
     {
         mPeriodicIO.pivotPos = pos;
     }
 
-    public  void setClawPos(int pos)
+    public void setClawPos(int pos)
     {
         mPeriodicIO.clawPos = pos;
     }
 
-    public  void setArmPos(int pos)
+    public void setArmPos(int pos)
     {
         mPeriodicIO.armPos = pos;
     }
 
-    public  void setGatePos(int pos)
+    public void setGatePos(int pos)
     {
         mPeriodicIO.GatePos = pos;
     }
@@ -378,6 +570,46 @@ public class Lift extends Subsystem {
 //        }
 //    }
 
+
+    public LiftPivotState getPivotState()
+    {
+        // Timer is active or we've requested movement
+        if( ((!PivotTimer.hasExpired()) || (mPeriodicIO.pivotPos != mPeriodicIO.prevPivotPos)) && (mPeriodicIO.prevPivotPos != -1))
+        {
+            return LiftPivotState.MOVING;
+        }
+        else
+        {
+            if (mPeriodicIO.pivotPos == PIVOT_POS.DEPOSIT.getVal())
+            {
+                return LiftPivotState.DEPOSIT;
+            }else
+            {
+                return LiftPivotState.INTAKE;
+            }
+        }
+    }
+
+    public LiftClawState getClawState()
+    {
+        // Timer is active or we've requested movement
+        if( ((!ClawTimer.hasExpired()) || (mPeriodicIO.clawPos != mPeriodicIO.prevClawPos)) && (mPeriodicIO.prevClawPos != -1))
+        {
+            return LiftClawState.MOVING;
+        }
+        else
+        {
+            if (mPeriodicIO.clawPos == CLAW_POS.CLOSED.getVal())
+            {
+                return LiftClawState.CLOSED;
+            }else
+            {
+                return LiftClawState.OPEN;
+            }
+        }
+    }
+
+
     public int getLiftPos() {
         return mPeriodicIO.liftPos;
     }
@@ -391,11 +623,11 @@ public class Lift extends Subsystem {
 
     public double getLiveLiftPosition()
     {
-        return lift.getCurrentPosition();
+        return liftB.getCurrentPosition();
     }
     public double getLiveLiftVelocity()
     {
-        return lift.getVelocity();
+        return liftB.getVelocity();
     }
 
     public LiftState getLiftState()
@@ -433,24 +665,90 @@ public class Lift extends Subsystem {
         mPeriodicIO.prevLastReadPos = mPeriodicIO.lastReadTicks;
         mPeriodicIO.prevLastReadVel = mPeriodicIO.lastReadVel;
 
-        mPeriodicIO.lastReadTicks = lift.getCurrentPosition();
-        mPeriodicIO.lastReadVel = lift.getVelocity();
+        mPeriodicIO.lastReadTicks = liftB.getCurrentPosition();
+        mPeriodicIO.lastReadVel = liftB.getVelocity();
     }
 
     public void writePeriodicOutputs()
     {
         writeLiftOutputs();
+        writePivotOutputs();
+        writeClawOutputs();
+        writeArmOutputs();
+        //writeGateOutputs();
     }
 
     public void writeLiftOutputs()
     {
         if(mPeriodicIO.prevDemand != mPeriodicIO.demand)
         {
-            lift.setPower(mPeriodicIO.demand);
+            liftB.setPower(mPeriodicIO.demand);
+            liftF.setPower(mPeriodicIO.demand);
             mPeriodicIO.prevDemand = mPeriodicIO.demand;
         }
     }
 
+//    public void writeGateOutputs()
+//    {
+//        if (mPeriodicIO.prevGatePos != mPeriodicIO.GatePos)
+//        {
+//            gate.setPosition(GatePositions[mPeriodicIO.GatePos]);
+//
+//            if (mPeriodicIO.prevGatePos != -1)
+//            {
+//                GateCloseTimer.reset();
+//                GateOpenTimer.reset();
+//
+//            }
+//            mPeriodicIO.prevGatePos = mPeriodicIO.GatePos;
+//        }
+//    }
+    public void setServoTime(int speed){
+        servoTime = speed;
+    }
+
+    public void writePivotOutputs()
+    {
+        if (mPeriodicIO.prevPivotPos != mPeriodicIO.pivotPos)
+        {
+
+            pivotTimed.setTimedPosition(pivotPositions[mPeriodicIO.pivotPos], servoTime);
+
+
+            if (mPeriodicIO.prevPivotPos != -1)
+            {
+                if (!(mPeriodicIO.pivotPos == PIVOT_POS.DEPOSIT.getVal())) {
+                    PivotTimer.reset();
+                }
+            }
+
+            mPeriodicIO.prevPivotPos = mPeriodicIO.pivotPos;
+        }
+
+        pivotTimed.update();
+    }
+
+    public void writeClawOutputs()
+    {
+        if (mPeriodicIO.prevClawPos != mPeriodicIO.clawPos)
+        {
+
+            claw.setPosition(clawPositions[mPeriodicIO.clawPos]);
+
+            mPeriodicIO.prevClawPos = mPeriodicIO.clawPos;
+        }
+    }
+
+    public void writeArmOutputs()
+    {
+        if (mPeriodicIO.prevArmPos != mPeriodicIO.armPos)
+        {
+
+            arm.setPosition(armPositions[mPeriodicIO.armPos]);
+
+            mPeriodicIO.prevArmPos = mPeriodicIO.armPos;
+        }
+    }
 
     @Override
     public String getTelem(double time)
@@ -487,5 +785,9 @@ public class Lift extends Subsystem {
         public double prevLastReadVel;
 
         public double prevDemand = -1;
+        public int prevGatePos = -1;
+        public int prevPivotPos = -1;
+        public int prevArmPos = -1;
+        public int prevClawPos = -1;
     }
 }

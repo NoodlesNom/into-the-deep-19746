@@ -12,7 +12,7 @@ package org.firstinspires.ftc.teamcode.teleop;//package org.firstinspires.ftc.te
 //import org.firstinspires.ftc.teamcode.Subsystems.BrainSTEMRobot;
 //import org.firstinspires.ftc.teamcode.utils.SmoothDrive;
 //import org.firstinspires.ftc.teamcode.Subsystems.Claw;
-//import org.firstinspires.ftc.teamcode.Subsystems.Lift;
+//import org.firstinspires.ftc.teamcode.Subsystems.old.Lift;
 //@Photon
 //@TeleOp
 //@Disabled

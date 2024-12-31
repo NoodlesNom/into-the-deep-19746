@@ -5,6 +5,7 @@ import static org.firstinspires.ftc.teamcode.autonomous.gf.GFMath.AngleWrap;
 import static org.firstinspires.ftc.teamcode.autonomous.gf.GFMath.subtractAngles;
 import static org.firstinspires.ftc.teamcode.autonomous.gf.GFMovement.profileStates.*;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.autonomous.gf.Constants;
@@ -16,7 +17,7 @@ import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
-
+@Config
 public class GFMovement
 {
 
@@ -37,8 +38,8 @@ public class GFMovement
     public static profileStates state_turning_prof = gunningIt;
 
     public static double movement_y_min = 0.11;
-    public static double movement_x_min = 0.11;
-    public static double movement_turn_min = 0.11;
+    public static double movement_x_min = 0.22;
+    public static double movement_turn_min = 0.17;
 
     private static Pose2d target;
 
@@ -68,10 +69,15 @@ public class GFMovement
     }
 
     public static class movementResult{
+
         public double turnDelta_rad;
+
         public movementResult(double turnDelta_rad){
+
             this.turnDelta_rad = turnDelta_rad;
+
         }
+
     }
 
     public static void updateRobotVars(double x, double y, double rad, double xV, double yV, double rV)
@@ -127,7 +133,7 @@ public class GFMovement
 
 
 
-    public static void goToPosition(double targetX, double targetY, double point_angle, double movement_speed, double point_speed) {
+    public static boolean goToPosition(double targetX, double targetY, double point_angle, double movement_speed, double point_speed) {
         //get our distance away from the point
         double distanceToPoint = Math.sqrt(Math.pow(targetX-worldXPosition,2) + Math.pow(targetY-worldYPosition,2));
 
@@ -147,7 +153,7 @@ public class GFMovement
 
         //every movement has two states, the fast "gunning" section and the slow refining part. turn this var off when close to target
         if(state_movement_y_prof == profileStates.gunningIt) {
-            if(relative_abs_y < Math.abs(Constants.ySlipDistanceFor1CMPS * yVel * 2) || relative_abs_y < 3){
+            if(relative_abs_y < Math.abs(Constants.ySlipDistanceFor1CMPS * yVel * 1.6) || relative_abs_y < 3){
                 state_movement_y_prof = state_movement_y_prof.next();
             }
         }
@@ -162,13 +168,13 @@ public class GFMovement
         }
 
         if(state_movement_x_prof == profileStates.gunningIt) {
-            if(relative_abs_x < Math.abs(Constants.ySlipDistanceFor1CMPS * yVel * 1.2) || relative_abs_x < 3){
+            if(relative_abs_x < Math.abs(Constants.xSlipDistanceFor1CMPS * xVel * 1.4) || relative_abs_x < 3){
                 state_movement_x_prof = state_movement_x_prof.next();
             }
         }
         if(state_movement_x_prof == profileStates.slipping){
             movement_x_power = 0;
-            if(Math.abs(yVel) < 0.03){
+            if(Math.abs(xVel) < 0.03){
                 state_movement_x_prof = state_movement_x_prof.next();
             }
         }
@@ -204,7 +210,8 @@ public class GFMovement
         movement_x = movement_x_power;
         movement_y = movement_y_power;
 
-        allComponentsMinPower();
+        allComponentsMinPowerGoTo();
+        return (Math.abs(distanceToPoint) < 2 && Math.abs(rad_to_target) < 0.05);
     }
 
 
@@ -232,6 +239,11 @@ public class GFMovement
         //let's divide how we are going to slip into components
         double currSlipY = ((Constants.ySlipDistanceFor1CMPS * yVel) * Math.sin(worldAngle_rad)) +
                 ((Constants.xSlipDistanceFor1CMPS * xVel) * Math.cos(worldAngle_rad));
+        BotLog.logD("slip y(x) test", (Constants.xSlipDistanceFor1CMPS * xVel * Math.cos(worldAngle_rad))+"");
+        BotLog.logD("slip y(y) test", (Constants.ySlipDistanceFor1CMPS * yVel * Math.sin(worldAngle_rad))+"");
+        BotLog.logD("anglrad", (worldAngle_rad)+"");
+        BotLog.logD("slip y", currSlipY+"");
+
         double currSlipX = ((Constants.ySlipDistanceFor1CMPS * yVel) * Math.cos(worldAngle_rad)) +
                 ((Constants.xSlipDistanceFor1CMPS * xVel) * Math.sin(worldAngle_rad));
 
@@ -241,8 +253,12 @@ public class GFMovement
 
         //get our distance away from the adjusted point
         double distanceToPoint = Math.sqrt(Math.pow(targetXAdjusted-worldXPosition,2) + Math.pow(targetYAdjusted-worldYPosition,2));
-
-        //arcTan gives the absolute angle from our location to the adjusted target
+        BotLog.logD("distance to point", distanceToPoint+"");
+        BotLog.logD("targetx", targetX+"");
+        BotLog.logD("targetx adjusted", targetXAdjusted+"");
+        BotLog.logD("targety", targetY+"");
+        BotLog.logD("targety adjusted", targetYAdjusted+"");
+        //arcTan gives the absoute angle from our location to the adjusted target
         double angleToPointAdjusted = Math.atan2(targetYAdjusted-worldYPosition,targetXAdjusted-worldXPosition);
 
         //we only care about the relative angle to the point, so subtract our angle
@@ -253,7 +269,8 @@ public class GFMovement
         //Relative x and y components required to move toward the next point (with angle correction)
         double relative_x_to_point = Math.cos(deltaAngleToPointAdjusted) * distanceToPoint;
         double relative_y_to_point = Math.sin(deltaAngleToPointAdjusted) * distanceToPoint;
-
+        BotLog.logD("angle to point", deltaAngleToPointAdjusted+"");
+        BotLog.logD("angle to point", deltaAngleToPointAdjusted+"");
         //just the absolute value of the relative components to the point (adjusted for slip)
         double relative_abs_x = Math.abs(relative_x_to_point);
         double relative_abs_y = Math.abs(relative_y_to_point);
@@ -267,6 +284,8 @@ public class GFMovement
         //so total magnitude should always equal 1
         double movement_x_power = (relative_x_to_point / (relative_abs_y+relative_abs_x));
         double movement_y_power = (relative_y_to_point / (relative_abs_y+relative_abs_x));
+        BotLog.logD("x after x+y=1", movement_x_power+"");
+        BotLog.logD("y after x+y=1", movement_y_power+"");
 
 
 
@@ -277,12 +296,19 @@ public class GFMovement
             movement_x_power *= relative_abs_x / 30.0;
             movement_y_power *= relative_abs_y / 30.0;
         }
+        BotLog.logD("x after /30", movement_x_power+"");
+        BotLog.logD("y after /30", movement_y_power+"");
+        BotLog.logD("relative x", relative_abs_x+"");
+        BotLog.logD("relative y", relative_abs_y+"");
+
 
 
         //clip the final speed to be in the range the user wants
         movement_x = Range.clip(movement_x_power,-movement_speed,movement_speed);
         movement_y = Range.clip(movement_y_power,-movement_speed,movement_speed);
 
+        BotLog.logD("x after clip", movement_x+"");
+        BotLog.logD("y after clip", movement_y+"");
 
 
 
@@ -338,6 +364,8 @@ public class GFMovement
         //no oscillation around here
         movement_x *= Range.clip((relative_abs_x/6.0),0,1);
         movement_y *= Range.clip((relative_abs_y/6.0),0,1);
+        BotLog.logD("x after smoothing", movement_x+"");
+        BotLog.logD("y after smoothing", movement_y+"");
 
         movement_turn *= Range.clip(Math.abs(relativePointAngle)/Math.toRadians(2),0,1);
 
@@ -350,6 +378,9 @@ public class GFMovement
         }
         movement_x *= errorTurnSoScaleDownMovement;
         movement_y *= errorTurnSoScaleDownMovement;
+        BotLog.logD("x after turn error", movement_x+"");
+        BotLog.logD("y after turn error", movement_y+"");
+
 
         movementResult r = new movementResult(relativePointAngle);
         return r;
@@ -395,28 +426,38 @@ public class GFMovement
         }
     }
 
+    private static void allComponentsMinPowerGoTo() {
+        if(Math.abs(movement_x) > Math.abs(movement_y)){
+            if(Math.abs(movement_x) > Math.abs(movement_turn)){
+                movement_x = minPower(movement_x,0.2);
+            }else{
+                movement_turn = minPower(movement_turn,0.11);
+            }
+        }else{
+            if(Math.abs(movement_y) > Math.abs(movement_turn)){
+                movement_y = minPower(movement_y, 0.11);
+            }else{
+                movement_turn = minPower(movement_turn,0.11);
+            }
+        }
+    }
 
-    public static double minPower(double val, double min)
-    {
-        if (val >= 0 && val <= min)
-        {
+
+    public static double minPower(double val, double min){
+        if(val >= 0 && val <= min){
             return min;
         }
-        if (val < 0 && val > -min)
-        {
+        if(val < 0 && val > -min){
             return -min;
         }
         return val;
     }
 
-    static class myPoint
-    {
+    static class myPoint{
         public double x;
         public double y;
         public boolean onLine;
-
-        public myPoint(double X, double Y, boolean isOnLine)
-        {
+        public myPoint(double X, double Y, boolean isOnLine){
             x = X;
             y = Y;
             onLine = isOnLine;
@@ -432,6 +473,7 @@ public class GFMovement
         followCurveIndex = 0;
     }
 
+    //TODO figured out if this did anything in johns code
     public static pointWithIndex clippedToPath;
     public static int segment;
     public static ArrayList<CurvePoint> points = new ArrayList<>();
@@ -439,7 +481,7 @@ public class GFMovement
     /**
      * follows a set of points, while maintaining a following distance
      */
-    public static boolean followCurve(ArrayList<CurvePoint> allPoints, double followAngle){
+    public static boolean followCurve(ArrayList<CurvePoint> allPoints, double followAngle, boolean constant){
 
         //now we will extend the last line so that the pointing looks smooth at the end
         ArrayList<CurvePoint> pathExtended = (ArrayList<CurvePoint>) allPoints.clone();
@@ -451,6 +493,8 @@ public class GFMovement
         //get the point to follow
         CurvePoint followMe = getFollowPointPath(pathExtended,worldXPosition,worldYPosition,
                 allPoints.get(currFollowIndex).followDistance);
+        BotLog.logD("followme x", followMe.x+"");
+        BotLog.logD("followme y", followMe.y+"");
 
 
 
@@ -472,6 +516,8 @@ public class GFMovement
         double clipedDistToFinalEnd = Math.hypot(
                 clippedToPath.x-allPoints.get(allPoints.size()-1).x,
                 clippedToPath.y-allPoints.get(allPoints.size()-1).y);
+        BotLog.logD("clipped dist to end", clipedDistToFinalEnd+"");
+
 
 
 
@@ -496,13 +542,19 @@ public class GFMovement
         //if our follow angle is different, point differently
         currFollowAngle += subtractAngles(followAngle,Math.toRadians(90));
 
+        if (constant){
+            currFollowAngle = followAngle;
+        }
         movementResult result = pointAngle(currFollowAngle,allPoints.get(currFollowIndex).turnSpeed,Math.toRadians(45));
+
         movement_x *= 1 - Range.clip(Math.abs(result.turnDelta_rad) / followMe.slowDownTurnRadians,0,followMe.slowDownTurnAmount);
         movement_y *= 1 - Range.clip(Math.abs(result.turnDelta_rad) / followMe.slowDownTurnRadians,0,followMe.slowDownTurnAmount);
+        BotLog.logD("x at end of followcurve", movement_x+"");
+        BotLog.logD("y at end of followcurve", movement_y+"");
 
-
-
-        return clipedDistToFinalEnd < 10;//if we are less than 10 cm to the target, return true
+        BotLog.logD("world rad", worldAngle_rad+"");
+        BotLog.logD("follow angle", currFollowAngle+"");
+        return (clipedDistToFinalEnd < 3 && Math.abs(AngleWrap(currFollowAngle-worldAngle_rad))<0.04);//if we are less than 10 cm to the target, return true
     }
 
 
@@ -513,8 +565,7 @@ public class GFMovement
      * @param secondPoint
      * @return a new curve point that is a replacement for the second point
      */
-    private static CurvePoint extendLine(CurvePoint firstPoint, CurvePoint secondPoint, double distance)
-    {
+    private static CurvePoint extendLine(CurvePoint firstPoint, CurvePoint secondPoint, double distance) {
 
         /**
          * Since we are pointing to this point, extend the line if it is the last line
@@ -529,9 +580,9 @@ public class GFMovement
          */
 
         //get the angle of this line
-        double lineAngle = Math.atan2(secondPoint.y - firstPoint.y, secondPoint.x - firstPoint.x);
+        double lineAngle = Math.atan2(secondPoint.y - firstPoint.y,secondPoint.x - firstPoint.x);
         //get this line's length
-        double lineLength = Math.hypot(secondPoint.x - firstPoint.x, secondPoint.y - firstPoint.y);
+        double lineLength = Math.hypot(secondPoint.x - firstPoint.x,secondPoint.y - firstPoint.y);
         //extend the line by 1.5 pointLengths so that we can still point to it when we
         //are at the end
         double extendedLineLength = lineLength + distance;
