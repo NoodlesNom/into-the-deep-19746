@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -8,7 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.MiniPID;
-
+@Config
 public class Lift extends Subsystem {
 
     // Hardware
@@ -46,13 +47,13 @@ public class Lift extends Subsystem {
     // private final double I = 0.00003;                 // integral scaling
     // private final double D = 0.0009;                  // derivative scaling
 
-    private final double P = 0.0075 / 1 ;
-    private final double I = 0.0015 / 1;
-    private final double D = 0.045 / 1;
-    private final double F = 0.0002;
+    public static double P = 0.0075 / 1 ;
+    public static double I = 0.0015 / 1;
+    public static double D = 0.045 / 1;
+    public static double F = 0.0002;
     private double vF = F;
-    public final double MAX_LIFT_PWR = 1;
-    public final double MIN_LIFT_PWR = -1;
+    public static double MAX_LIFT_PWR = 1;
+    public static double MIN_LIFT_PWR = -1;
 
     // This are from Center Stage (no external encoder)
     //    private final double P = 0.0075 / 1.3;
@@ -68,7 +69,7 @@ public class Lift extends Subsystem {
     // 720 gives us second set line bonus.
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-    private int[] liftPositions = new int[]{1,350,520,1400,1500};
+    private int[] liftPositions = new int[]{1,150,300,600,850};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
 
     public final double SAFE_HEIGHT = 200;

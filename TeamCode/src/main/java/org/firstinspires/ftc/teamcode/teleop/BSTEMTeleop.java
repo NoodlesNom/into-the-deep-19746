@@ -278,17 +278,17 @@ public class BSTEMTeleop extends OpMode {
             }
         }
         // HANG
-        if (gamepad1.dpad_up){
-            robot.mHang.setScrewOpenLoop(1);
-
-        }else if(gamepad1.dpad_down) {
-            robot.mHang.setScrewOpenLoop(-1);
-            hanging = true;
-        }else if (hanging){
-            robot.mHang.setScrewOpenLoop(-0.05);
-        }else{
-            robot.mHang.stop();
-        }
+//        if (gamepad1.dpad_up){
+//            robot.mHang.setScrewOpenLoop(1);
+//
+//        }else if(gamepad1.dpad_down) {
+//            robot.mHang.setScrewOpenLoop(-1);
+//            hanging = true;
+//        }else if (hanging){
+//            robot.mHang.setScrewOpenLoop(-0.05);
+//        }else{
+//            robot.mHang.stop();
+//        }
 
 
         // update robot

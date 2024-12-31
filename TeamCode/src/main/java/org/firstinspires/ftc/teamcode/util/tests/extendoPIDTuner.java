@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
+import org.firstinspires.ftc.teamcode.Subsystems.Intake;
 import org.firstinspires.ftc.teamcode.Subsystems.Lift;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.StickyButton;
@@ -13,8 +14,8 @@ import org.firstinspires.ftc.teamcode.util.StickyButton;
 import java.util.concurrent.TimeUnit;
 
 // @Disabled
-@TeleOp(name = "liftPIDTuner")
-public class liftPIDTuner extends LinearOpMode {
+@TeleOp(name = "extendoPIDTuner")
+public class extendoPIDTuner extends LinearOpMode {
 
     // * Xbox/PS4 Button - Motor
     // *   Y / Δ         - Up 1 Idx
@@ -34,78 +35,78 @@ public class liftPIDTuner extends LinearOpMode {
     // *                \.          .'
     // *                  \________/
     // *
-    private StickyButton liftIdxIncStickyButton = new StickyButton();
-    private StickyButton liftIdxDecStickyButton = new StickyButton();
+    private StickyButton extendoIdxIncStickyButton = new StickyButton();
+    private StickyButton extendoIdxDecStickyButton = new StickyButton();
 
-    private StickyButton liftIncStickyButton = new StickyButton();
-    private StickyButton liftDecStickyButton = new StickyButton();
+    private StickyButton extendoIncStickyButton = new StickyButton();
+    private StickyButton extendoDecStickyButton = new StickyButton();
 
-    private StickyButton liftMiniIncStickyButton = new StickyButton();
-    private StickyButton liftMiniDecStickyButton = new StickyButton();
+    private StickyButton extendoMiniIncStickyButton = new StickyButton();
+    private StickyButton extendoMiniDecStickyButton = new StickyButton();
 
-    private StickyButton liftResetStickyButton = new StickyButton();
-    private StickyButton liftModeStickyButton = new StickyButton();
+    private StickyButton extendoResetStickyButton = new StickyButton();
+    private StickyButton extendoModeStickyButton = new StickyButton();
 
-    private Lift lift;
+    private Intake extendo;
     private ElapsedTime myTimer;
 
-    private int liftTicks = 1;
-    private int liftTicksMax = 900;
+    private int extendoTicks = 1;
+    private int extendoTicksMax = 900;
     private int smallTicks = 100;
     private int bigTicks = 200;
-    private int liftPosIdx = 0;
+    private int extendoPosIdx = 0;
     private boolean idxMode = true;
 
     private Deadline telemTimer = new Deadline(100, TimeUnit.MILLISECONDS);
 
     private void mapControls() {
 
-        liftResetStickyButton.update(gamepad1.left_bumper);
-        liftPosIdx = liftResetStickyButton.getState() ? 0 : liftPosIdx;
-        liftTicks = liftResetStickyButton.getState() ? 0 : liftTicks;
+        extendoResetStickyButton.update(gamepad1.left_bumper);
+        extendoPosIdx = extendoResetStickyButton.getState() ? 0 : extendoPosIdx;
+        extendoTicks = extendoResetStickyButton.getState() ? 0 : extendoTicks;
 
-        liftModeStickyButton.update(gamepad1.right_bumper);
-        idxMode = liftModeStickyButton.getState() ? !idxMode : idxMode;
+        extendoModeStickyButton.update(gamepad1.right_bumper);
+        idxMode = extendoModeStickyButton.getState() ? !idxMode : idxMode;
 
         if(idxMode)
         {
 
-            // Manage the LiftPosIdx controls
-            liftIdxIncStickyButton.update(gamepad1.y);
-            liftPosIdx += liftIdxIncStickyButton.getState() ? 1 : 0;
+            // Manage the extendoPosIdx controls
+            extendoIdxIncStickyButton.update(gamepad1.y);
+            extendoPosIdx += extendoIdxIncStickyButton.getState() ? 1 : 0;
 
-            liftIdxDecStickyButton.update(gamepad1.a);
-            liftPosIdx -= liftIdxDecStickyButton.getState() ? 1 : 0;
+            extendoIdxDecStickyButton.update(gamepad1.a);
+            extendoPosIdx -= extendoIdxDecStickyButton.getState() ? 1 : 0;
 
             // Bounds check
-            liftPosIdx = Range.clip(liftPosIdx, 0, Lift.LIFT_POS.MAX.getVal());
+            extendoPosIdx = Range.clip(extendoPosIdx, 0, Intake.EXTEND_POS.INTAKING.getVal());
         }
         else
         {
-            liftMiniIncStickyButton.update(gamepad1.dpad_right);
-            liftTicks += liftMiniIncStickyButton.getState() ? 100 : 0;
+            extendoMiniIncStickyButton.update(gamepad1.dpad_right);
+            extendoTicks += extendoMiniIncStickyButton.getState() ? 100 : 0;
 
-            liftMiniDecStickyButton.update(gamepad1.dpad_left);
-            liftTicks -= liftMiniDecStickyButton.getState() ? 100 : 0;
+            extendoMiniDecStickyButton.update(gamepad1.dpad_left);
+            extendoTicks -= extendoMiniDecStickyButton.getState() ? 100 : 0;
 
-            liftIncStickyButton.update(gamepad1.dpad_up);
-            liftTicks += liftIncStickyButton.getState() ? 200 : 0;
+            extendoIncStickyButton.update(gamepad1.dpad_up);
+            extendoTicks += extendoIncStickyButton.getState() ? 200 : 0;
 
-            liftDecStickyButton.update(gamepad1.dpad_down);
-            liftTicks -= liftDecStickyButton.getState() ? 200 : 0;
+            extendoDecStickyButton.update(gamepad1.dpad_down);
+            extendoTicks -= extendoDecStickyButton.getState() ? 200 : 0;
 
             // Bounds check
-            liftTicks = Range.clip(liftTicks, 1, liftTicksMax);
+            extendoTicks = Range.clip(extendoTicks, 1, extendoTicksMax);
         }
     }
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        lift = new Lift(hardwareMap);
+        extendo = new Intake(hardwareMap);
         myTimer = new ElapsedTime();
 
-        lift.teleopInit();
+        extendo.teleopInit();
 
         telemetry.addLine("Press play to begin the debugging opmode");
         telemetry.update();
@@ -120,7 +121,7 @@ public class liftPIDTuner extends LinearOpMode {
 
         while (!isStopRequested()) {
             mapControls();
-            telemetry.addLine("Press buttons to adjust lift position");
+            telemetry.addLine("Press buttons to adjust extendo position");
             telemetry.addLine();
             telemetry.addLine("Xbox/PS4 Button - Action");
             telemetry.addLine("lft_bumper: reset position to 0");
@@ -131,35 +132,35 @@ public class liftPIDTuner extends LinearOpMode {
                 telemetry.addLine("Idx Mode");
                 telemetry.addLine("Y         : +1 Idx");
                 telemetry.addLine("A         : -1 Idx");
-                telemetry.addData("lift Pos   : ", liftPosIdx);
+                telemetry.addData("extendo Pos   : ", extendoPosIdx);
             } else {
                 telemetry.addLine("Ticks Mode");
                 telemetry.addLine(String.format("dpad_right: +%4d ticks", smallTicks));
                 telemetry.addLine(String.format("dpad_left : -%4d ticks", smallTicks));
                 telemetry.addLine(String.format("dpad_up   : +%4d ticks", bigTicks));
                 telemetry.addLine(String.format("dpad_down : -%4d ticks", bigTicks));
-                telemetry.addData("lift Ticks : ", liftTicks);
+                telemetry.addData("extendo Ticks : ", extendoTicks);
             }
 
-            telemetry.addData("lift Enc: ", lift.getLiveLiftPosition());
+            telemetry.addData("extendo Enc: ", extendo.getLiveExtendoPosition());
             telemetry.addLine();
 
             telemetry.update();
 
             if (idxMode)
             {
-                lift.setTargetPos(liftPosIdx, myTimer.seconds());
+                extendo.setExtendoPos(extendoPosIdx, myTimer.seconds());
             } else {
-                lift.setTargetTicks(liftTicks, myTimer.seconds());
+                extendo.setExtendoTicks(extendoTicks, myTimer.seconds());
             }
-            lift.update(myTimer.seconds());
+            extendo.update(myTimer.seconds());
 
             boolean debug = true;
             if(debug)
             {
                 if( telemTimer.hasExpired() )
                 {
-                    BotLog.logD("LiftTuner", lift.getTelem(myTimer.seconds()));
+                    BotLog.logD("extendoTuner", extendo.getTelem(myTimer.seconds()));
                     telemTimer.reset();
                 }
             }

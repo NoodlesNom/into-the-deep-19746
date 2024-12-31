@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -9,7 +10,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.MiniPID;
-
+@Config
 public class Intake extends Subsystem {
 
     // Hardware
@@ -27,13 +28,13 @@ public class Intake extends Subsystem {
     private int PIDSkipCount = 0;
     private double prevPIDTime = 0.0;
     private MiniPID pid;
-    private final double P = 0.0075 / 1 ;
-    private final double I = 0.0015 / 1;
-    private final double D = 0.045 / 1;
-    private final double F = 0.0002;
+    public static double P = 0.0075 / 1 ;
+    public static double I = 0.0015 / 1;
+    public static double D = 0.045 / 1;
+    public static double F = 0.0002;
     private double vF = F;
-    public final double MAX_LIFT_PWR = 1;
-    public final double MIN_LIFT_PWR = -0.6;
+    public static double MAX_EXTENDO_PWR = 1;
+    public static double MIN_EXTENDO_PWR = -1;
     private Servo gate;
 
     // Hardware states
@@ -139,7 +140,7 @@ public class Intake extends Subsystem {
 
         pid = new MiniPID(P, I, D, F);
         pid.reset();
-        pid.setOutputLimits(MIN_LIFT_PWR, MAX_LIFT_PWR);
+        pid.setOutputLimits(MIN_EXTENDO_PWR, MAX_EXTENDO_PWR);
         pid.setOutputRampRate(1);
         vF = F;
         pid.setPID(P, I, D, vF);
@@ -224,6 +225,22 @@ public class Intake extends Subsystem {
         //BotLog.logD(" Intake 1 :: ", "Pos %d, %5.2f", pos, intakePos[mPeriodicIO.pivot_pos]  );
     }
 
+    public void setExtendoTicks(int tgtTicksArg, double timestamp)
+    {
+        mExtendoControlState = ExtendoControlState.PID_CONTROL;
+
+        if (tgtTicksArg != tgtTicks)
+        {
+            tgtTicks = tgtTicksArg;
+
+            PIDCount = 0;
+            PIDSkipCount = 0;
+            nextPID = timestamp;
+            pid.reset();
+            updateExtendoPID(timestamp);
+        }
+    }
+
     public  void setExtendoPos(int tgtPosArg, double timestamp)
     {
         tgtPosArg = Math.min(tgtPosArg,(extendoPos.length-1));
@@ -251,7 +268,7 @@ public class Intake extends Subsystem {
         // Try to re-sync on the next call
         if ((timestamp < prevPIDTime) ||  ((timestamp - prevPIDTime) > (PIDTime * 25.0)))
         {
-            BotLog.logD("LIFTPID :: ", "Unexpected times %5.2f, %5.2f, %5.2f", timestamp, prevPIDTime, PIDTime);
+            BotLog.logD("EXTENDOPID :: ", "Unexpected times %5.2f, %5.2f, %5.2f", timestamp, prevPIDTime, PIDTime);
 
             nextPID = timestamp + PIDTime;
             prevPIDTime = timestamp;
@@ -289,7 +306,7 @@ public class Intake extends Subsystem {
                     power = 0.0;
                 }
 
-                // power = Range.clip(power, -MAX_LIFT_UP_PWR, MAX_LIFT_UP_PWR);
+                // power = Range.clip(power, -MAX_EXTENDO_UP_PWR, MAX_EXTENDO_UP_PWR);
                 // We want to avoid an oscillation around '0' so we will ignore power < +/2.5%
                 if(Math.abs(power) < 0.025 )
                 {
@@ -311,6 +328,10 @@ public class Intake extends Subsystem {
         }
     }
 
+    public double getLiveExtendoPosition()
+    {
+        return extendo.getCurrentPosition();
+    }
     public  void setGatePos(int pos)
     {
         mPeriodicIO.gate_pos = pos;
@@ -326,15 +347,15 @@ public class Intake extends Subsystem {
     {
         return mPeriodicIO.intake_current;
     }
-    public Lift.LiftState getIntakeState()
+    public ExtendoState getExtendoState()
     {
         if (closeEnough())
         {
-            return Lift.LiftState.CLOSE_ENOUGH;
+            return ExtendoState.CLOSE_ENOUGH;
         }
         else
         {
-            return Lift.LiftState.MOVING;
+            return ExtendoState.MOVING;
         }
     }
     public boolean closeEnough()
