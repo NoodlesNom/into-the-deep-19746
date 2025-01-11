@@ -28,10 +28,10 @@ public class Intake extends Subsystem {
     private int PIDSkipCount = 0;
     private double prevPIDTime = 0.0;
     private MiniPID pid;
-    public static double P = 0.0075 / 1 ;
+    public static double P = 0.0075/ 1 ;
     public static double I = 0.0015 / 1;
     public static double D = 0.045 / 1;
-    public static double F = 0.0002;
+    public static double F = 0;
     private double vF = F;
     public static double MAX_EXTENDO_PWR = 1;
     public static double MIN_EXTENDO_PWR = -1;
@@ -40,7 +40,7 @@ public class Intake extends Subsystem {
     // Hardware states
     private PeriodicIO mPeriodicIO;
 
-    private double[] extendoPos = new double[] {0,50,150, 700};
+    private double[] extendoPos = new double[] {1,170,350, 550};
 
     public enum EXTEND_POS
     {
@@ -64,13 +64,15 @@ public class Intake extends Subsystem {
             return val;
         }
     }
-    private double[] pivotPos = new double[] {0, 30.0/355, 180.0/355};
+    private double[] pivotPos = new double[] {0, 0.53, 0.03, 0.15, 0.38, 0.36};
     public enum PIVOT_POS
     {
         //Constants with values
-        STOWED(0),
         INTAKING(1),
-        LAUNCH(2);
+        LAUNCH(2),
+        IDLE(3),
+        TRANSFER(4),
+        TRAP(5);
 
         //Instance variable
         private final int val;
@@ -86,7 +88,7 @@ public class Intake extends Subsystem {
             return val;
         }
     }
-    private double[] gatePos = new double[] {0, 30.0/355, 90.0/355};
+    private double[] gatePos = new double[] {0.89, 0.81, 0.2};
     public enum GATE_POS
     {
         //Constants with values
@@ -131,17 +133,20 @@ public class Intake extends Subsystem {
         // motors
         intake = map.get(DcMotorEx.class, "intake");
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake.setDirection(DcMotorEx.Direction.REVERSE);
+
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         extendo = map.get(DcMotorEx.class, "extendo");
         extendo.setDirection(DcMotorEx.Direction.REVERSE);
+        extendo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         extendo.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
         pid = new MiniPID(P, I, D, F);
         pid.reset();
         pid.setOutputLimits(MIN_EXTENDO_PWR, MAX_EXTENDO_PWR);
-        pid.setOutputRampRate(1);
+        pid.setOutputRampRate(0.5);
         vF = F;
         pid.setPID(P, I, D, vF);
 
@@ -162,18 +167,19 @@ public class Intake extends Subsystem {
     @Override
     public void autoInit()
     {
-        setPivotPos(PIVOT_POS.STOWED.getVal());
     }
 
     @Override
     public void teleopInit()
     {
-
+        setGatePos(GATE_POS.CATCH.getVal());
+        setPivotPos(PIVOT_POS.IDLE.getVal());
     }
 
     @Override
     public void update(double timestamp)
     {
+
         double startTime = 0.0;
         if (debugLoopTime)
         {
@@ -206,6 +212,7 @@ public class Intake extends Subsystem {
 
     public void setIntakeOpenLoop(double power)
     {
+
         mPeriodicIO.intake_demand = power;
     }
 
@@ -247,6 +254,7 @@ public class Intake extends Subsystem {
         double tgtPosArgTicks = extendoPos[tgtPosArg];
 
         mExtendoControlState = ExtendoControlState.PID_CONTROL;
+
         mPeriodicIO.extendo_pos = tgtPosArg;
 
         if (tgtPosArgTicks != tgtTicks)
@@ -332,6 +340,19 @@ public class Intake extends Subsystem {
     {
         return extendo.getCurrentPosition();
     }
+    public double getExtendoPosition()
+    {
+        return mPeriodicIO.lastExtendoTicks;
+    }
+
+    public double getTargetExtendoPosition()
+    {
+        return extendoPos[mPeriodicIO.extendo_pos];
+    }
+    public double getTargetExtendoIdx()
+    {
+        return mPeriodicIO.extendo_pos;
+    }
     public  void setGatePos(int pos)
     {
         mPeriodicIO.gate_pos = pos;
@@ -343,9 +364,13 @@ public class Intake extends Subsystem {
         return intake.getPower();
     }
 
-    public double getMotorCurrent()
+    public double getIntakeCurrent()
     {
         return mPeriodicIO.intake_current;
+    }
+    public double getExtendoCurrent()
+    {
+        return mPeriodicIO.extendo_current;
     }
     public ExtendoState getExtendoState()
     {
@@ -363,12 +388,20 @@ public class Intake extends Subsystem {
         return Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20 && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
     }
 
+    public boolean past()
+    {
+        double prevpos = extendoPos[mPeriodicIO.prevExtend_pos];
+        double currpos = extendoPos[mPeriodicIO.extendo_pos];
+        return ((prevpos<currpos&&mPeriodicIO.lastExtendoTicks>currpos)||(prevpos>currpos&&mPeriodicIO.lastExtendoTicks<currpos));
+    }
+
     //public void setReadVelocity(boolean on) { readVelocity = on; }
     // With deadwheels, we are reclaiming the intake encoder so no more velocity
 
     public void readPeriodicInputs(double timestamp)
     {
         mPeriodicIO.intake_current = intake.getCurrent(CurrentUnit.AMPS);
+        mPeriodicIO.extendo_current = extendo.getCurrent(CurrentUnit.AMPS);
         mPeriodicIO.prevLastExtendoTicks = mPeriodicIO.lastExtendoTicks;
         mPeriodicIO.prevLastExtendoVel = mPeriodicIO.lastExtendoVel;
 
@@ -421,7 +454,8 @@ public class Intake extends Subsystem {
         public int pivot_pos;
         public int gate_pos;
 
-        public double intake_current;
+        public double intake_current = 0;
+        public double extendo_current = 0;
         public int extendo_pos;
 
         public double lastExtendoTicks;
@@ -430,7 +464,7 @@ public class Intake extends Subsystem {
         public double prevLastExtendoTicks;
         public double prevLastExtendoVel;
         public double extendo_demand;
-        public double prevextendo_demand;
+        public double prevextendo_demand = -1;
         public double intake_demand;
 
         public int prevPivot_pos = -1;

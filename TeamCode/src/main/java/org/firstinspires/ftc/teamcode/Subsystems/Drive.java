@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDrivePeriodic;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 
@@ -88,16 +89,20 @@ public class Drive extends Subsystem {
 
         drive.mPeriodicIO.estimate = drive.updatePoseEstimate();
 
-        drive.mPeriodicIO.volts = drive.voltageSensor.getVoltage();
+        drive.mPeriodicIO.flcurrent = drive.leftFront.getCurrent(CurrentUnit.AMPS);
+        drive.mPeriodicIO.frcurrent = drive.rightFront.getCurrent(CurrentUnit.AMPS);
+        drive.mPeriodicIO.blcurrent = drive.leftBack.getCurrent(CurrentUnit.AMPS);
+        drive.mPeriodicIO.brcurrent = drive.rightBack.getCurrent(CurrentUnit.AMPS);
+
 
     }
 
     @Override
     public void writePeriodicOutputs() {
-        drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr*0.8979);
-        drive.leftBack.setPower(drive.mPeriodicIO.lr_pwr);
-        drive.rightBack.setPower(drive.mPeriodicIO.rr_pwr*0.8684);
-        drive.rightFront.setPower(drive.mPeriodicIO.rf_pwr*0.8696);
+        drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr*1);
+        drive.leftBack.setPower(drive.mPeriodicIO.lr_pwr*1);
+        drive.rightBack.setPower(drive.mPeriodicIO.rr_pwr*1);
+        drive.rightFront.setPower(drive.mPeriodicIO.rf_pwr*1);
 
     }
 }

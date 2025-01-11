@@ -5,7 +5,9 @@ import androidx.annotation.NonNull;
 import com.acmerobotics.dashboard.canvas.Canvas;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.*;
+import com.acmerobotics.roadrunner.AccelConstraint;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.Actions;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
 import com.acmerobotics.roadrunner.DualNum;
 import com.acmerobotics.roadrunner.HolonomicController;
@@ -14,13 +16,20 @@ import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.MotorFeedforward;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Pose2dDual;
+import com.acmerobotics.roadrunner.PoseVelocity2d;
+import com.acmerobotics.roadrunner.PoseVelocity2dDual;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
+import com.acmerobotics.roadrunner.ProfileParams;
+import com.acmerobotics.roadrunner.Rotation2d;
 import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.TimeTrajectory;
 import com.acmerobotics.roadrunner.TimeTurn;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TrajectoryBuilderParams;
 import com.acmerobotics.roadrunner.TurnConstraints;
 import com.acmerobotics.roadrunner.Twist2dDual;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.Vector2dDual;
 import com.acmerobotics.roadrunner.VelConstraint;
 import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
 import com.acmerobotics.roadrunner.ftc.Encoder;
@@ -40,22 +49,19 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
+import org.firstinspires.ftc.teamcode.autonomous.rr.Drawing;
+import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.Localizer;
 import org.firstinspires.ftc.teamcode.autonomous.rr.messages.DriveCommandMessage;
 import org.firstinspires.ftc.teamcode.autonomous.rr.messages.MecanumCommandMessage;
 import org.firstinspires.ftc.teamcode.autonomous.rr.messages.MecanumLocalizerInputsMessage;
 import org.firstinspires.ftc.teamcode.autonomous.rr.messages.PoseMessage;
-import org.firstinspires.ftc.teamcode.autonomous.rr.Drawing;
-import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.Localizer;
-import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.TwoDeadWheelLocalizer;
 
-import java.lang.Math;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 @Config
-public final class MecanumDrivePeriodic {
-    public PeriodicIO mPeriodicIO;
+public class MecanumDriveOld {
     public static class Params {
         // IMU orientation
         // TODO: fill in these values based on
@@ -63,17 +69,17 @@ public final class MecanumDrivePeriodic {
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
                 RevHubOrientationOnRobot.LogoFacingDirection.UP;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         // drive model parameters
-        public double inPerTick = 0.00292800628;
-        public double lateralInPerTick = 0.00231;
-        public double trackWidthTicks = 4587;
+        public double inPerTick = 1;
+        public double lateralInPerTick = 0.7247936837512365;
+        public double trackWidthTicks = 13.441437;
 
         // feedforward paramet  ers (in tick units)
-        public double kS = 1.23;
-        public double kV = 0.00035;
-        public double kA = 0.000089;
+        public double kS = 0.8;
+        public double kV = 0.1272461710128284;
+        public double kA = 0.032;
 
         // path profile parameters (in inches)
         public double maxWheelVel = 50;
@@ -85,13 +91,13 @@ public final class MecanumDrivePeriodic {
         public double maxAngAccel = Math.PI;
 
         // path controller gains
-        public double axialGain = 8;
-        public double lateralGain = 8;
-        public double headingGain = 8; // shared with turn
+        public double axialGain = 10;
+        public double lateralGain = 10;
+        public double headingGain = 10; // shared with turn
 
-        public double axialVelGain = 1;
-        public double lateralVelGain = 1;
-        public double headingVelGain = 1.2; // shared with turn
+        public double axialVelGain = 0;
+        public double lateralVelGain = 0;
+        public double headingVelGain = 0 ; // shared with turn
     }
 
     public static Params PARAMS = new Params();
@@ -113,12 +119,12 @@ public final class MecanumDrivePeriodic {
 
     public final VoltageSensor voltageSensor;
 
-    public final LazyImu lazyImu;
+    public LazyImu lazyImu;
 
     public final Localizer localizer;
     public Pose2d pose;
 
-    private final LinkedList<Pose2d> poseHistory = new LinkedList<>();
+    public final LinkedList<Pose2d> poseHistory = new LinkedList<>();
 
     private final DownsampledWriter estimatedPoseWriter = new DownsampledWriter("ESTIMATED_POSE", 50_000_000);
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
@@ -134,10 +140,10 @@ public final class MecanumDrivePeriodic {
         private boolean initialized;
 
         public DriveLocalizer() {
-            leftFront = new OverflowEncoder(new RawEncoder(MecanumDrivePeriodic.this.leftFront));
-            leftBack = new OverflowEncoder(new RawEncoder(MecanumDrivePeriodic.this.leftBack));
-            rightBack = new OverflowEncoder(new RawEncoder(MecanumDrivePeriodic.this.rightBack));
-            rightFront = new OverflowEncoder(new RawEncoder(MecanumDrivePeriodic.this.rightFront));
+            leftFront = new OverflowEncoder(new RawEncoder(MecanumDriveOld.this.leftFront));
+            leftBack = new OverflowEncoder(new RawEncoder(MecanumDriveOld.this.leftBack));
+            rightBack = new OverflowEncoder(new RawEncoder(MecanumDriveOld.this.rightBack));
+            rightFront = new OverflowEncoder(new RawEncoder(MecanumDriveOld.this.rightFront));
 
             imu = lazyImu.get();
 
@@ -148,7 +154,7 @@ public final class MecanumDrivePeriodic {
         }
 
         @Override
-        public  Twist2dDual<Time> update() {
+        public Twist2dDual<Time> update() {
             PositionVelocityPair leftFrontPosVel = leftFront.getPositionAndVelocity();
             PositionVelocityPair leftBackPosVel = leftBack.getPositionAndVelocity();
             PositionVelocityPair rightBackPosVel = rightBack.getPositionAndVelocity();
@@ -211,8 +217,7 @@ public final class MecanumDrivePeriodic {
         }
     }
 
-    public MecanumDrivePeriodic(HardwareMap hardwareMap, Pose2d pose) {
-        mPeriodicIO = new PeriodicIO();
+    public MecanumDriveOld(HardwareMap hardwareMap, Pose2d pose) {
         this.pose = pose;
 
         LynxFirmware.throwIfModulesAreOutdated(hardwareMap);
@@ -237,7 +242,6 @@ public final class MecanumDrivePeriodic {
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setDirection(DcMotor.Direction.REVERSE);
-
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
         lazyImu = new LazyImu(hardwareMap, "imuCH", new RevHubOrientationOnRobot(
@@ -245,8 +249,7 @@ public final class MecanumDrivePeriodic {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick);
-
+        localizer = new DriveLocalizer();
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -260,10 +263,10 @@ public final class MecanumDrivePeriodic {
             maxPowerMag = Math.max(maxPowerMag, power.value());
         }
 
-        mPeriodicIO.lf_pwr = wheelVels.leftFront.get(0) / maxPowerMag;
-        mPeriodicIO.lr_pwr = wheelVels.leftBack.get(0) / maxPowerMag;
-        mPeriodicIO.rf_pwr = wheelVels.rightFront.get(0) / maxPowerMag;
-        mPeriodicIO.rr_pwr = wheelVels.rightBack.get(0) / maxPowerMag;
+        leftFront.setPower(wheelVels.leftFront.get(0) / maxPowerMag);
+        leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag);
+        rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag);
+        rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag);
     }
 
     public final class FollowTrajectoryAction implements Action {
@@ -298,10 +301,10 @@ public final class MecanumDrivePeriodic {
             }
 
             if (t >= timeTrajectory.duration) {
-                mPeriodicIO.lf_pwr =0 ;
-                mPeriodicIO.lr_pwr =0;
-                mPeriodicIO.rf_pwr =0;
-                mPeriodicIO.rr_pwr =0;
+                leftFront.setPower(0);
+                leftBack.setPower(0);
+                rightBack.setPower(0);
+                rightFront.setPower(0);
 
                 return false;
             }
@@ -309,17 +312,17 @@ public final class MecanumDrivePeriodic {
             Pose2dDual<Time> txWorldTarget = timeTrajectory.get(t);
             targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
-            PoseVelocity2d robotVelRobot = mPeriodicIO.estimate;
-            PoseVelocity2dDual<Time> command= new HolonomicController(
+            PoseVelocity2d robotVelRobot = updatePoseEstimate();
+
+            PoseVelocity2dDual<Time> command = new HolonomicController(
                     PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
                     PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
             )
                     .compute(txWorldTarget, pose, robotVelRobot);
             driveCommandWriter.write(new DriveCommandMessage(command));
 
-
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(command);
-            double voltage = mPeriodicIO.volts;
+            double voltage = voltageSensor.getVoltage();
 
             final MotorFeedforward feedforward = new MotorFeedforward(PARAMS.kS,
                     PARAMS.kV / PARAMS.inPerTick, PARAMS.kA / PARAMS.inPerTick);
@@ -331,10 +334,10 @@ public final class MecanumDrivePeriodic {
                     voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
             ));
 
-            mPeriodicIO.lf_pwr = leftFrontPower;
-            mPeriodicIO.lr_pwr = leftBackPower;
-            mPeriodicIO.rf_pwr = rightFrontPower;
-            mPeriodicIO.rr_pwr = rightBackPower;
+            leftFront.setPower(leftFrontPower);
+            leftBack.setPower(leftBackPower);
+            rightBack.setPower(rightBackPower);
+            rightFront.setPower(rightFrontPower);
 
             p.put("x", pose.position.x);
             p.put("y", pose.position.y);
@@ -390,10 +393,10 @@ public final class MecanumDrivePeriodic {
             }
 
             if (t >= turn.duration) {
-                mPeriodicIO.lf_pwr =0 ;
-                mPeriodicIO.lr_pwr =0;
-                mPeriodicIO.rf_pwr =0;
-                mPeriodicIO.rr_pwr =0;
+                leftFront.setPower(0);
+                leftBack.setPower(0);
+                rightBack.setPower(0);
+                rightFront.setPower(0);
 
                 return false;
             }
@@ -401,20 +404,17 @@ public final class MecanumDrivePeriodic {
             Pose2dDual<Time> txWorldTarget = turn.get(t);
             targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
+            PoseVelocity2d robotVelRobot = updatePoseEstimate();
 
-
-
-            PoseVelocity2d robotVelRobot = mPeriodicIO.estimate;
-            PoseVelocity2dDual<Time> command= new HolonomicController(
+            PoseVelocity2dDual<Time> command = new HolonomicController(
                     PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
                     PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
             )
                     .compute(txWorldTarget, pose, robotVelRobot);
             driveCommandWriter.write(new DriveCommandMessage(command));
 
-
             MecanumKinematics.WheelVelocities<Time> wheelVels = kinematics.inverse(command);
-            double voltage = mPeriodicIO.volts;
+            double voltage = voltageSensor.getVoltage();
             final MotorFeedforward feedforward = new MotorFeedforward(PARAMS.kS,
                     PARAMS.kV / PARAMS.inPerTick, PARAMS.kA / PARAMS.inPerTick);
             double leftFrontPower = feedforward.compute(wheelVels.leftFront) / voltage;
@@ -425,10 +425,10 @@ public final class MecanumDrivePeriodic {
                     voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
             ));
 
-            mPeriodicIO.lf_pwr = leftFrontPower;
-            mPeriodicIO.lr_pwr = leftBackPower;
-            mPeriodicIO.rf_pwr = rightFrontPower;
-            mPeriodicIO.rr_pwr = rightBackPower;
+            leftFront.setPower(feedforward.compute(wheelVels.leftFront) / voltage);
+            leftBack.setPower(feedforward.compute(wheelVels.leftBack) / voltage);
+            rightBack.setPower(feedforward.compute(wheelVels.rightBack) / voltage);
+            rightFront.setPower(feedforward.compute(wheelVels.rightFront) / voltage);
 
             Canvas c = p.fieldOverlay();
             drawPoseHistory(c);
@@ -497,22 +497,5 @@ public final class MecanumDrivePeriodic {
                 defaultTurnConstraints,
                 defaultVelConstraint, defaultAccelConstraint
         );
-    }
-    public static class PeriodicIO
-    {
-        //INPUTS
-        public PoseVelocity2d estimate;
-        public double flcurrent= 0;
-        public double frcurrent= 0;
-        public double blcurrent= 0;
-        public double brcurrent= 0;
-
-        public double volts;
-
-        // OUTPUTS
-        public double lf_pwr=0;
-        public double lr_pwr=0;
-        public double rf_pwr=0;
-        public double rr_pwr=0;
     }
 }

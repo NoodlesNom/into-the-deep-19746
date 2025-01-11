@@ -28,9 +28,9 @@ public class Constants {
     public static final double kDriveVelocityKd = 1;
     public static final double kDriveVelocityKf = 1;
 
-    public static double ySlipDistanceFor1CMPS = 0.2;
-    public static double xSlipDistanceFor1CMPS = 0.16;
-    public static double turnSlipAmountFor1RPS = 0.07         ; // Experimentally this is .2 but like that is just not right
+    public static double ySlipDistanceFor1CMPS = 0.22;
+    public static double xSlipDistanceFor1CMPS = 0.25;
+    public static double turnSlipAmountFor1RPS = 0.25         ; // Experimentally this is .2 but like that is just not right
 
     // Vision
     public static boolean hsv = true;

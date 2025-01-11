@@ -27,10 +27,12 @@ public class motorSpeedTuner extends LinearOpMode {
     private State auto = State.quarter;
     private double stateStartTime = 0;
 
-    public static double lf = 0.8979;
+    public static double lf = 0.98;
     public static double lr = 1;
-    public static double rf = 0.8696;
-    public static double rr = 0.8684;
+    public static double rf = 0.96;
+    double test = 0;
+    double test2 = 0;
+    public static double rr = 0.955;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -86,17 +88,20 @@ public class motorSpeedTuner extends LinearOpMode {
                             multipliers[0][2] += rfspeeds.get(i);
                             multipliers[0][3] += rrspeeds.get(i);
                         }
-                        multipliers[0][0] /= lfspeeds.size();
-                        multipliers[0][1] /= lfspeeds.size();
-                        multipliers[0][2] /= lfspeeds.size();
-                        multipliers[0][3] /= lfspeeds.size();
-                        
+                        multipliers[0][0]/= lfspeeds.size();
+                        multipliers[0][1]/= lfspeeds.size();
+                        multipliers[0][2]/= lfspeeds.size();
+                        multipliers[0][3]/= lfspeeds.size();
+                        test = multipliers[0][3];
+
+                        test2 = multipliers[0][0];
                         double min = Math.min(multipliers[0][0], Math.min(multipliers[0][1], Math.min(multipliers[0][2], multipliers[0][3])));
 
-                        multipliers[0][0] = multipliers[0][1] / multipliers[0][0];
-                        multipliers[0][1] = multipliers[0][1];
-                        multipliers[0][2] = multipliers[0][1] / multipliers[0][2];
-                        multipliers[0][3] = multipliers[0][1] / multipliers[0][3];
+
+                        multipliers[0][1] = multipliers[0][0] / multipliers[0][1];
+                        multipliers[0][2] = multipliers[0][0] / multipliers[0][2];
+                        multipliers[0][3] = multipliers[0][0] / multipliers[0][3];
+                        multipliers[0][0] = 1;
 
                         lfspeeds.clear();
                         lrspeeds.clear();
@@ -128,18 +133,18 @@ public class motorSpeedTuner extends LinearOpMode {
                             multipliers[1][2] += rfspeeds.get(i);
                             multipliers[1][3] += rrspeeds.get(i);
                         }
-                        multipliers[1][0] /= lfspeeds.size();
-                        multipliers[1][1] /= lfspeeds.size();
-                        multipliers[1][2] /= lfspeeds.size();
-                        multipliers[1][3] /= lfspeeds.size();
+                        multipliers[1][0]/= lfspeeds.size();
+                        multipliers[1][1]/= lfspeeds.size();
+                        multipliers[1][2]/= lfspeeds.size();
+                        multipliers[1][3]/= lfspeeds.size();
 
                         double min = Math.min(multipliers[1][0], Math.min(multipliers[1][1], Math.min(multipliers[1][2], multipliers[1][3])));
 
-                        multipliers[1][0] = multipliers[1][1]/ multipliers[1][0];
-                        multipliers[1][1] = multipliers[1][1];
-                        multipliers[1][2] = multipliers[1][1] / multipliers[1][2];
-                        multipliers[1][3] = multipliers[1][1] / multipliers[1][3];
 
+                        multipliers[1][1] = multipliers[1][0] / multipliers[1][1];
+                        multipliers[1][2] = multipliers[1][0] / multipliers[1][2];
+                        multipliers[1][3] = multipliers[1][0] / multipliers[1][3];
+                        multipliers[1][0] = 1;
                         lfspeeds.clear();
                         lrspeeds.clear();
                         rfspeeds.clear();
@@ -172,18 +177,18 @@ public class motorSpeedTuner extends LinearOpMode {
                             multipliers[2][2] += rfspeeds.get(i);
                             multipliers[2][3] += rrspeeds.get(i);
                         }
-                        multipliers[2][0] /= lfspeeds.size();
-                        multipliers[2][1] /= lfspeeds.size();
-                        multipliers[2][2] /= lfspeeds.size();
-                        multipliers[2][3] /= lfspeeds.size();
+                        multipliers[2][0]/= lfspeeds.size();
+                        multipliers[2][1]/= lfspeeds.size();
+                        multipliers[2][2]/= lfspeeds.size();
+                        multipliers[2][3]/= lfspeeds.size();
 
                         double min = Math.min(multipliers[2][0], Math.min(multipliers[2][1], Math.min(multipliers[2][2], multipliers[2][3])));
 
-                        multipliers[2][0] = multipliers[2][1] / multipliers[2][0];
-                        multipliers[2][1] = multipliers[2][1];
-                        multipliers[2][2] = multipliers[2][1] / multipliers[2][2];
-                        multipliers[2][3] = multipliers[2][1] / multipliers[2][3];
 
+                        multipliers[2][1] = multipliers[2][0] / multipliers[2][1];
+                        multipliers[2][2] = multipliers[2][0] / multipliers[2][2];
+                        multipliers[2][3] = multipliers[2][0] / multipliers[2][3];
+                        multipliers[2][0] = 1;
                         lfspeeds.clear();
                         lrspeeds.clear();
                         rfspeeds.clear();
@@ -214,18 +219,18 @@ public class motorSpeedTuner extends LinearOpMode {
                             multipliers[3][2] += rfspeeds.get(i);
                             multipliers[3][3] += rrspeeds.get(i);
                         }
-                        multipliers[3][0] /= lfspeeds.size();
-                        multipliers[3][1] /= lfspeeds.size();
-                        multipliers[3][2] /= lfspeeds.size();
-                        multipliers[3][3] /= lfspeeds.size();
+                        multipliers[3][0]/= lfspeeds.size();
+                        multipliers[3][1]/= lfspeeds.size();
+                        multipliers[3][2]/= lfspeeds.size();
+                        multipliers[3][3]/= lfspeeds.size();
 
                         double min = Math.min(multipliers[3][0], Math.min(multipliers[3][1], Math.min(multipliers[3][2], multipliers[3][3])));
 
-                        multipliers[3][0] = multipliers[3][1] / multipliers[3][0];
-                        multipliers[3][1] = multipliers[3][1];
-                        multipliers[3][2] = multipliers[3][1] / multipliers[3][2];
-                        multipliers[3][3] = multipliers[3][1] / multipliers[3][3];
 
+                        multipliers[3][1] = multipliers[3][0] / multipliers[3][1];
+                        multipliers[3][2] = multipliers[3][0] / multipliers[3][2];
+                        multipliers[3][3] = multipliers[3][0] / multipliers[3][3];
+                        multipliers[3][0] = 1;
                         lfspeeds.clear();
                         lrspeeds.clear();
                         rfspeeds.clear();
@@ -248,6 +253,8 @@ public class motorSpeedTuner extends LinearOpMode {
                 }
                 case finished:
                 {
+                    telemetry.addLine("test " + test);
+                    telemetry.addLine("test2 " + test2);
                     telemetry.addLine("multipliers");
                     telemetry.addLine("front left: "+ (multipliers[0][0]+multipliers[1][0]+multipliers[2][0]+multipliers[3][0])/4);
                     telemetry.addLine("back left: "+ (multipliers[0][1]+multipliers[1][1]+multipliers[2][1]+multipliers[3][1])/4);

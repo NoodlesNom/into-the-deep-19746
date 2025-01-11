@@ -50,7 +50,7 @@ public class Lift extends Subsystem {
     public static double P = 0.0075 / 1 ;
     public static double I = 0.0015 / 1;
     public static double D = 0.045 / 1;
-    public static double F = 0.0002;
+    public static double F = 0;
     private double vF = F;
     public static double MAX_LIFT_PWR = 1;
     public static double MIN_LIFT_PWR = -1;
@@ -69,7 +69,7 @@ public class Lift extends Subsystem {
     // 720 gives us second set line bonus.
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-    private int[] liftPositions = new int[]{1,150,300,600,850};
+            private int[] liftPositions = new int[]{1,110,215,270,760,1040,400,820, 200,130};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
 
     public final double SAFE_HEIGHT = 200;
@@ -78,10 +78,15 @@ public class Lift extends Subsystem {
     {
         //Constants with values
         DOWN(0),
-        SPECIMEN(2),
+        SPECINTAKE(2),
         SPECIMEN_PLACE(1),
-        SAMPLE(3),
-        MAX(4);
+        SAMPLE(4),
+        MAX(5),
+        SPECANGLED(3),
+        SPECCLEAR(6),
+        SAMPLESAFE(7),
+        TRANSFERPREP(8),
+        TRANSFER(9);
 
         //Instance variable
         private final int val;
@@ -133,7 +138,7 @@ public class Lift extends Subsystem {
         pid = new MiniPID(P, I, D, F);
         pid.reset();
         pid.setOutputLimits(MIN_LIFT_PWR, MAX_LIFT_PWR);
-        pid.setOutputRampRate(1);
+        pid.setOutputRampRate(0.5);
         vF = F;
         pid.setPID(P, I, D, vF);
 
@@ -303,7 +308,7 @@ public class Lift extends Subsystem {
                     power = vF * pidTgtTicks;
                 }
 
-                if((tgtTicks < 10.0) && (mPeriodicIO.lastReadTicks < 10.0))
+                if((tgtTicks < 15.0) && (mPeriodicIO.lastReadTicks < 15.0))
                 {
                     PIDCount = 0;
                     PIDSkipCount = 0;
@@ -334,29 +339,9 @@ public class Lift extends Subsystem {
     }
 
 
-    public double getMotorCurrent()
+    public double getLiftCurrent()
     {
-        return(lift.getCurrent(CurrentUnit.AMPS));
-    }
-
-    public  void setPivotPos(int pos)
-    {
-        mPeriodicIO.pivotPos = pos;
-    }
-
-    public  void setClawPos(int pos)
-    {
-        mPeriodicIO.clawPos = pos;
-    }
-
-    public  void setArmPos(int pos)
-    {
-        mPeriodicIO.armPos = pos;
-    }
-
-    public  void setGatePos(int pos)
-    {
-        mPeriodicIO.GatePos = pos;
+        return(mPeriodicIO.current);
     }
 
 //    public LiftGateState getGateState()
@@ -379,8 +364,12 @@ public class Lift extends Subsystem {
 //        }
 //    }
 
-    public int getLiftPos() {
+    public int getLiftTargetPos() {
         return mPeriodicIO.liftPos;
+    }
+
+    public int getLiftTargetTicks() {
+        return liftPositions[mPeriodicIO.liftPos];
     }
 
     public double getLiftTicks()
@@ -433,7 +422,7 @@ public class Lift extends Subsystem {
     {
         mPeriodicIO.prevLastReadPos = mPeriodicIO.lastReadTicks;
         mPeriodicIO.prevLastReadVel = mPeriodicIO.lastReadVel;
-
+        mPeriodicIO.current = lift.getCurrent(CurrentUnit.AMPS);
         mPeriodicIO.lastReadTicks = lift.getCurrentPosition();
         mPeriodicIO.lastReadVel = lift.getVelocity();
     }
@@ -483,6 +472,8 @@ public class Lift extends Subsystem {
         public int pivotPos;
         public int clawPos;
         public int armPos;
+
+        public double current = 0;
 
         public double prevLastReadPos=-1;
         public double prevLastReadVel;

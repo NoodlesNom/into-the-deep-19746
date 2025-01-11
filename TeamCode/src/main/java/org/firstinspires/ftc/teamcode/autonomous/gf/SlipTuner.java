@@ -26,7 +26,7 @@ public class SlipTuner extends OldAutoMaster {
         finished
     }
 
-    private State auto = State.straight;
+    private State auto = State.turn;
 
     private Rotation2d endAngle;
     private Vector2d endPos;
@@ -36,7 +36,7 @@ public class SlipTuner extends OldAutoMaster {
     public static double targetStraightPow = .8;
     public static double targetStrafePow = .8;
 
-    public static int accelTime = 1;
+    public static double accelTime = 1;
     public static int slipTime = 1;
 
     private double stateStartTime = 0;
@@ -68,7 +68,6 @@ public class SlipTuner extends OldAutoMaster {
                     robot.mDrive.localizer.rightBack.setPower(0);
                     robot.mDrive.localizer.leftFront.setPower(0);
                     robot.mDrive.localizer.rightFront.setPower(0);
-                    robot.mLift.setClawPos(0);
 
                     stateStartTime = time;
                     auto = State.slipStraight;
@@ -112,7 +111,7 @@ public class SlipTuner extends OldAutoMaster {
                 if (time - stateStartTime > accelTime)
                 {
                     robot.mDrive.readPeriodicInputs(time);
-                    speed = Math.toRadians(robot.mDrive.mPeriodicIO.angularVelocity.zRotationRate);
+                    speed = robot.mDrive.mPeriodicIO.angularVelocity.zRotationRate;
 
                     robot.mDrive.setOpenLoop(0,0,0,0);
 

@@ -7,6 +7,8 @@ import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.Subsystems.Deposit;
+import org.firstinspires.ftc.teamcode.Subsystems.Lift;
 import org.firstinspires.ftc.teamcode.autonomous.rr.Drawing;
 
 import java.util.ArrayList;
@@ -19,8 +21,14 @@ public class GFspec extends OldAutoMaster {
         sub1,
         pick1,
         human1,
+        pick2,
+        pick3,
         spec1,
         sub2,
+        spec2,
+        sub3,
+        spec3,
+        sub4,
         finished
     }
     public static int gox = 0;
@@ -59,7 +67,7 @@ public class GFspec extends OldAutoMaster {
         allPoints.add(new CurvePoint(30.5, 30.5, 1, 1, 40, 40, Math.toRadians(60), 0.6));
         allPoints.add(new CurvePoint(30.6, 30.3, 1, 1, 40, 40, Math.toRadians(60), 0.6));
 
-        return new Path(allPoints, false, Math.toRadians(180));
+        return new Path(allPoints, Math.toRadians(180));
     }
     private Path human1()
     {
@@ -112,10 +120,16 @@ public class GFspec extends OldAutoMaster {
                 if (robot.mDrive.isDoneWithGF()){
                     if (test.seconds()>0.1) {
                         auto = State.pick1;
-                        robot.mDrive.setWantGFPath(pick1());
+                        robot.mDrive.setWantGFPos(49,20,Math.toRadians(90),1,1);
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECANGLED.getVal());
+                        robot.mDeposit.setClawPos(0);
+                        robot.mDeposit.setDiffyPos(0,90);
                     }
                 }else{
                     test.reset();
+                    robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), time);
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal());
+                    robot.mDeposit.setDiffyPos(-50,70);
                 }
                 break;
             }
@@ -124,7 +138,11 @@ public class GFspec extends OldAutoMaster {
                 if (robot.mDrive.isDoneWithGF()){
                     if (test.seconds()>0.1) {
                         auto = State.human1;
-                        robot.mDrive.setWantGFPath(human1());
+                        robot.mDrive.setWantGFPos(49,9,Math.toRadians(90),1,1);
+                        robot.mLift.setTargetPos(Lift.LIFT_POS.SPECINTAKE.getVal(), time);
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal());
+                        robot.mDeposit.setClawPos(0);
+                        robot.mDeposit.setDiffyPos(70,-90);
                     }
                 }else{
                     test.reset();
@@ -135,8 +153,20 @@ public class GFspec extends OldAutoMaster {
             {
                 if (robot.mDrive.isDoneWithGF()){
                     if (test.seconds()>0.1) {
+                        auto = State.pick2;
+                        robot.mDrive.setWantGFPos(60,20,Math.toRadians(90),1,1);
+                    }
+                }else{
+                    test.reset();
+                }
+                break;
+            }
+            case pick2:
+            {
+                if (robot.mDrive.isDoneWithGF()){
+                    if (test.seconds()>0.1) {
                         auto = State.spec1;
-                        robot.mDrive.setWantGFPath(spec1());
+                        robot.mDrive.setWantGFPos(49,9,Math.toRadians(90),1,1);
                     }
                 }else{
                     test.reset();
@@ -148,7 +178,7 @@ public class GFspec extends OldAutoMaster {
                 if (robot.mDrive.isDoneWithGF()){
                     if (test.seconds()>0.1) {
                         auto = State.sub2;
-                        robot.mDrive.setWantGFPath(sub2());
+                        robot.mDrive.setWantGFPos(7.25,34,Math.toRadians(90),1,1);
                     }
                 }else{
                     test.reset();
@@ -159,7 +189,56 @@ public class GFspec extends OldAutoMaster {
             {
                 if (robot.mDrive.isDoneWithGF()){
                     if (test.seconds()>0.1) {
+                        auto = State.spec2;
+                        robot.mDrive.setWantGFPos(49,9,Math.toRadians(90),1,1);
+                    }
+                }else{
+                    test.reset();
+                }
+                break;
+            }
+            case spec2:
+            {
+                if (robot.mDrive.isDoneWithGF()){
+                    if (test.seconds()>0.1) {
+                        auto = State.sub3;
+                        robot.mDrive.setWantGFPos(7.25,34,Math.toRadians(90),1,1);
+                    }
+                }else{
+                    test.reset();
+                }
+                break;
+            }
+            case sub3:
+            {
+                if (robot.mDrive.isDoneWithGF()){
+                    if (test.seconds()>0.1) {
+                        auto = State.spec3;
+                        robot.mDrive.setWantGFPos(49,9,Math.toRadians(90),1,1);
+                    }
+                }else{
+                    test.reset();
+                }
+                break;
+            }
+            case spec3:
+            {
+                if (robot.mDrive.isDoneWithGF()){
+                    if (test.seconds()>0.1) {
+                        auto = State.sub4;
+                        robot.mDrive.setWantGFPos(7.25,34,Math.toRadians(90),1,1);
+                    }
+                }else{
+                    test.reset();
+                }
+                break;
+            }
+            case sub4:
+            {
+                if (robot.mDrive.isDoneWithGF()){
+                    if (test.seconds()>0.1) {
                         auto = State.finished;
+                        robot.mDrive.setWantGFPos(49,9, Math.toRadians(90), 1, 1);
                     }
                 }else{
                     test.reset();

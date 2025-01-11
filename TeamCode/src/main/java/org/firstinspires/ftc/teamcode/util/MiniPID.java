@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.util;
 
+import com.acmerobotics.dashboard.config.Config;
+
 /*
  * Small, easy to use PID implementation with advanced controller capability.<br>
  * Minimal usage:<br>
@@ -11,7 +13,7 @@ package org.firstinspires.ftc.teamcode.util;
  * @see http://brettbeauregard.com/blog/2011/04/improving-the-beginners-pid-direction/improving-the-beginners-pid-introduction
  * @see https://github.com/tekdemo/MiniPID-Java
  */
-
+@Config
 public class MiniPID{
     //**********************************
     // Class private variables
@@ -43,7 +45,7 @@ public class MiniPID{
 
     private double setpointRange=0;
 
-    public double ReduceErrorAtSetpoint=0.3;
+    public static double ReduceErrorAtSetpoint=0.45;
     public boolean logging = false;
 
     //**********************************

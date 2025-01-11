@@ -115,7 +115,7 @@ public class GFDrive extends Subsystem {
 
         double xV = (inToCM(mPeriodicIO.currentvels.linearVel.y));
         double yV = (inToCM(mPeriodicIO.currentvels.linearVel.x));
-        double rV = mPeriodicIO.currentvels.angVel;
+        double rV = mPeriodicIO.angularVelocity.zRotationRate;
 
         GFMovement.updateRobotVars(inToCM(mPeriodicIO.currentpose.position.x), inToCM(mPeriodicIO.currentpose.position.y), mPeriodicIO.currentpose.heading.toDouble(), xV, yV, rV);
         //BotLog.logD("pos :: ", String.format("x :: %.2f, y :: %.2f, rad :: %.2f", inToCM(getXPos()), inToCM(getYPos()), getHeadingRad()));
@@ -133,10 +133,17 @@ public class GFDrive extends Subsystem {
         double strafe = GFMovement.getMovement_x();
         double turn = GFMovement.getMovement_rad();
 
+
         mPeriodicIO.lf_pwr = drive + strafe - turn;
         mPeriodicIO.lr_pwr = drive - strafe - turn;
         mPeriodicIO.rf_pwr = drive - strafe + turn;
         mPeriodicIO.rr_pwr = drive + strafe + turn;
+        if (isDoneWithGF()){
+            mPeriodicIO.lf_pwr = 0;
+            mPeriodicIO.lr_pwr = 0;
+            mPeriodicIO.rf_pwr = 0;
+            mPeriodicIO.rr_pwr = 0;
+        }
 
 
 
@@ -211,9 +218,9 @@ public class GFDrive extends Subsystem {
             }
             if (canmove) {
                 localizer.leftBack.setPower(mPeriodicIO.lr_pwr);
-                localizer.rightBack.setPower(mPeriodicIO.rr_pwr * 0.8684);
-                localizer.leftFront.setPower(mPeriodicIO.lf_pwr * 0.8979);
-                localizer.rightFront.setPower(mPeriodicIO.rf_pwr * 0.8696);
+                localizer.rightBack.setPower(mPeriodicIO.rr_pwr * 1);
+                localizer.leftFront.setPower(mPeriodicIO.lf_pwr * 1);
+                localizer.rightFront.setPower(mPeriodicIO.rf_pwr * 1);
                 mPeriodicIO.last_lf_demand = mPeriodicIO.lf_pwr;
                 mPeriodicIO.last_lr_demand = mPeriodicIO.lr_pwr;
                 mPeriodicIO.last_rf_demand = mPeriodicIO.rf_pwr;

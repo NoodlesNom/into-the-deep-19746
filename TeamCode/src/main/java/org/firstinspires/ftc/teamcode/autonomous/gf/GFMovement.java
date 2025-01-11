@@ -37,9 +37,9 @@ public class GFMovement
     public static profileStates state_movement_x_prof = gunningIt;
     public static profileStates state_turning_prof = gunningIt;
 
-    public static double movement_y_min = 0.11;
-    public static double movement_x_min = 0.22;
-    public static double movement_turn_min = 0.17;
+    public static double movement_y_min = 0.08;
+    public static double movement_x_min = 0.13;
+    public static double movement_turn_min = 0.06;
 
     private static Pose2d target;
 
@@ -116,7 +116,7 @@ public class GFMovement
         voltage = v;
     }
 
-    public static final double smallAdjustSpeed = 0.135;
+    public static final double smallAdjustSpeed = 0.35;
     //this is used for the last 10 degrees of turning with a point speed of 0.15 to remain just barely unstable
     public static String turnCurveVisual =
             "                   1" +
@@ -153,28 +153,28 @@ public class GFMovement
 
         //every movement has two states, the fast "gunning" section and the slow refining part. turn this var off when close to target
         if(state_movement_y_prof == profileStates.gunningIt) {
-            if(relative_abs_y < Math.abs(Constants.ySlipDistanceFor1CMPS * yVel * 1.6) || relative_abs_y < 3){
+            if(relative_abs_y < Math.abs(Constants.ySlipDistanceFor1CMPS * yVel * 1.4) || relative_abs_y < 3){
                 state_movement_y_prof = state_movement_y_prof.next();
             }
         }
         if(state_movement_y_prof == profileStates.slipping){
             movement_y_power = 0;
-            if(Math.abs(yVel) <  0.03){
+            if(Math.abs(yVel) <  0.05){
                 state_movement_y_prof = state_movement_y_prof.next();
             }
         }
         if(state_movement_y_prof == profileStates.fineAdjustment){
-            movement_y_power = Range.clip(((relative_y_to_point/8.0) * 0.15),-0.15,0.15);
+            movement_y_power = Range.clip(((relative_y_to_point/8.0) * 0.35),-0.35,0.35);
         }
 
         if(state_movement_x_prof == profileStates.gunningIt) {
-            if(relative_abs_x < Math.abs(Constants.xSlipDistanceFor1CMPS * xVel * 1.4) || relative_abs_x < 3){
+            if(relative_abs_x < Math.abs(Constants.xSlipDistanceFor1CMPS * xVel * 1.5) || relative_abs_x < 3){
                 state_movement_x_prof = state_movement_x_prof.next();
             }
         }
         if(state_movement_x_prof == profileStates.slipping){
             movement_x_power = 0;
-            if(Math.abs(xVel) < 0.03){
+            if(Math.abs(xVel) < 0.05){
                 state_movement_x_prof = state_movement_x_prof.next();
             }
         }
@@ -188,13 +188,13 @@ public class GFMovement
         //every movement has two states, the fast "gunning" section and the slow refining part. turn this var off when close to target
         if(state_turning_prof == profileStates.gunningIt) {
             turnPower = rad_to_target > 0 ? point_speed : -point_speed;
-            if(Math.abs(rad_to_target) < Math.abs(Constants.turnSlipAmountFor1RPS * radVel * 1.2) || Math.abs(rad_to_target) < Math.toRadians(3.0)){
+            if(Math.abs(rad_to_target) < Math.abs(Constants.turnSlipAmountFor1RPS * radVel * 1.3) || Math.abs(rad_to_target) < Math.toRadians(3.0)){
                 state_turning_prof = state_turning_prof.next();
             }
 
         }
         if(state_turning_prof == profileStates.slipping){
-            if(Math.abs(Math.toDegrees(radVel)) < 60){
+            if(Math.abs(Math.toDegrees(radVel)) < 70){
                 state_turning_prof = state_turning_prof.next();
             }
 
@@ -210,7 +210,7 @@ public class GFMovement
         movement_x = movement_x_power;
         movement_y = movement_y_power;
 
-        allComponentsMinPowerGoTo();
+        allComponentsMinPower();
         return (Math.abs(distanceToPoint) < 2 && Math.abs(rad_to_target) < 0.05);
     }
 
@@ -429,15 +429,15 @@ public class GFMovement
     private static void allComponentsMinPowerGoTo() {
         if(Math.abs(movement_x) > Math.abs(movement_y)){
             if(Math.abs(movement_x) > Math.abs(movement_turn)){
-                movement_x = minPower(movement_x,0.2);
+                movement_x = minPower(movement_x,0.22);
             }else{
-                movement_turn = minPower(movement_turn,0.11);
+                movement_turn = minPower(movement_turn,0.12);
             }
         }else{
             if(Math.abs(movement_y) > Math.abs(movement_turn)){
                 movement_y = minPower(movement_y, 0.11);
             }else{
-                movement_turn = minPower(movement_turn,0.11);
+                movement_turn = minPower(movement_turn,0.12);
             }
         }
     }
@@ -554,7 +554,7 @@ public class GFMovement
 
         BotLog.logD("world rad", worldAngle_rad+"");
         BotLog.logD("follow angle", currFollowAngle+"");
-        return (clipedDistToFinalEnd < 3 && Math.abs(AngleWrap(currFollowAngle-worldAngle_rad))<0.04);//if we are less than 10 cm to the target, return true
+        return (clipedDistToFinalEnd < 2 && Math.abs(AngleWrap(currFollowAngle-worldAngle_rad))<0.04);//if we are less than 10 cm to the target, return true
     }
 
 

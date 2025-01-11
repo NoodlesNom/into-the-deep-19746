@@ -1,14 +1,12 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-
-import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
-import org.firstinspires.ftc.teamcode.Subsystems.old.LiftOld;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.TimedServo;
 
@@ -18,15 +16,24 @@ public class Deposit extends Subsystem {
 
     //private Servo gate;
 
-    private int servoTime= 250;
+    private int servoTime= 1;
     private ServoImplEx pivotL;
-    private ServoImplEx pivotR;
-    private TimedServo pivotLTimed;
 
-    private AnalogInput pivotencoder;
+    private RevBlinkinLedDriver led;
+    private ServoImplEx pivotR;
+    private TimedServo pivotRTimed;
+
 
 
     private ServoImplEx claw;
+
+    //70 for spec intake
+    //-85 for spec angled place
+    //-65 for spec head on place
+    //20 roll for spec angled place
+    //-20 roll for spec head on place
+    //-40 for sample place
+    //90 roll for sample place
 
     private ServoImplEx diffyL;
 
@@ -44,7 +51,8 @@ public class Deposit extends Subsystem {
 
     // private double[] pivotPositions = new double[]{.46, .78}; // TELEOP PIVOTS
     // private double[] pivotPositions = new double[]{.47, .78, .52}; // Regionals Gobilda Pivot
-    private double[] pivotPositions = new double[]{0.08,0.25 ,0.58, 0.92}; // Double Wide Axon Pivot
+    //0.467 straight up
+    private double[] pivotPositions = new double[]{0.96,0.65 ,0.4, 0, 0.467, 0.73, 0.775, 0.8, 0.284, 0.204}; // Double Wide Axon Pivot
 
     public enum PIVOT_POS
     {
@@ -53,7 +61,13 @@ public class Deposit extends Subsystem {
         TRANSFER(0),
         SPEC(1),
         SAMPLE(2),
-        SPECINTAKE(3);
+        SPECINTAKE(3),
+        IDLE(4),
+        SPECANGLED(5),
+        TRANSFERPREPARE(6),
+        TRANSFERPREPARE2(7),
+        AUTOSPEC(8),
+        AUTOSPECANGLED(9);
 
 
         //Instance variable
@@ -71,7 +85,7 @@ public class Deposit extends Subsystem {
         }
     }
 
-    private double[] clawPositions = new double[]{0, 60.0/180};
+    private double[] clawPositions = new double[]{0.01, 0.18};
 
     public enum CLAW_POS
     {
@@ -116,14 +130,12 @@ public class Deposit extends Subsystem {
         READY
     }
 
-    public PivotState getPivotState()
-    {
-        if (Math.abs(mPeriodicIO.pivotencoderpos-mPeriodicIO.pivotPos*355)<7){
-            return PivotState.READY;
-        }else{
-            return PivotState.MOVING;
-        }
-    }
+//    public PivotState getPivotState()
+//    {
+//        if (true){
+//            return
+//        }
+//    }
 
 
 
@@ -131,22 +143,23 @@ public class Deposit extends Subsystem {
     {
         mPeriodicIO = new PeriodicIO();
 
+        led = map.get(RevBlinkinLedDriver.class, "blinkin");
         pivotL = map.get(ServoImplEx.class, "pivotL");
-        pivotL.setDirection(ServoImplEx.Direction.REVERSE);
-        pivotLTimed = new TimedServo(pivotL, new ElapsedTime());
 
+        pivotL.setPwmRange(new PwmControl.PwmRange(500, PwmControl.PwmRange.usPulseUpperDefault));
         pivotR = map.get(ServoImplEx.class, "pivotR");
+        pivotR.setPwmRange(new PwmControl.PwmRange(500, PwmControl.PwmRange.usPulseUpperDefault));
+        pivotR.setDirection(ServoImplEx.Direction.REVERSE);
+        pivotRTimed = new TimedServo(pivotR, new ElapsedTime());
+        pivotRTimed.servo.setPwmRange(new PwmControl.PwmRange(500, PwmControl.PwmRange.usPulseUpperDefault));;
 
-        
         claw = map.get(ServoImplEx.class, "claw");
-        claw.setDirection(ServoImplEx.Direction.REVERSE);
+
 
 
         diffyL = map.get(ServoImplEx .class, "diffyL");
         diffyR = map.get(ServoImplEx .class, "diffyR");
         diffyR.setDirection(ServoImplEx.Direction.REVERSE);
-
-        pivotencoder = hardwareMap.get(AnalogInput.class, "pivotEncoder");
 
 
     }
@@ -155,7 +168,7 @@ public class Deposit extends Subsystem {
     public void autoInit()
     {
         //zeroLift();
-        setPivotPos(2);
+        setPivotPos(PIVOT_POS.IDLE.getVal());
 
         setClawPos(1);
 
@@ -167,24 +180,11 @@ public class Deposit extends Subsystem {
     @Override
     public void teleopInit()
     {
-        //zeroLift();
-        setPivotPos(PIVOT_POS.TRANSFER.getVal());
+        setPivotPos(PIVOT_POS.IDLE.getVal());
 
         setClawPos(1);
+
         setDiffyPos(0,0);
-
-
-
-        //setGatePos(GATE_POS.OPEN.getVal()); // closed
-
-        PivotTimer.reset();
-        PivotTimer.cancel();
-
-        ClawTimer.reset();
-        ClawTimer.cancel();
-
-        //GateCloseTimer.reset();
-        //GateCloseTimer.cancel();
 
 
     }
@@ -217,7 +217,19 @@ public class Deposit extends Subsystem {
 
     public void setPivotPos(int pos)
     {
+        setPivotPos(pos, 1);
+    }
+    public void setPivotPos(int pos, int time)
+    {
         mPeriodicIO.pivotPos = pos;
+        setServoTime(time);
+    }
+
+    public void setLed(RevBlinkinLedDriver.BlinkinPattern pattern)
+    {
+
+        mPeriodicIO.ledstate = pattern;
+
     }
 
     public void setClawPos(int pos)
@@ -236,7 +248,7 @@ public class Deposit extends Subsystem {
 
     public void readPeriodicInputs(double time)
     {
-        mPeriodicIO.pivotencoderpos = (pivotencoder.getVoltage() / 3.3 * 360);
+
     }
 
     public void writePeriodicOutputs()
@@ -244,6 +256,10 @@ public class Deposit extends Subsystem {
         writePivotOutputs();
         writeClawOutputs();
         writeDiffyOutputs();
+        if (mPeriodicIO.ledstate!=mPeriodicIO.prevledstate){
+            mPeriodicIO.prevledstate = mPeriodicIO.ledstate;
+            led.setPattern(mPeriodicIO.ledstate);
+        }
     }
 
 
@@ -255,14 +271,15 @@ public class Deposit extends Subsystem {
     {
         if (mPeriodicIO.prevPivotPos != mPeriodicIO.pivotPos)
         {
+            pivotRTimed.setTimedPosition(pivotPositions[mPeriodicIO.pivotPos], servoTime);
+            pivotL.setPosition(pivotRTimed.servo.getPosition()-0.02);
 
-            pivotLTimed.setTimedPosition(pivotPositions[mPeriodicIO.pivotPos], servoTime);
-            pivotR.setPosition(pivotLTimed.servo.getPosition());
 
             mPeriodicIO.prevPivotPos = mPeriodicIO.pivotPos;
         }
 
-        pivotLTimed.update();
+        pivotRTimed.update();
+        pivotL.setPosition(pivotRTimed.servo.getPosition()-0.02);
     }
 
     public void writeClawOutputs()
@@ -280,8 +297,8 @@ public class Deposit extends Subsystem {
     {
         if (mPeriodicIO.prevPitch != mPeriodicIO.pitch|| mPeriodicIO.prevRoll != mPeriodicIO.roll)
         {
-            diffyL.setPosition(0.5+((mPeriodicIO.pitch/340.0)+(mPeriodicIO.roll/320.0)));
-            diffyR.setPosition(0.5+((mPeriodicIO.pitch/340.0)-(mPeriodicIO.roll/320.0)));
+            diffyL.setPosition(0.5+(((mPeriodicIO.pitch+3)/340.0)+(mPeriodicIO.roll/320.0)));
+            diffyR.setPosition(0.5+(((mPeriodicIO.pitch+3)/340.0)-(mPeriodicIO.roll/320.0)));
             mPeriodicIO.prevRoll = mPeriodicIO.roll;
             mPeriodicIO.prevPitch = mPeriodicIO.pitch;
 
@@ -301,14 +318,14 @@ public class Deposit extends Subsystem {
 
     public static class PeriodicIO {
         // INPUTS
-        public int pivotPos;
-        public int clawPos;
+        public RevBlinkinLedDriver.BlinkinPattern ledstate;
+        public RevBlinkinLedDriver.BlinkinPattern prevledstate;
+        public int pivotPos=-1;
+        public int clawPos=-1;
         public int prevPivotPos = -1;
         public int prevPitch = -200000;
         public int prevRoll = -200000;
         public int prevClawPos = -1;
-
-        public double pivotencoderpos;
         public int pitch = 0;
         public int roll = 0;
     }

@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.autonomous.rr.localizer;
 
 
-
-import com.acmerobotics.dashboard.config.Config;
 import static com.qualcomm.hardware.rev.RevHubOrientationOnRobot.zyxOrientation;
 
 import com.acmerobotics.roadrunner.Pose2d;
@@ -13,10 +11,12 @@ import com.acmerobotics.roadrunner.ftc.GoBildaPinpointDriverRR;
 import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDrive;
+import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDriveOld;
 import org.firstinspires.ftc.teamcode.autonomous.rr.messages.PoseMessage;
 
 /**
@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.autonomous.rr.messages.PoseMessage;
  * Portions of this code made and released under the MIT License by Gobilda (Base 10 Assets, LLC)
  * Unless otherwise noted, comments are from Gobilda
  */
-public class PinpointDrive extends MecanumDrive {
+public class PinpointDriveOld extends MecanumDriveOld {
     public static class Params {
         /*
         Set this to the name that your Pinpoint is configured as in your hardware config.
@@ -43,8 +43,8 @@ public class PinpointDrive extends MecanumDrive {
         //These are tuned for 3110-0002-0001 Product Insight #1
         // RR localizer note: These units are inches, presets are converted from mm (which is why they are inexact)
 
-        public  double xOffset = -4.016;
-        public  double yOffset = -3.898;
+        public  double xOffset = 6.4375;
+        public  double yOffset = -7.694882;
 
         /*
         Set the kind of pods used by your robot. If you're using goBILDA odometry pods, select either
@@ -63,7 +63,7 @@ public class PinpointDrive extends MecanumDrive {
         increase when you move the robot forward. And the Y (strafe) pod should increase when
         you move the robot to the left.
          */
-        public GoBildaPinpointDriver.EncoderDirection xDirection = GoBildaPinpointDriver.EncoderDirection.FORWARD;
+        public GoBildaPinpointDriver.EncoderDirection xDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
         public GoBildaPinpointDriver.EncoderDirection yDirection = GoBildaPinpointDriver.EncoderDirection.REVERSED;
         /*
         Use the pinpoint IMU for tuning
@@ -79,7 +79,7 @@ public class PinpointDrive extends MecanumDrive {
     public GoBildaPinpointDriverRR pinpoint;
     private Pose2d lastPinpointPose = pose;
 
-    public PinpointDrive(HardwareMap hardwareMap, Pose2d pose) {
+    public PinpointDriveOld(HardwareMap hardwareMap, Pose2d pose) {
         super(hardwareMap, pose);
         FlightRecorder.write("PINPOINT_PARAMS",PARAMS);
         pinpoint = hardwareMap.get(GoBildaPinpointDriverRR.class,PARAMS.pinpointDeviceName);

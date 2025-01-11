@@ -3,18 +3,13 @@ package org.firstinspires.ftc.teamcode.util.tests;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import java.util.ArrayList;
-import java.util.Arrays;
 
 // @Disabled
 @Config
-@TeleOp(name = "extendo test")
-public class extendotest extends LinearOpMode {
+@TeleOp(name = "lift test")
+public class lifttest extends LinearOpMode {
 
     private DcMotorEx extendo;
     public static int target = 0;
@@ -25,11 +20,11 @@ public class extendotest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        extendo = hardwareMap.get(DcMotorEx .class, "extendo");
+        extendo = hardwareMap.get(DcMotorEx .class, "lift");
         extendo.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         extendo.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         extendo.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
-        extendo.setDirection(DcMotorEx.Direction.REVERSE);
+        extendo.setDirection(DcMotorEx.Direction.FORWARD);
 
         waitForStart();
 
@@ -37,12 +32,6 @@ public class extendotest extends LinearOpMode {
         while (!isStopRequested()) {
             telemetry.addData("pos", extendo.getCurrentPosition());
             telemetry.update();
-            if (move) {
-                extendo.setTargetPosition(target);
-                extendo.setPower(pow);
-                extendo.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
-
-            }
         }
     }
 }

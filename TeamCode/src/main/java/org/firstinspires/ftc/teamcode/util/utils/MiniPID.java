@@ -43,7 +43,7 @@ public class MiniPID{
 
     private double setpointRange=0;
 
-    public double ReduceErrorAtSetpoint=0.3;
+    public double ReduceErrorAtSetpoint=0.4;
     public BotLog logger = null;
 
     //**********************************

@@ -1,0 +1,59 @@
+package org.firstinspires.ftc.teamcode.util.tests;
+
+import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+
+// @Disabled
+@Config
+@TeleOp(name = "intake servo tester")
+public class intake_test extends LinearOpMode {
+
+    private ServoImplEx pivot;
+    private ServoImplEx gate;
+
+    private DcMotorEx intake;
+    public static double gatepos = 0;
+    public static double pivotpos = 0;
+
+    public static double intakepower = 0;
+    public static boolean move = false;
+    @Override
+    public void runOpMode() throws InterruptedException {
+        ElapsedTime timer = new ElapsedTime();
+        pivot = hardwareMap.get(ServoImplEx .class, "pivot");
+        pivot.setPosition(0);
+
+
+        gate = hardwareMap.get(ServoImplEx .class, "gate");
+        gate.setPosition(0);
+
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        intake.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        intake.setDirection(DcMotorEx.Direction.REVERSE);
+
+
+
+        waitForStart();
+        timer.reset();
+
+        if (isStopRequested()) return;
+        while (!isStopRequested()) {
+            telemetry.update();
+            if (move) {
+                pivot.setPosition(pivotpos);
+                gate.setPosition(gatepos);
+                intake.setPower(intakepower);
+                telemetry.addData("current", intake.getCurrent(CurrentUnit.AMPS));
+            }
+        }
+    }
+}

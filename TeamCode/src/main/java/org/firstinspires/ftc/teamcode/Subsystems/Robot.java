@@ -8,8 +8,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.Subsystems.old.DriveOld;
-import org.firstinspires.ftc.teamcode.Subsystems.old.LiftOld;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 
 import java.util.ArrayList;
@@ -17,9 +15,11 @@ import java.util.List;
 
 public class Robot {
 
-    public DriveOld mDrive;
-    //public Intake mIntake;
-    public LiftOld mLift;
+    public Drive mDrive;
+    public Intake mIntake;
+
+    public Deposit mDeposit;
+    public Lift mLift;
     //public Vision mVision;
     //public Hang mHang;
 
@@ -31,6 +31,7 @@ public class Robot {
     private double oneLoopShutoff = 26.0;
     private double currentRate = 200.0;
     private double lastCurrent = 0.0;
+
 
     private ElapsedTime currentTimer = new ElapsedTime();
     private ElapsedTime emergencyCurrentWatchdog = new ElapsedTime();
@@ -50,15 +51,17 @@ public class Robot {
     {
         subsystems = new ArrayList<>();
 
-        mDrive = new DriveOld(opMode.hardwareMap);
-        //mIntake = new Intake(opMode.hardwareMap);
-        mLift = new LiftOld(opMode.hardwareMap);
+        mDrive = new Drive(opMode.hardwareMap);
+        mIntake = new Intake(opMode.hardwareMap);
+        mDeposit = new Deposit(opMode.hardwareMap);
+        mLift = new Lift(opMode.hardwareMap);
         //mHang = new Hang(opMode.hardwareMap);
         //mVision = new Vision(opMode.hardwareMap);
         allHubs = opMode.hardwareMap.getAll(LynxModule.class);
 
         subsystems.add(mDrive);
-        //subsystems.add(mIntake);
+        subsystems.add(mIntake);
+        subsystems.add(mDeposit);
         subsystems.add(mLift);
         //subsystems.add(mHang);
         //subsystems.add(mVision);
@@ -74,7 +77,7 @@ public class Robot {
 
         //mDrive = new Drive(map, start);
         //mIntake = new Intake(opMode.hardwareMap);
-        mLift = new LiftOld(map);
+        mLift = new Lift(map);
         //mHang = new Hang(map);
         //mVision = new Vision(opMode.hardwareMap);
         allHubs = map.getAll(LynxModule.class);
@@ -102,15 +105,17 @@ public class Robot {
     {
         subsystems = new ArrayList<>();
 
-        mDrive = new DriveOld(opMode.hardwareMap);
-        //mIntake = new Intake(opMode.hardwareMap);
-        mLift = new LiftOld(opMode.hardwareMap);
+        mDrive = new Drive(opMode.hardwareMap);
+        mIntake = new Intake(opMode.hardwareMap);
+        mDeposit = new Deposit(opMode.hardwareMap);
+        mLift = new Lift(opMode.hardwareMap);
         //mHang = new Hang(opMode.hardwareMap);
         //mVision = new Vision(opMode.hardwareMap);
         allHubs = opMode.hardwareMap.getAll(LynxModule.class);
 
         subsystems.add(mDrive);
-        //subsystems.add(mIntake);
+        subsystems.add(mIntake);
+        subsystems.add(mDeposit);
         //subsystems.add(mHang);
         //subsystems.add(mVision);
         if (addLift)

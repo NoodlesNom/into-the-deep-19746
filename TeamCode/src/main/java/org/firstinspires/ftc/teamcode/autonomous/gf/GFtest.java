@@ -47,10 +47,8 @@ public class GFtest extends OldAutoMaster {
     {
         ArrayList<CurvePoint> allPoints = new ArrayList<>();
         allPoints.add(new CurvePoint(0, 0, 0, 0, 0, 0, 0, 0));
-        allPoints.add(new CurvePoint(2, 1 , 1, 1, 40, 40, Math.toRadians(60), 0.6));
-
-        allPoints.add(new CurvePoint(24, 5 , 1, 1, 40, 40, Math.toRadians(60), 0.6));
-        return new Path(allPoints, Math.toRadians(90));
+        allPoints.add(new CurvePoint(5, 24 , 1, 1, 40, 40, Math.toRadians(60), 0.6));
+        return new Path(allPoints, Math.toRadians(30),true);
     }
 
     private Path pick1()
@@ -100,7 +98,7 @@ public class GFtest extends OldAutoMaster {
 
         if (!start) {
             start = true;
-            robot.mDrive.setWantGFPos(24,5,Math.toRadians(-30),1, 1    );
+            robot.mDrive.setWantGFPath(sub1());
         }
 
 
@@ -111,7 +109,7 @@ public class GFtest extends OldAutoMaster {
                 if (robot.mDrive.isDoneWithGF()){
                     if (test.seconds()>0.1) {
                         auto = State.pick1;
-                        robot.mDrive.setWantGFPos(12,14,Math.toRadians(90),1, 1    );
+                        robot.mDrive.setWantGFPos(0,0,Math.toRadians(0),1, 1    );
                     }
                 }else{
                     test.reset();
@@ -122,13 +120,13 @@ public class GFtest extends OldAutoMaster {
             {
                 if (robot.mDrive.isDoneWithGF()){
                     if (test.seconds()>0.1) {
-                        auto = State.finished;
-                        robot.mDrive.setWantGFPath(human1());
+                        auto = State.human1;
+                        robot.mDrive.setWantGFPos(5,24,Math.toRadians(30),1, 1    );
+
                     }
                 }else{
                     test.reset();
                 }
-                test.reset();
 
                 break;
             }
@@ -136,8 +134,8 @@ public class GFtest extends OldAutoMaster {
             {
                 if (robot.mDrive.isDoneWithGF()){
                     if (test.seconds()>0.1) {
-                        auto = State.spec1;
-                        robot.mDrive.setWantGFPath(spec1());
+                        auto = State.finished;
+                        //robot.mDrive.setWantGFPath(spec1());
                     }
                 }else{
                     test.reset();
