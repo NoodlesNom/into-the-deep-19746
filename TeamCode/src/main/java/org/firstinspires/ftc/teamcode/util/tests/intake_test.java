@@ -12,7 +12,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
-@Disabled
 @Config
 @TeleOp(name = "intake servo tester")
 public class intake_test extends LinearOpMode {

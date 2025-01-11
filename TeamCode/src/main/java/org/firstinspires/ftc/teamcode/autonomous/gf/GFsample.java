@@ -43,6 +43,7 @@ public class GFsample extends OldAutoMaster {
         retract3,
         transfer3,
         bucket4,
+        park,
         finished
     }
     public static int gox = 0;
@@ -65,11 +66,14 @@ public class GFsample extends OldAutoMaster {
 
     private double stateStartTime = 0;
 
-    private Path sub1()
+    private Path park()
     {
         ArrayList<CurvePoint> allPoints = new ArrayList<>();
-        allPoints.add(new CurvePoint(7.25, 7.25, 0, 0, 0, 0, 0, 0));
-        allPoints.add(new CurvePoint(7.25, 34, 1, 1, 40, 40, Math.toRadians(60), 0.6));
+        allPoints.add(new CurvePoint(-60, 17, 0, 0, 0, 0, 0, 0));
+        allPoints.add(new CurvePoint(-48, 48, 1, 1, 40, 40, Math.toRadians(60), 1));
+        allPoints.add(new CurvePoint(-35, 60, 1, 1, 40, 40, Math.toRadians(60), 1));
+        allPoints.add(new CurvePoint(-23.5, 60, 1, 1, 40, 40, Math.toRadians(60), 1));
+
         return new Path(allPoints, false);
     }
 
@@ -125,10 +129,10 @@ public class GFsample extends OldAutoMaster {
         if (!start) {
             robot.teleopInit();
             start = true;
-            robot.mDrive.setWantGFPos(-60,18,Math.toRadians(60),1, 1    );
-            robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(),time);
+            robot.mDrive.setWantGFPos(-60,17,Math.toRadians(60),1, 1    );
             robot.mIntake.setExtendoPos(0,time);
             robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRAP.getVal());
+            robot.mDeposit.autoInit();
 
         }
 
@@ -137,21 +141,22 @@ public class GFsample extends OldAutoMaster {
         {
             case bucket1:
             {
-                if (robot.mLift.closeEnough()) {
-                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal());
-                    robot.mDeposit.setDiffyPos(-60,0);
-
-                    if (test.seconds() > 0.3) {
-                        robot.mDeposit.setClawPos(0);
-                    }
-                    if (robot.mDrive.isDoneWithGF()) {
-                        if (test.seconds() > 0.5) {
+                if (robot.mDrive.isDoneWithGF()) {
+                    robot.mLift.setTargetPos(Lift.LIFT_POS.AUTOSAMPLE.getVal(),time);
+                    if (robot.mLift.closeEnough()) {
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal());
+                        robot.mDeposit.setDiffyPos(-30,0);
+                        if (test.seconds() > 0.6) {
                             auto = State.pick1;
-                            robot.mDrive.setWantGFPos(-60, 18, Math.toRadians(75), 1, 1);
+                            robot.mDrive.setWantGFPos(-60, 17, Math.toRadians(70), 1, 1);
                             robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(),time);
-                            robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
                             robot.mDeposit.setDiffyPos(25,-90);
+                        }else if (test.seconds() > 0.3) {
+                            robot.mDeposit.setClawPos(0);
                         }
+                    }
+                    else{
+                        test.reset();
                     }
                 }else{
                     test.reset();
@@ -164,13 +169,17 @@ public class GFsample extends OldAutoMaster {
                     if (!robot.mIntake.closeEnough()){
                         test.reset();
                     }
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
                     robot.mIntake.setExtendoPos(Intake.EXTEND_POS.INTAKING.getVal(), time);
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+                    robot.mIntake.setIntakeOpenLoop(1);
                     if (test.seconds()>0.5) {
                         auto = State.retract1;
                         robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), time);
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                         robot.mIntake.setGatePos(Intake.GATE_POS.CLAMP.getVal());
+                        robot.mIntake.setIntakeOpenLoop(0);
                     }
                 }else{
                     test.reset();
@@ -180,7 +189,7 @@ public class GFsample extends OldAutoMaster {
             case retract1:
             {
                 if (robot.mDrive.isDoneWithGF()&&robot.mIntake.closeEnough()){
-                    robot.mDrive.setWantGFPos(-60, 18, Math.toRadians(60), 1, 1);
+                    robot.mDrive.setWantGFPos(-60, 17, Math.toRadians(60), 1, 1);
                     transferready = false;
                     robot.mIntake.setGatePos(Intake.GATE_POS.CLAMP.getVal());
                     generaltimer.reset();
@@ -201,8 +210,8 @@ public class GFsample extends OldAutoMaster {
                 if (robot.mLift.closeEnough()&&robot.mIntake.closeEnough()&&!transferready){
                     robot.mIntake.setExtendoOpenLoop(-0.1);
                     robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
-                    if (transfertimer.seconds()>firstwait){
-                        robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                    if (transfertimer.seconds()>firstwait+0.2){
+
                         robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), time);
                         transferready = true;
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRAP.getVal());
@@ -210,7 +219,7 @@ public class GFsample extends OldAutoMaster {
                         robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), time);
 
                     }else if (transfertimer.seconds()>intakewait){
-                        //robot.mIntake.setIntakeOpenLoop(0.6);
+                        robot.mIntake.setIntakeOpenLoop(0.7);
                     }
                 }else if (transferready){
                     if (robot.mLift.getLiftTicks()<135){
@@ -221,7 +230,7 @@ public class GFsample extends OldAutoMaster {
                             transfertimer.reset();
                             robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
                             robot.mIntake.setExtendoPos(Intake.EXTEND_POS.TRANSFER.getVal(), time);
-                            robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(), time);
+                            robot.mLift.setTargetPos(Lift.LIFT_POS.AUTOSAMPLE.getVal(), time);
 
                         }
                     }else{
@@ -242,24 +251,26 @@ public class GFsample extends OldAutoMaster {
                     robot.mDeposit.setDiffyPos(0, -90);
                 }
                 if (robot.mLift.closeEnough()) {
-                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal());
-                    robot.mDeposit.setDiffyPos(-60,0);
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal());
+                    robot.mDeposit.setDiffyPos(-30,0);
 
-                    if (test.seconds() > 0.3) {
-                        robot.mDeposit.setClawPos(0);
-                        robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
-                        robot.mIntake.setIntakeOpenLoop(0);
-                        robot.mIntake.setExtendoPos(0, time);
-                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
-                    }
+
                     if (robot.mDrive.isDoneWithGF()) {
-                        if (test.seconds() > 0.5) {
+                        if (test.seconds() > 0.6) {
                             auto = State.pick2;
-                            robot.mDrive.setWantGFPos(-60, 18, Math.toRadians(90), 1, 1);
+                            robot.mDrive.setWantGFPos(-60, 17, Math.toRadians(90), 1, 1);
                             robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(),time);
-                            robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
+
                             robot.mDeposit.setDiffyPos(25,-90);
+                        }else if (test.seconds() > 0.3) {
+                            robot.mDeposit.setClawPos(0);
+                            robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                            robot.mIntake.setIntakeOpenLoop(0);
+                            robot.mIntake.setExtendoPos(0, time);
+                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                         }
+                    }else{
+                        test.reset();
                     }
                 }else{
                     test.reset();
@@ -272,10 +283,15 @@ public class GFsample extends OldAutoMaster {
                     if (!robot.mIntake.closeEnough()){
                         test.reset();
                     }
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
                     robot.mIntake.setExtendoPos(Intake.EXTEND_POS.INTAKING.getVal(), time);
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+                    robot.mIntake.setIntakeOpenLoop(1);
                     if (test.seconds()>0.5) {
                         auto = State.retract2;
+                        robot.mIntake.setIntakeOpenLoop(0);
+
                         robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), time);
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                         robot.mIntake.setGatePos(Intake.GATE_POS.CLAMP.getVal());
@@ -292,7 +308,7 @@ public class GFsample extends OldAutoMaster {
                     robot.mIntake.setGatePos(Intake.GATE_POS.CLAMP.getVal());
                     generaltimer.reset();
                     transfertimer.reset();
-                    robot.mDrive.setWantGFPos(-60, 18, Math.toRadians(60), 1, 1);
+                    robot.mDrive.setWantGFPos(-60, 17, Math.toRadians(60), 1, 1);
 
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                     robot.mDeposit.setClawPos(0);
@@ -310,8 +326,8 @@ public class GFsample extends OldAutoMaster {
                 if (robot.mLift.closeEnough()&&robot.mIntake.closeEnough()&&!transferready){
                     robot.mIntake.setExtendoOpenLoop(-0.1);
                     robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
-                    if (transfertimer.seconds()>firstwait){
-                        robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                    if (transfertimer.seconds()>firstwait+0.2){
+
                         robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), time);
                         transferready = true;
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRAP.getVal());
@@ -319,7 +335,7 @@ public class GFsample extends OldAutoMaster {
                         robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), time);
 
                     }else if (transfertimer.seconds()>intakewait){
-                        //robot.mIntake.setIntakeOpenLoop(0.6);
+                        robot.mIntake.setIntakeOpenLoop(0.7);
                     }
                 }else if (transferready){
                     if (robot.mLift.getLiftTicks()<135){
@@ -329,8 +345,8 @@ public class GFsample extends OldAutoMaster {
                             robot.mIntake.setIntakeOpenLoop(0);
                             transfertimer.reset();
                             robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
-                            robot.mIntake.setExtendoPos(Intake.EXTEND_POS.TRANSFER.getVal(), time);
-                            robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(), time);
+                            robot.mLift.setTargetPos(Lift.LIFT_POS.AUTOSAMPLE.getVal(),time);
+                            robot.mLift.setTargetPos(Lift.LIFT_POS.AUTOSAMPLE.getVal(), time);
 
                         }
                     }else{
@@ -350,24 +366,26 @@ public class GFsample extends OldAutoMaster {
                     robot.mDeposit.setDiffyPos(0, -90);
                 }
                 if (robot.mLift.closeEnough()) {
-                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal());
-                    robot.mDeposit.setDiffyPos(-60,0);
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal());
+                    robot.mDeposit.setDiffyPos(-30,0);
 
-                    if (test.seconds() > 0.3) {
-                        robot.mDeposit.setClawPos(0);
-                        robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
-                        robot.mIntake.setIntakeOpenLoop(0);
-                        robot.mIntake.setExtendoPos(0, time);
-                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
-                    }
+
                     if (robot.mDrive.isDoneWithGF()) {
-                        if (test.seconds() > 0.5) {
+                        if (test.seconds() > 0.6) {
                             auto = State.pick3;
-                            robot.mDrive.setWantGFPos(-60, 18, Math.toRadians(110), 1, 1);
+                            robot.mDrive.setWantGFPos(-60, 17, Math.toRadians(110), 1, 1);
                             robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(),time);
-                            robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
+
                             robot.mDeposit.setDiffyPos(25,-90);
+                        }if (test.seconds() > 0.3) {
+                            robot.mDeposit.setClawPos(0);
+                            robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                            robot.mIntake.setIntakeOpenLoop(0);
+                            robot.mIntake.setExtendoPos(0, time);
+                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                         }
+                    }else{
+                        test.reset();
                     }
                 }else{
                     test.reset();
@@ -380,10 +398,16 @@ public class GFsample extends OldAutoMaster {
                     if (!robot.mIntake.closeEnough()){
                         test.reset();
                     }
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
                     robot.mIntake.setExtendoPos(Intake.EXTEND_POS.INTAKING.getVal(), time);
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+                    robot.mIntake.setIntakeOpenLoop(1);
+
                     if (test.seconds()>0.5) {
                         auto = State.retract3;
+                        robot.mIntake.setIntakeOpenLoop(0);
+
                         robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), time);
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                         robot.mIntake.setGatePos(Intake.GATE_POS.CLAMP.getVal());
@@ -400,7 +424,7 @@ public class GFsample extends OldAutoMaster {
                     robot.mIntake.setGatePos(Intake.GATE_POS.CLAMP.getVal());
                     generaltimer.reset();
                     transfertimer.reset();
-                    robot.mDrive.setWantGFPos(-60, 18, Math.toRadians(60), 1, 1);
+                    robot.mDrive.setWantGFPos(-60, 17, Math.toRadians(60), 1, 1);
 
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                     robot.mDeposit.setClawPos(0);
@@ -418,8 +442,7 @@ public class GFsample extends OldAutoMaster {
                 if (robot.mLift.closeEnough()&&robot.mIntake.closeEnough()&&!transferready){
                     robot.mIntake.setExtendoOpenLoop(-0.1);
                     robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
-                    if (transfertimer.seconds()>firstwait){
-                        robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                    if (transfertimer.seconds()>firstwait+0.2){
                         robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), time);
                         transferready = true;
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRAP.getVal());
@@ -427,7 +450,7 @@ public class GFsample extends OldAutoMaster {
                         robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), time);
 
                     }else if (transfertimer.seconds()>intakewait){
-                        //robot.mIntake.setIntakeOpenLoop(0.6);
+                        robot.mIntake.setIntakeOpenLoop(0.7);
                     }
                 }else if (transferready){
                     if (robot.mLift.getLiftTicks()<135){
@@ -438,7 +461,7 @@ public class GFsample extends OldAutoMaster {
                             transfertimer.reset();
                             robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
                             robot.mIntake.setExtendoPos(Intake.EXTEND_POS.TRANSFER.getVal(), time);
-                            robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(), time);
+                            robot.mLift.setTargetPos(Lift.LIFT_POS.AUTOSAMPLE.getVal(),time);
 
                         }
                     }else{
@@ -458,24 +481,28 @@ public class GFsample extends OldAutoMaster {
                     robot.mDeposit.setDiffyPos(0, -90);
                 }
                 if (robot.mLift.closeEnough()) {
-                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal());
-                    robot.mDeposit.setDiffyPos(-60,0);
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal());
+                    robot.mDeposit.setDiffyPos(-30,0);
 
-                    if (test.seconds() > 0.3) {
-                        robot.mDeposit.setClawPos(0);
-                        robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
-                        robot.mIntake.setIntakeOpenLoop(0);
-                        robot.mIntake.setExtendoPos(0, time);
-                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
-                    }
+
                     if (robot.mDrive.isDoneWithGF()) {
-                        if (test.seconds() > 0.5) {
+                        if (test.seconds() > 0.6) {
                             auto = State.finished;
-                            robot.mDrive.setWantGFPos(-60, 18, Math.toRadians(110), 1, 1);
-                            robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(),time);
-                            robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
+                            robot.mDrive.setWantGFPath(park());
+                            robot.mLift.setTargetPos(Lift.LIFT_POS.DOWN.getVal(),time);
+                            robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOEND.getVal());
                             robot.mDeposit.setDiffyPos(25,-90);
+                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
+                            robot.mIntake.setExtendoPos(0,time);
+                        }if (test.seconds() > 0.3) {
+                            robot.mDeposit.setClawPos(0);
+                            robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                            robot.mIntake.setIntakeOpenLoop(0);
+                            robot.mIntake.setExtendoPos(0, time);
+                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                         }
+                    }else{
+                        test.reset();
                     }
                 }else{
                     test.reset();
@@ -484,6 +511,9 @@ public class GFsample extends OldAutoMaster {
             }
             case finished:
             {
+                if (robot.mLift.closeEnough()){
+                    robot.mLift.setOpenLoop(-0.8);
+                }
                 break;
             }
 

@@ -69,7 +69,7 @@ public class Lift extends Subsystem {
     // 720 gives us second set line bonus.
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-            private int[] liftPositions = new int[]{1,110,215,270,760,1040,400,820, 200,130};
+            private int[] liftPositions = new int[]{1,110,215,270,760,1040,400,830, 200,130, 930};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
 
     public final double SAFE_HEIGHT = 200;
@@ -86,7 +86,8 @@ public class Lift extends Subsystem {
         SPECCLEAR(6),
         SAMPLESAFE(7),
         TRANSFERPREP(8),
-        TRANSFER(9);
+        TRANSFER(9),
+        AUTOSAMPLE(10);
 
         //Instance variable
         private final int val;
@@ -268,6 +269,16 @@ public class Lift extends Subsystem {
         }
 
         mPeriodicIO.demand = power;
+    }
+
+    public  void rezero()
+    {
+        setOpenLoop(0);
+        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+    public  void zerofinish()
+    {
+        lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     private void updateLiftPID(double timestamp)
