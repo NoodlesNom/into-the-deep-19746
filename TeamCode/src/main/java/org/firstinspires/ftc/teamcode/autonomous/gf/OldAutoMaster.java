@@ -32,7 +32,7 @@ public abstract class OldAutoMaster extends LinearOpMode
         telemetry.update();
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         while  (!isStopRequested()&&!opModeIsActive()){
-            robot.mDeposit.setLed(team);
+            robot.mDeposit.setLiveLed(team);
             telemetry.addLine("PRESS A (BOTTOM) FOR BLUE");
             telemetry.addLine("PRESS B (RIGHT) FOR RED");
             if (gamepad1.a){
@@ -41,6 +41,7 @@ public abstract class OldAutoMaster extends LinearOpMode
             if (gamepad1.b){
                 team = RevBlinkinLedDriver.BlinkinPattern.RED;
             }
+            telemetry.update();
         }
 
         test.reset();

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.util.tests;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,7 +12,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-// @Disabled
+@Disabled
 @Config
 @TeleOp(name = "extendo test")
 public class extendotest extends LinearOpMode {

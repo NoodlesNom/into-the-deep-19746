@@ -11,7 +11,7 @@
             <Servo name="hangL" port="0" />
             <Servo name="pivot" port="4" />
             <Servo name="gate" port="2" />
-            <Servo name="blinkin" port="5" />
+            <RevBlinkinLedDriver name="blinkin" port="5" />
         </LynxModule>
     </LynxUsbDevice>
     <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2D39HA" parentModuleAddress="2">

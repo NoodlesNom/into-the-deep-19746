@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.teleop.BSTEMTELE;
 import java.util.ArrayList;
 
 @Config
-@Autonomous(name="GF sample")
+@Autonomous(name="4 sample")
 public class GFsample extends OldAutoMaster {
 
     private boolean transferready = false;

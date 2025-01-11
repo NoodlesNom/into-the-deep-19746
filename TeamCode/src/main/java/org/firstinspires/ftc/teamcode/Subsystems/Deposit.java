@@ -231,6 +231,12 @@ public class Deposit extends Subsystem {
         mPeriodicIO.ledstate = pattern;
 
     }
+    public void setLiveLed(RevBlinkinLedDriver.BlinkinPattern pattern)
+    {
+
+        led.setPattern(pattern);
+
+    }
 
     public void setClawPos(int pos)
     {

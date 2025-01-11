@@ -146,7 +146,7 @@ public class Intake extends Subsystem {
         pid = new MiniPID(P, I, D, F);
         pid.reset();
         pid.setOutputLimits(MIN_EXTENDO_PWR, MAX_EXTENDO_PWR);
-        pid.setOutputRampRate(0.5);
+        pid.setOutputRampRate(0.35);
         vF = F;
         pid.setPID(P, I, D, vF);
 

@@ -127,7 +127,6 @@ public class BSTEMTELE extends OpMode {
         telemetry.addLine("Initing robot");
         telemetry.update();
         robot.teleopInit();
-        robot.mDeposit.setLed(team);
 
 
 
@@ -141,6 +140,8 @@ public class BSTEMTELE extends OpMode {
 
         telemetry.addLine("Init finished");
         telemetry.update();
+        robot.mDeposit.setLiveLed(team);
+
 
         // We're through init, lets go back to bulk caching and clear caches
         for (LynxModule hub : allHubs)

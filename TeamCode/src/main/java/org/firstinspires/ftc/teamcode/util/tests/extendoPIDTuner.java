@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.util.tests;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -13,7 +14,7 @@ import org.firstinspires.ftc.teamcode.util.StickyButton;
 
 import java.util.concurrent.TimeUnit;
 
-// @Disabled
+@Disabled
 @TeleOp(name = "extendoPIDTuner")
 public class extendoPIDTuner extends LinearOpMode {
 

@@ -138,7 +138,7 @@ public class Lift extends Subsystem {
         pid = new MiniPID(P, I, D, F);
         pid.reset();
         pid.setOutputLimits(MIN_LIFT_PWR, MAX_LIFT_PWR);
-        pid.setOutputRampRate(0.5);
+        pid.setOutputRampRate(0.35);
         vF = F;
         pid.setPID(P, I, D, vF);
 

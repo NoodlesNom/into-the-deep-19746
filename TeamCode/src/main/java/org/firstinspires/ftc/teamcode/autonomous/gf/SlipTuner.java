@@ -7,10 +7,11 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.autonomous.rr.Drawing;
 import org.firstinspires.ftc.teamcode.util.BotLog;
-
+@Disabled
 @Config
 @Autonomous(name="slip tuner")
 public class SlipTuner extends OldAutoMaster {
