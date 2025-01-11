@@ -5,6 +5,7 @@ package org.firstinspires.ftc.teamcode.autonomous.rr.localizer;
 import com.acmerobotics.dashboard.config.Config;
 import static com.qualcomm.hardware.rev.RevHubOrientationOnRobot.zyxOrientation;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.ftc.FlightRecorder;
@@ -26,6 +27,7 @@ import org.firstinspires.ftc.teamcode.autonomous.rr.messages.PoseMessage;
  * Portions of this code made and released under the MIT License by Gobilda (Base 10 Assets, LLC)
  * Unless otherwise noted, comments are from Gobilda
  */
+@Config
 public class PinpointDrive extends MecanumDrive {
     public static class Params {
         /*
@@ -120,7 +122,7 @@ public class PinpointDrive extends MecanumDrive {
         if (lastPinpointPose != pose) {
             // RR localizer note:
             // Something else is modifying our pose (likely for relocalization),
-            // so we override otos pose with the new pose.
+            // so we override the sensor's pose with the new pose.
             // This could potentially cause up to 1 loop worth of drift.
             // I don't like this solution at all, but it preserves compatibility.
             // The only alternative is to add getter and setters, but that breaks compat.
