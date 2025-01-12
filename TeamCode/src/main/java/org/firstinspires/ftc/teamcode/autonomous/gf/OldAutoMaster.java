@@ -6,6 +6,7 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.Subsystems.Intake;
 
 
 public abstract class OldAutoMaster extends LinearOpMode
@@ -42,6 +43,9 @@ public abstract class OldAutoMaster extends LinearOpMode
                 team = RevBlinkinLedDriver.BlinkinPattern.RED;
             }
             telemetry.update();
+            robot.mDeposit.autoInit();
+            robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+            robot.update(test.seconds());
         }
 
         test.reset();

@@ -14,7 +14,6 @@ import org.firstinspires.ftc.teamcode.util.StickyButton;
 
 import java.util.concurrent.TimeUnit;
 
-@Disabled
 @TeleOp(name = "extendoPIDTuner")
 public class extendoPIDTuner extends LinearOpMode {
 

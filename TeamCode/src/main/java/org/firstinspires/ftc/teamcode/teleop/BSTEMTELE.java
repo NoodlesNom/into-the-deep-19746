@@ -100,7 +100,8 @@ public class BSTEMTELE extends OpMode {
         SHOOT,
         HANG,
         NOTHING,
-        REZERO
+        REZERO,
+        SAFTEY
     }
 
     private teleState teleFSM = teleState.IDLE;
@@ -280,10 +281,10 @@ public class BSTEMTELE extends OpMode {
                 break;
             }
             case SPECPLACE:{
-                if (shoottimer.seconds()>0.6){
+                if (shoottimer.seconds()>0.8){
                     robot.mIntake.setIntakeOpenLoop(0);
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                }else if (shoottimer.seconds()>0.3){
+                }else if (shoottimer.seconds()>0.5){
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                     robot.mIntake.setIntakeOpenLoop(-1);
                 }else{
@@ -413,10 +414,10 @@ public class BSTEMTELE extends OpMode {
                     robot.mLift.setTargetPos(0, timer.seconds());
                     prevtelestate = teleFSM;
                     teleFSM = teleState.IDLE;
-                }else if (shoottimer.seconds()>0.8){
+                }else if (shoottimer.seconds()>0.9){
                     robot.mIntake.setIntakeOpenLoop(0);
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                }else if (shoottimer.seconds()>0.5){
+                }else if (shoottimer.seconds()>0.6){
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                     robot.mIntake.setIntakeOpenLoop(-1);
                 }else if (shoottimer.seconds()>0.3){
@@ -436,6 +437,11 @@ public class BSTEMTELE extends OpMode {
                     robot.mLift.setOpenLoop(-0.8);
                 }
 
+                break;
+            }
+            case SAFTEY:{
+                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECANGLED.getVal());
+                robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(),timer.seconds());
                 break;
             }
             case SAMPLE:{
@@ -499,7 +505,7 @@ public class BSTEMTELE extends OpMode {
             prevtelestate = teleFSM;
             teleFSM = teleState.SPECINTAKE;
             autoclear = false;
-            clawToggleHits = 1;
+            clawToggleHits = 0;
         }
         if (gamepad2.y){
             shoottimer.reset();
@@ -540,6 +546,10 @@ public class BSTEMTELE extends OpMode {
             teleFSM = teleState.REZERO;
             robot.mLift.zerofinish();
             rezero.reset();
+        }
+        if (gamepad2.dpad_right){
+            prevtelestate = teleFSM;
+            teleFSM = teleState.SAFTEY;
         }
         if (gamepad2.dpad_down){
             prevtelestate = teleFSM;
@@ -593,7 +603,7 @@ public class BSTEMTELE extends OpMode {
 
 
 
-        if (clawButton.getState()&&teleFSM!=teleState.INTAKING){
+        if (clawButton.getState()&&!(teleFSM==teleState.INTAKING&&samplemode)&&teleFSM!=teleState.SPECINTAKE){
             clawToggleHits++;
             if (specplacing){
                 specplacing= false;
