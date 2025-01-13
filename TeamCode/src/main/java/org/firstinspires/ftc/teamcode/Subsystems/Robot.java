@@ -286,9 +286,15 @@ public class Robot {
 //        }
         currentReporting();
 
+        ElapsedTime updateTime = new ElapsedTime();
+        boolean debug = false;
         for (Subsystem subsystem : subsystems)
         {
+            if (debug) { updateTime.reset(); }
+
             subsystem.update(timestamp);
+
+            if (debug) { BotLog.logD("UpdateTime :: ", "%4.0f (%s)", updateTime.milliseconds(), subsystem.getClass().getName()); }
         }
 
 //        if (usingComputer)
