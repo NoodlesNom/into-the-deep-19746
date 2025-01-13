@@ -65,6 +65,15 @@ public class GFsample extends OldAutoMaster {
     public static int slipTime = 1;
 
     private double stateStartTime = 0;
+    private String telemMsg = "";
+
+    @Override
+    public String getTelem() {
+        String output = "";
+        output = String.format(" auto.st :: %s\n", auto.name());
+        output += telemMsg;
+        return (output);
+    }
 
     private Path park()
     {
@@ -327,7 +336,7 @@ public class GFsample extends OldAutoMaster {
             }
             case transfer2:
             {
-                if (robot.mLift.closeEnough()&&robot.mIntake.closeEnough()&&!transferready){
+                if (robot.mLift.closeEnough() && robot.mIntake.closeEnough() && !transferready){
                     robot.mIntake.setExtendoOpenLoop(-0.1);
                     robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
                     if (transfertimer.seconds()>firstwait+0.2){

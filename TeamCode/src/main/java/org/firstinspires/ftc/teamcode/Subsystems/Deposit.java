@@ -317,11 +317,17 @@ public class Deposit extends Subsystem {
     @Override
     public String getTelem(double time)
     {
-        boolean debug = true;
-        String output = "\n";
+        boolean debug = false;
+        String output = "";
         if( debug ) {
+            output =   " pivotL.tgt  :: " + pivotL.getPosition() + "\n";
+            output +=  " pivotR.tgt  :: " + pivotR.getPosition() + "\n";
+            output +=  "   claw.tgt  :: " +   claw.getPosition() + "\n";
+            output +=  "  pitch.tgt  :: " + mPeriodicIO.pitch + "\n";
+            output +=  "   roll.tgt  :: " + mPeriodicIO.roll + "\n";
+            output +=  " diffyL.tgt  :: " + diffyL.getPosition() + "\n";
+            output +=  " diffyR.tgt  :: " + diffyR.getPosition() + "\n";
         }
-
         return output;
     }
 

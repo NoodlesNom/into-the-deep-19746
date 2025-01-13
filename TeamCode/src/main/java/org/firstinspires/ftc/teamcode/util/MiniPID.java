@@ -48,6 +48,9 @@ public class MiniPID{
     public static double ReduceErrorAtSetpoint=0.45;
     public boolean logging = false;
 
+    public double outputLog=0, PoutputLog=0, IoutputLog=0, DoutputLog=0, FoutputLog=0, timeAdjLog=0, minOutputLog=0, maxOutputLog=0, errorSumLog=0 ;
+    public String LogStr = "";
+
     //**********************************
     // Constructor functions
     //**********************************
@@ -343,21 +346,21 @@ public class MiniPID{
             // Setting to current error ensures a smooth transition when the P term
             // decreases enough for the I term to start acting upon the controller
             // From that point the I term will build up as would be expected
-            if(logging) { BotLog.logD("PID_Debug :: ", "Case 1" ); }
+            // if(logging) { BotLog.logD("PID_Debug :: ", "Case 1" ); }
         }
         else if(outputRampRate!=0 && !bounded(output, lastOutput-(outputRampRate*timeAdj),lastOutput+(outputRampRate*timeAdj)) ){
             errorSum=error*timeAdj;
-            if(logging) { BotLog.logD("PID_Debug :: ", "Case 2" ); }
+            // if(logging) { BotLog.logD("PID_Debug :: ", "Case 2" ); }
         }
         else if(maxIOutput!=0){
             errorSum=constrain(errorSum+(error*timeAdj),-maxError,maxError);
             // In addition to output limiting directly, we also want to prevent I term
             // buildup, so restrict the error directly
-            if(logging) { BotLog.logD("PID_Debug :: ", "Case 3" ); }
+            // if(logging) { BotLog.logD("PID_Debug :: ", "Case 3" ); }
         }
         else{
             errorSum+=(error*timeAdj);
-            if(logging) { BotLog.logD("PID_Debug :: ", "Case 4" ); }
+            // if(logging) { BotLog.logD("PID_Debug :: ", "Case 4" ); }
         }
 
         // Restrict output to our specified output and ramp limits
@@ -374,12 +377,33 @@ public class MiniPID{
         // Get a test printline with lots of details about the internal
         // calculations. This can be useful for debugging.
         if(logging) {
-            BotLog.logD("PID_Debug :: ", "%5.2f [ %5.2f, %5.2f, %5.2f, %5.2f, %5.2f, %5.2f, %5.2f ], eSum %5.2f\n",output, Poutput, Ioutput, Doutput, Foutput, timeAdj, minOutput, maxOutput, errorSum );
+            // BotLog.logD("PID_Debug :: ", "%5.2f [ %5.2f, %5.2f, %5.2f, %5.2f, %5.2f, %5.2f, %5.2f ], eSum %5.2f\n",output, Poutput, Ioutput, Doutput, Foutput, timeAdj, minOutput, maxOutput, errorSum );
             // PIDF coeff BotLog.logD("PID_Debug :: ", "%5.2f [ %5.2f, %5.2f, %5.2f, %5.2f, %5.2f, %5.2f ], eSum %5.2f\n",output, P, I, D, F, minOutput, maxOutput, errorSum );
+            /*
+            outputLog = output;
+            PoutputLog = Poutput;
+            IoutputLog = Ioutput;
+            DoutputLog = Doutput;
+            FoutputLog = Foutput;
+            timeAdjLog = timeAdj;
+            minOutputLog = minOutput;
+            maxOutputLog = maxOutput;
+            errorSumLog = errorSum;
+            */
+            LogStr = String.format("o:%5.2f [ p:%5.2f, i:%5.2f, d:%5.2f, f:%5.2f, t:%5.2f, min:%5.2f, max:%5.2f ], eSum %5.2f\n",output, Poutput, Ioutput, Doutput, Foutput, timeAdj, minOutput, maxOutput, errorSum );
         }
 
         lastOutput=output;
         return output;
+    }
+
+    public String getTelem() {
+        if(logging)
+        {
+            return (LogStr);
+        } else {
+            return("");
+        }
     }
 
     /*
