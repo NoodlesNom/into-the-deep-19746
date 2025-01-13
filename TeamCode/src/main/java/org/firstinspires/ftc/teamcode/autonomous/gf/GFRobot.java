@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.Deposit;
 import org.firstinspires.ftc.teamcode.Subsystems.Drive;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake;
@@ -297,6 +298,16 @@ public class GFRobot {
 //        }
     }
 
+//    for (VoltageSensor sensor : map.voltageSensor)
+//    {
+//        volts = Math.min(sensor.getVoltage(), 14.2);
+//        if (volts > 0)
+//        {
+//            vScale = ((tgtV - volts) / 7) + 1.0;
+//            this.voltage = sensor;
+//        }
+//    }
+
     public String getTelem(double seconds)
     {
         String output = "";
@@ -305,7 +316,24 @@ public class GFRobot {
             output += subsystem.getTelem(seconds);
         }
 
-        // BotLog.logD("Robot :: ", String.format("%s", output));
+        boolean debug = true;
+        if(debug)
+        {
+            double total = 0;
+            String CStr = "  robot.A ::    ";
+            String VStr = "  robot.V ::    ";
+            for (LynxModule hub : allHubs)
+            {
+                double val = hub.getCurrent(CurrentUnit.AMPS);
+                CStr += String.format("%2.1f A ", val);
+                total += val;
+
+                VStr += String.format("%2.1f V ", hub.getInputVoltage(VoltageUnit.VOLTS));
+            }
+            output += CStr + String.format(" => %2.1f A ", total) + "\n";
+            output += VStr + "\n";
+        }
+
         return output;
     }
 

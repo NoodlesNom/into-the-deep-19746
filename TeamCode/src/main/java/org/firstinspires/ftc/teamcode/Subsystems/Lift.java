@@ -456,16 +456,18 @@ public class Lift extends Subsystem {
     @Override
     public String getTelem(double time)
     {
-        boolean debug = true;
-        String output = "\n";
+        boolean debug = false;
+        pid.logging = debug;
+        String output = "";
         if( debug ) {
-            pid.logging = false;  // This turns on a lot of PID debugging in miniPID.  Not necessary most of the time I think
-            output =  "   tgt ::" + tgtTicks + "\n";
-            output += "pidTgt ::" + pidTgtTicks + "\n";
-            output += " rdPos ::" + mPeriodicIO.lastReadTicks + "\n";
-            output += " power ::" + mPeriodicIO.demand + "\n";
-            output += " state ::" + mLiftControlState + "\n";
-            output += "PIDCnt ::" + PIDCount + "\n";
+            output =  "   lift.pwr  :: " + mPeriodicIO.demand + "\n";
+            output += "   lift.pos  :: " + mPeriodicIO.lastReadTicks + "\n";
+            output += "   lift.tgt  :: " + tgtTicks + "\n";
+            output += "   lift.ptgt :: " + pidTgtTicks + "\n";
+            if(pid.logging)
+            {
+                output += "   lift.pid  :: " + pid.getTelem();
+            }
         }
 
         return output;

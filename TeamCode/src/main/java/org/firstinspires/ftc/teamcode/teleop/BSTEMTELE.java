@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.firstinspires.ftc.teamcode.Subsystems.Deposit;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake;
 import org.firstinspires.ftc.teamcode.Subsystems.Lift;
@@ -22,6 +23,8 @@ import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.StickyButton;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 @Config
 @TeleOp(name = "BSTEM teleop", group = "opMode")
 public class BSTEMTELE extends OpMode {
@@ -44,6 +47,8 @@ public class BSTEMTELE extends OpMode {
     private ElapsedTime loopTimer = new ElapsedTime();
     private boolean debugLoopTime = false;
     private double  outputRate = 0.5;
+    private Deadline logging = new Deadline((long)(outputRate*1000), TimeUnit.MILLISECONDS);
+    private double loopCnt = 0;
 
     private boolean specangled = false;
     private double  lastOutput = 0.0;
@@ -180,6 +185,9 @@ public class BSTEMTELE extends OpMode {
             if(enableCurrentReporting) {
                 robot.setEnableCurrentReporting(true);
             }
+            loopTimer.reset();
+            startTime = loopTimer.milliseconds();
+            logging.reset();
         }
 
         switch (teleFSM){
@@ -523,7 +531,7 @@ public class BSTEMTELE extends OpMode {
             teleFSM = teleState.INTAKING;
         }
 
-        if (gamepad2.a||(gamepad1.a&&teleFSM == teleState.INTAKING&&samplemode)){
+        if (gamepad2.a||(gamepad1.a&&teleFSM==teleState.INTAKING&&samplemode)){
             robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
             robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
@@ -625,11 +633,23 @@ public class BSTEMTELE extends OpMode {
         //BotLog.logD("Lift :: ", String.format("%s", robot.mLift.getTelem(timer.seconds())));
         //BotLog.logD("Hang :: ", String.format("%s", robot.mHang.getTelem(timer.seconds())));
 
-        if ((timer.seconds() > (lastOutput + outputRate)) && enableTelem)
-        {
-            BotLog.logD("robot :: ", String.format("%s", robot.getTelem(timer.seconds())));
-            // BotLog.logD("lift :: ", String.format("%s", robot.mLift.getTelem(timer.seconds())));
-            lastOutput = timer.seconds();
+        //if ((timer.seconds() > (lastOutput + outputRate)) && enableTelem)
+        //{
+        //    BotLog.logD("robot :: ", String.format("%s", robot.getTelem(timer.seconds())));
+        //    // BotLog.logD("lift :: ", String.format("%s", robot.mLift.getTelem(timer.seconds())));
+        //    lastOutput = timer.seconds();
+        //}
+
+        boolean debug = false;
+        if(debug) {
+            if(logging.hasExpired())
+            {
+                logging.reset();
+                String debugMsg = robot.getTelem(time);
+                debugMsg += String.format("loopTime = %4.0f\n", loopTimer.milliseconds());
+                BotLog.logD("BSDbg",debugMsg);
+            }
+            loopTimer.reset();
         }
 
         // This adds a lot of loop time, don't call this lightly

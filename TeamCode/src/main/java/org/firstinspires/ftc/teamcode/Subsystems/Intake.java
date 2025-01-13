@@ -385,7 +385,14 @@ public class Intake extends Subsystem {
     }
     public boolean closeEnough()
     {
-        return Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20 && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
+        boolean nonZero = Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20 && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
+        boolean nearZero = ( (Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20) || (mPeriodicIO.lastExtendoTicks<0) )  && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
+
+        if (tgtTicks < 20) {
+            return nearZero;
+        } else {
+            return nonZero;
+        }
     }
 
     public boolean past()
@@ -442,10 +449,22 @@ public class Intake extends Subsystem {
     @Override
     public String getTelem(double time)
     {
-        String output = "power :: " + mPeriodicIO.intake_demand + "\n";
-        output += "intake pos :: " + mPeriodicIO.pivot_pos + "\n";
-        output += "extend pos :: " + mPeriodicIO.extendo_pos + "\n";
-
+        boolean debug = false;
+        pid.logging = debug;
+        String output = "";
+        if( debug ) {
+            output =   " intake.pwr  :: " + mPeriodicIO.intake_demand + "\n";
+            output +=  " extend.pwr  :: " + mPeriodicIO.extendo_demand + "\n";
+            output +=  " extend.pos  :: " + mPeriodicIO.lastExtendoTicks + "\n";
+            output +=  " extend.tgt  :: " + tgtTicks + "\n";
+            output +=  " extend.ptgt :: " + pidTgtTicks + "\n";
+            output +=  "  pivot.tgt  :: " + pivot.getPosition() + "\n";
+            output +=  "   gate.tgt  :: " +  gate.getPosition() + "\n";
+            if(pid.logging)
+            {
+                output += " extend.pid :: " + pid.getTelem();
+            }
+        }
 
         return output;
     }
