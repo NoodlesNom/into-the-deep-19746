@@ -134,7 +134,7 @@ public class Lift extends Subsystem {
         //gate = map.get(Servo.class, "gate");
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         pid = new MiniPID(P, I, D, F);
         pid.reset();

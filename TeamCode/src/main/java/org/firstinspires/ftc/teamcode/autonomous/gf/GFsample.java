@@ -50,6 +50,7 @@ public class GFsample extends OldAutoMaster {
     public static int goy = 0;
     private State auto = State.bucket1;
 
+
     ElapsedTime test = new ElapsedTime();
     private Rotation2d endAngle;
     private Vector2d endPos;

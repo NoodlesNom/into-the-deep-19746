@@ -132,7 +132,7 @@ public class Intake extends Subsystem {
 
         // motors
         intake = map.get(DcMotorEx.class, "intake");
-        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         intake.setDirection(DcMotorEx.Direction.REVERSE);
 
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

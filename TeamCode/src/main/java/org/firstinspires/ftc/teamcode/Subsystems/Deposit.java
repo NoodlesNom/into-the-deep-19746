@@ -88,7 +88,7 @@ public class Deposit extends Subsystem {
         }
     }
 
-    private double[] clawPositions = new double[]{0.01, 0.18};
+    private double[] clawPositions = new double[]{0.01, 0.2};
 
     public enum CLAW_POS
     {

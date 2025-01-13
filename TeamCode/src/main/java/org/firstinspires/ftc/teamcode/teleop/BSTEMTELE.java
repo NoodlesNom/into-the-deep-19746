@@ -17,6 +17,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Deposit;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake;
 import org.firstinspires.ftc.teamcode.Subsystems.Lift;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
+import org.firstinspires.ftc.teamcode.autonomous.gf.GFsample;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.StickyButton;
 
@@ -112,7 +113,6 @@ public class BSTEMTELE extends OpMode {
         firstTeleopLoop = true;
         //PhotonCore.start(hardwareMap);
         allHubs = hardwareMap.getAll(LynxModule.class);
-
         // Let's start with bulk caching off until we get through all the init.
         for (LynxModule hub : allHubs)
         {
