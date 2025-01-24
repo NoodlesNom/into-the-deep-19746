@@ -40,7 +40,7 @@ public class Intake extends Subsystem {
     // Hardware states
     private PeriodicIO mPeriodicIO;
 
-    private double[] extendoPos = new double[] {1,170,350, 550};
+    private double[] extendoPos = new double[] {1,170,350, 580, 350};
 
     public enum EXTEND_POS
     {
@@ -48,7 +48,8 @@ public class Intake extends Subsystem {
         STOWED(0),
         TRANSFER(1),
         GETOUT(2),
-        INTAKING(3);
+        INTAKING(3),
+        AUTOINTAKEPREPARE(4);
 
         //Instance variable
         private final int val;
@@ -64,7 +65,8 @@ public class Intake extends Subsystem {
             return val;
         }
     }
-    private double[] pivotPos = new double[] {0, 0.53, 0.03, 0.15, 0.38, 0.36};
+    //0.565 with fixed intake
+    public static double[] pivotPos = new double[] {0, 0.54, 0.04, 0.18, 0.18, 0.18, 0.4, 0.3};
     public enum PIVOT_POS
     {
         //Constants with values
@@ -72,7 +74,9 @@ public class Intake extends Subsystem {
         LAUNCH(2),
         IDLE(3),
         TRANSFER(4),
-        TRAP(5);
+        TRAP(5),
+        AUTOINIT(6),
+        INTAKEPREP(7);
 
         //Instance variable
         private final int val;
@@ -88,7 +92,7 @@ public class Intake extends Subsystem {
             return val;
         }
     }
-    private double[] gatePos = new double[] {0.89, 0.81, 0.2};
+    private double[] gatePos = new double[] {0.89, 0.89, 0.2};
     public enum GATE_POS
     {
         //Constants with values
@@ -167,6 +171,8 @@ public class Intake extends Subsystem {
     @Override
     public void autoInit()
     {
+        setGatePos(GATE_POS.CATCH.getVal());
+        setPivotPos(PIVOT_POS.AUTOINIT.getVal());
     }
 
     @Override
@@ -306,7 +312,7 @@ public class Intake extends Subsystem {
                     power = vF * pidTgtTicks;
                 }
 
-                if((tgtTicks < 10.0) && (mPeriodicIO.lastExtendoTicks < 10.0))
+                if((tgtTicks < 15) && (mPeriodicIO.lastExtendoTicks < 15))
                 {
                     PIDCount = 0;
                     PIDSkipCount = 0;
@@ -383,10 +389,27 @@ public class Intake extends Subsystem {
             return ExtendoState.MOVING;
         }
     }
+
+    public ExtendoControlState getExtendoControlState()
+    {
+        return mExtendoControlState;
+    }
     public boolean closeEnough()
     {
         boolean nonZero = Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20 && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
         boolean nearZero = ( (Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20) || (mPeriodicIO.lastExtendoTicks<0) )  && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
+
+        if (tgtTicks < 20) {
+            return nearZero;
+        } else {
+            return nonZero;
+        }
+    }
+
+    public boolean closeEnoughAuto()
+    {
+        boolean nonZero = Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20; // TODO: What is a resonable velocity
+        boolean nearZero = ( (Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20) || (mPeriodicIO.lastExtendoTicks<0) ); // TODO: What is a resonable velocity
 
         if (tgtTicks < 20) {
             return nearZero;
@@ -401,6 +424,17 @@ public class Intake extends Subsystem {
         double currpos = extendoPos[mPeriodicIO.extendo_pos];
         return ((prevpos<currpos&&mPeriodicIO.lastExtendoTicks>currpos)||(prevpos>currpos&&mPeriodicIO.lastExtendoTicks<currpos));
     }
+
+    public  void rezero()
+    {
+        setExtendoOpenLoop(0);
+        extendo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    }
+    public  void zerofinish(double time)
+    {
+        extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
 
     //public void setReadVelocity(boolean on) { readVelocity = on; }
     // With deadwheels, we are reclaiming the intake encoder so no more velocity

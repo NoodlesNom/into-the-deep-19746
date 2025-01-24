@@ -13,7 +13,7 @@ public class TimedProfiledServo
     public double tgtPos;
     public double startPos;
     private double startTime, msTgt;
-    private boolean reachedTgt;
+    public boolean reachedTgt;
     private double[] profile;
     private double[] profileTgt;
     private double[] profileSums;
@@ -98,6 +98,7 @@ public class TimedProfiledServo
     }
 
     public void setProfile(double[] profile) {
+        reachedTgt = true;
         double sum = 0.0;
 
         this.profile = profile;

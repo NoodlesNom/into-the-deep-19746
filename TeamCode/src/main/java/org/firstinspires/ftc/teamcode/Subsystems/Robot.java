@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.VoltageUnit;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 
 import java.util.ArrayList;
@@ -23,6 +24,8 @@ public class Robot {
     //public Vision mVision;
     //public Hang mHang;
 
+    private double V;
+    private double maxA = 0.0;
     private double prevCurrentTimer = 0.0;
     private double infoCurrent = 15.0;
     private double infoDuration = 500;
@@ -37,7 +40,7 @@ public class Robot {
     private ElapsedTime emergencyCurrentWatchdog = new ElapsedTime();
     private ElapsedTime infoCurrentWatchdog = new ElapsedTime();
 
-    private boolean enableCurrentReporting = true;
+    private boolean enableCurrentReporting = false;
     private static boolean usingComputer = false;
     
     private ArrayList<Subsystem> subsystems;
@@ -72,32 +75,21 @@ public class Robot {
 //        }
     }
     public Robot(LinearOpMode opMode, Pose2d start, HardwareMap map)
+
     {
         subsystems = new ArrayList<>();
-
-        //mDrive = new Drive(map, start);
-        //mIntake = new Intake(opMode.hardwareMap);
-        mLift = new Lift(map);
-        //mHang = new Hang(map);
+        //mDrive = new Drive(opMode.hardwareMap);
+        mIntake = new Intake(opMode.hardwareMap);
+        mDeposit = new Deposit(opMode.hardwareMap);
+        mLift = new Lift(opMode.hardwareMap);
+        //mHang = new Hang(opMode.hardwareMap);
         //mVision = new Vision(opMode.hardwareMap);
-        allHubs = map.getAll(LynxModule.class);
-
-//        for (LynxModule hub : allHubs)
-//        {
-//            hub.setBulkCachingMode(LynxModule.BulkCachingMode.MANUAL);
-//            hub.clearBulkCache();
-//        }
+        allHubs = opMode.hardwareMap.getAll(LynxModule.class);
 
         //subsystems.add(mDrive);
-        //subsystems.add(mIntake);
+        subsystems.add(mIntake);
+        subsystems.add(mDeposit);
         subsystems.add(mLift);
-        //subsystems.add(mHang);
-        //subsystems.add(mVision);
-
-//        if (usingComputer)
-//        {
-//            computerDebugging = new ComputerDebugging(true);
-//        }
     }
 
     // For Teleop (fixLift use)
@@ -160,6 +152,9 @@ public class Robot {
             total += hub.getCurrent(CurrentUnit.AMPS);
         }
         return(total);
+    }
+    public double getHubsVoltage() {
+        return(V);
     }
 
 //    public double getMotorCurrent() {
@@ -296,6 +291,13 @@ public class Robot {
 
             if (debug) { BotLog.logD("UpdateTime :: ", "%4.0f (%s)", updateTime.milliseconds(), subsystem.getClass().getName()); }
         }
+        double total = 0;
+        for (LynxModule hub : allHubs)
+        {
+            total += hub.getInputVoltage(VoltageUnit.VOLTS);
+        }
+        V = total;
+
 
 //        if (usingComputer)
 //        {
@@ -318,7 +320,34 @@ public class Robot {
             output += subsystem.getTelem(seconds);
         }
 
-        // BotLog.logD("Robot :: ", String.format("%s", output));
+        boolean debug = true;
+        if(debug)
+        {
+            maxA = 0;
+            double total = 0;
+            String CStr = "  robot.A ::    ";
+            String VStr = "  robot.V ::    ";
+            for (LynxModule hub : allHubs)
+            {
+                double val = hub.getCurrent(CurrentUnit.AMPS);
+                CStr += String.format("%2.1f A ", val);
+                total += val;
+
+                VStr += String.format("%2.1f V ", hub.getInputVoltage(VoltageUnit.VOLTS));
+            }
+
+
+            if (total> maxA){
+                maxA =total;
+            }
+            if (total>0){
+                output += CStr + String.format(" => %2.1f A ", total) + "\n";
+                output+= String.format("%2.1f maxA ", maxA);
+            }
+            output += VStr + "\n";
+
+        }
+
         return output;
     }
 

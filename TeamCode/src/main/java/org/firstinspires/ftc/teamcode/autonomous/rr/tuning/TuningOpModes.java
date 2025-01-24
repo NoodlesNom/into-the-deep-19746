@@ -10,11 +10,13 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
-
+import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.*;
 import org.firstinspires.ftc.robotcore.internal.opmode.OpModeMeta;
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDrive;
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.TankDrive;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.PinpointDrive;
+import com.acmerobotics.roadrunner.ftc.GoBildaPinpointDriverRR;
+import com.acmerobotics.roadrunner.ftc.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.ThreeDeadWheelLocalizer;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.TwoDeadWheelLocalizer;
 import org.firstinspires.ftc.teamcode.*;
@@ -22,12 +24,11 @@ import org.firstinspires.ftc.teamcode.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-@Disabled
 public final class TuningOpModes {
     public static final Class<?> DRIVE_CLASS = PinpointDrive.class; // TODO: change to your drive class i.e. PinpointDrive if using pinpoint
 
     public static final String GROUP = "quickstart";
-    public static final boolean DISABLED = true;
+    public static final boolean DISABLED = false;
 
     private TuningOpModes() {}
 
@@ -223,6 +224,7 @@ public final class TuningOpModes {
 
         manager.register(metaForClass(ManualFeedbackTuner.class), ManualFeedbackTuner.class);
         manager.register(metaForClass(SplineTest.class), SplineTest.class);
+        manager.register(metaForClass(TurnTest.class), TurnTest.class);
         manager.register(metaForClass(LocalizationTest.class), LocalizationTest.class);
 
         FtcDashboard.getInstance().withConfigRoot(configRoot -> {

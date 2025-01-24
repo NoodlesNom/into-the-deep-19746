@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.util.tests;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.PwmControl;
@@ -23,7 +22,7 @@ public class pivottest extends LinearOpMode {
     public static int pitch = 0;
     public static int roll = 0;
 
-    public static double pos = 0.5;
+    public static double pivot_pos = 0.5;
     public static boolean move = false;
     public static boolean random = false;
     @Override
@@ -49,8 +48,8 @@ public class pivottest extends LinearOpMode {
         while (!isStopRequested()) {
             telemetry.update();
             if (move) {
-                pivotL.setPosition(pos - 0.02);
-                pivotR.setPosition(pos);
+                pivotL.setPosition(pivot_pos - 0.02);
+                pivotR.setPosition(pivot_pos);
 
                 double targetL = 0.5+((pitch/340.0)+(roll/320.0));
                 double targetR = 0.5+((pitch/340.0)-(roll/320.0));

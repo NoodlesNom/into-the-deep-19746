@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
 import org.firstinspires.ftc.teamcode.util.BotLog;
+import org.firstinspires.ftc.teamcode.util.TimedProfiledServo;
 import org.firstinspires.ftc.teamcode.util.TimedServo;
 
 import java.util.concurrent.TimeUnit;
@@ -18,10 +19,11 @@ public class Deposit extends Subsystem {
 
     private int servoTime= 1;
     private ServoImplEx pivotL;
+    private TimedProfiledServo pivotLTimed;
 
     private RevBlinkinLedDriver led;
     private ServoImplEx pivotR;
-    private TimedServo pivotRTimed;
+    private TimedProfiledServo pivotRTimed;
 
 
 
@@ -52,7 +54,7 @@ public class Deposit extends Subsystem {
     // private double[] pivotPositions = new double[]{.46, .78}; // TELEOP PIVOTS
     // private double[] pivotPositions = new double[]{.47, .78, .52}; // Regionals Gobilda Pivot
     //0.467 straight up
-    private double[] pivotPositions = new double[]{0.96,0.65 ,0.4, 0, 0.467, 0.73, 0.775, 0.8, 0.284, 0.204,0.32,0.86,0.590}; // Double Wide Axon Pivot
+    private double[] pivotPositions = new double[]{0.915,0.67,0.4, 0, 0.467, 0.73, 0.775, 0.8, 0.284, 0.204,0.25,0.82,0.590}; // Double Wide Axon Pivot
 
     public enum PIVOT_POS
     {
@@ -88,13 +90,15 @@ public class Deposit extends Subsystem {
         }
     }
 
-    private double[] clawPositions = new double[]{0.01, 0.2};
+    private double[] clawPositions = new double[]{0.04, 0.3, 0.04, 0.1};
 
     public enum CLAW_POS
     {
         //Constants with values
         CLOSED(1),
-        OPEN(0);
+        OPEN(0),
+        TRANSFER(2),
+        AUTOOPEN(3);
 
         //Instance variable
         private final int val;
@@ -147,13 +151,18 @@ public class Deposit extends Subsystem {
         mPeriodicIO = new PeriodicIO();
 
         led = map.get(RevBlinkinLedDriver.class, "blinkin");
-        pivotL = map.get(ServoImplEx.class, "pivotL");
 
+        pivotL = map.get(ServoImplEx.class, "pivotL");
         pivotL.setPwmRange(new PwmControl.PwmRange(500, PwmControl.PwmRange.usPulseUpperDefault));
+
         pivotR = map.get(ServoImplEx.class, "pivotR");
         pivotR.setPwmRange(new PwmControl.PwmRange(500, PwmControl.PwmRange.usPulseUpperDefault));
         pivotR.setDirection(ServoImplEx.Direction.REVERSE);
-        pivotRTimed = new TimedServo(pivotR, new ElapsedTime());
+
+        pivotLTimed = new TimedProfiledServo(pivotL, new ElapsedTime());
+        pivotLTimed.servo.setPwmRange(new PwmControl.PwmRange(500, PwmControl.PwmRange.usPulseUpperDefault));
+
+        pivotRTimed = new TimedProfiledServo(pivotR, new ElapsedTime());
         pivotRTimed.servo.setPwmRange(new PwmControl.PwmRange(500, PwmControl.PwmRange.usPulseUpperDefault));;
 
         claw = map.get(ServoImplEx.class, "claw");
@@ -224,7 +233,12 @@ public class Deposit extends Subsystem {
     }
     public void setPivotPos(int pos, int time)
     {
+        setPivotPos(pos, time, new double[]{1});
+    }
+    public void setPivotPos(int pos, int time, double[] profile)
+    {
         mPeriodicIO.pivotPos = pos;
+        mPeriodicIO.profile = profile;
         setServoTime(time);
     }
 
@@ -276,19 +290,31 @@ public class Deposit extends Subsystem {
         servoTime = speed;
     }
 
+    public boolean servoDone(){
+        return pivotRTimed.reachedTgt;
+    }
+
+    public int getPivotPos(){
+        return mPeriodicIO.pivotPos;
+    }
     public void writePivotOutputs()
     {
         if (mPeriodicIO.prevPivotPos != mPeriodicIO.pivotPos)
         {
+
+            pivotRTimed.setProfile(mPeriodicIO.profile);
+            pivotLTimed.setProfile(mPeriodicIO.profile);
+            mPeriodicIO.prevprofile = mPeriodicIO.profile;
+
             pivotRTimed.setTimedPosition(pivotPositions[mPeriodicIO.pivotPos], servoTime);
-            pivotL.setPosition(pivotRTimed.servo.getPosition()-0.02);
+            pivotLTimed.setTimedPosition(pivotPositions[mPeriodicIO.pivotPos]-0.02, servoTime);
 
 
             mPeriodicIO.prevPivotPos = mPeriodicIO.pivotPos;
         }
 
         pivotRTimed.update();
-        pivotL.setPosition(pivotRTimed.servo.getPosition()-0.02);
+        pivotLTimed.update();
     }
 
     public void writeClawOutputs()
@@ -317,7 +343,7 @@ public class Deposit extends Subsystem {
     @Override
     public String getTelem(double time)
     {
-        boolean debug = false;
+        boolean debug = true;
         String output = "";
         if( debug ) {
             output =   " pivotL.tgt  :: " + pivotL.getPosition() + "\n";
@@ -336,6 +362,8 @@ public class Deposit extends Subsystem {
         public RevBlinkinLedDriver.BlinkinPattern ledstate;
         public RevBlinkinLedDriver.BlinkinPattern prevledstate;
         public int pivotPos=-1;
+        public double[] profile;
+        public double[] prevprofile;
         public int clawPos=-1;
         public int prevPivotPos = -1;
         public int prevPitch = -200000;

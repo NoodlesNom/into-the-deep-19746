@@ -68,10 +68,11 @@ public class Lift extends Subsystem {
     // 758 is the hard max of the lift, but we should not use it as is puts strain on the string.
     // 720 gives us second set line bonus.
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
+    //
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-            private int[] liftPositions = new int[]{1,110,215,270,760,1040,400,830, 200,130, 930};
+    private int[] liftPositions = new int[]{1,150,220,270,760,1040,400,830, 330,330, 960};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
-
+    //120 spec place normal, changed for mega
     public final double SAFE_HEIGHT = 200;
 
     public enum LIFT_POS
@@ -276,7 +277,7 @@ public class Lift extends Subsystem {
         setOpenLoop(0);
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
-    public  void zerofinish()
+    public  void zerofinish(double time)
     {
         lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
@@ -413,7 +414,7 @@ public class Lift extends Subsystem {
 
     public boolean closeEnough()
     {
-        return Math.abs(tgtTicks - mPeriodicIO.lastReadTicks) <= 20 && Math.abs(mPeriodicIO.lastReadVel) < 100; // TODO: What is a resonable velocity
+        return Math.abs(tgtTicks - mPeriodicIO.lastReadTicks) <= 20 && Math.abs(mPeriodicIO.lastReadVel) < 200; // TODO: What is a resonable velocity
     }
 
     public int getNearestVerticalIndex(double pos)
