@@ -658,7 +658,7 @@ public class BSTEMTELE extends OpMode {
             shoottimer.reset();
             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.IDLE.getVal());
         }
-        if (gamepad2.dpad_up||gamepad2.dpad_left){
+        if (gamepad2.dpad_up){
             prevtelestate = teleFSM;
             teleFSM = teleState.SAMPLE;
         }
