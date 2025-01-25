@@ -7,7 +7,9 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -122,7 +124,7 @@ public class sample4 extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal(), 600, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
+                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal(), 1000, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                 return robot.mDeposit.servoDone();
             }
         }
@@ -266,7 +268,6 @@ public class sample4 extends LinearOpMode {
                     robot.mIntake.setGatePos(Intake.GATE_POS.CLAMP.getVal());
                     generaltimer.reset();
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
-                    robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
                 }
 
                 if (generaltimer.seconds()>1.4&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.AUTOSAMPLE.getVal()){
@@ -293,7 +294,7 @@ public class sample4 extends LinearOpMode {
                 if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
                     if (!genericboolean&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.AUTOSAMPLE.getVal()&&robot.mDeposit.getPivotPos() != Deposit.PIVOT_POS.TRANSFER.getVal()) {
                         robot.mIntake.setExtendoPos(Intake.EXTEND_POS.AUTOINTAKEPREPARE.getVal(), timer.seconds());
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal(), 600, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal(), 1000, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                         robot.mDeposit.setDiffyPos(0,-90);
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                     }
@@ -342,7 +343,7 @@ public class sample4 extends LinearOpMode {
                 if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
                     if (!genericboolean&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.AUTOSAMPLE.getVal()&&robot.mDeposit.getPivotPos() != Deposit.PIVOT_POS.TRANSFER.getVal()) {
                         robot.mIntake.setExtendoPos(Intake.EXTEND_POS.GETOUT.getVal(), timer.seconds());
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal(), 600, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal(), 1000, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                         robot.mDeposit.setDiffyPos(0,-90);
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                     }
@@ -385,7 +386,7 @@ public class sample4 extends LinearOpMode {
 
                 if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
                     if (!genericboolean&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.AUTOSAMPLE.getVal()&&robot.mDeposit.getPivotPos() != Deposit.PIVOT_POS.TRANSFER.getVal()) {
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal(), 600, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOSAMPLE.getVal(), 1000, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                         robot.mDeposit.setDiffyPos(0,-90);
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
                         robot.mIntake.setExtendoPos(0,timer.seconds());
@@ -621,7 +622,7 @@ public class sample4 extends LinearOpMode {
                         controller.diffyPlace(),
                         controller.pivotIdle()
                 ))
-                .strafeToLinearHeading(new Vector2d(11,18), Math.toRadians(70))
+                .strafeToLinearHeading(new Vector2d(11,18), Math.toRadians(69))
                 .stopAndAdd(new SequentialAction(
                         controller.liftUp(),
                         controller.pivotUp(),
@@ -639,27 +640,27 @@ public class sample4 extends LinearOpMode {
                         controller.liftTransferPrepInstant(),
                         controller.extendoOutInstant()
                 ))
-                .strafeToLinearHeading(new Vector2d(12,20), Math.toRadians(70))
+                .strafeToLinearHeading(new Vector2d(12,20), Math.toRadians(69))
                 .stopAndAdd(controller.extendoOutInstant())
                 .waitSeconds(0.75)
                 .build();
 
-        Action sample1_intake2 = drive.actionBuilder(new Pose2d(12,20, Math.toRadians(70)))
+        Action sample1_intake2 = drive.actionBuilder(new Pose2d(12,20, Math.toRadians(69)))
                 .waitSeconds(0.2)
-                .strafeToLinearHeading(new Vector2d(7,19), Math.toRadians(84))
+                .strafeToLinearHeading(new Vector2d(7,19), Math.toRadians(83))
                 .build();
 
-        Action intake4 = drive.actionBuilder(new Pose2d(7,19, Math.toRadians(84)))
+        Action intake4 = drive.actionBuilder(new Pose2d(7,19, Math.toRadians(83)))
                 .strafeToLinearHeading(new Vector2d(10,19), Math.toRadians(108))
                 .build();
 
         Action sample3 = drive.actionBuilder(new Pose2d(10,19, Math.toRadians(108)))
-                .strafeToLinearHeading(new Vector2d(7,19), Math.toRadians(84))
+                .strafeToLinearHeading(new Vector2d(7,19), Math.toRadians(83))
                 .build();
 
-        Action park = drive.actionBuilder(new Pose2d(7,19, Math.toRadians(87)))
-                .splineTo(new Vector2d(42,62), Math.toRadians(0))
-                .splineTo(new Vector2d(49,62), Math.toRadians(0))
+        Action park = drive.actionBuilder(new Pose2d(7,19, Math.toRadians(83)))
+                .splineTo(new Vector2d(42,60.5), Math.toRadians(0),new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-30, 80))
+                .splineTo(new Vector2d(50,60.5), Math.toRadians(0),new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-30, 80))
 
                 .build();
 

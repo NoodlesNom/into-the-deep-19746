@@ -70,7 +70,7 @@ public class Lift extends Subsystem {
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
     //
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-    private int[] liftPositions = new int[]{1,150,220,270,760,1040,400,830, 330,330, 960};
+    private int[] liftPositions = new int[]{1,130,220,270,760,1040,400,830, 330,330, 960};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
     //120 spec place normal, changed for mega
     public final double SAFE_HEIGHT = 200;

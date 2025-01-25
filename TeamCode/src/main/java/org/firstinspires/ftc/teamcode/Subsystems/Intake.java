@@ -66,7 +66,7 @@ public class Intake extends Subsystem {
         }
     }
     //0.565 with fixed intake
-    public static double[] pivotPos = new double[] {0, 0.54, 0.04, 0.18, 0.18, 0.18, 0.4, 0.3};
+    public static double[] pivotPos = new double[] {0, 0.54, 0.04, 0.18, 0.18, 0.18, 0.4, 0.3, 0.44};
     public enum PIVOT_POS
     {
         //Constants with values
@@ -76,7 +76,8 @@ public class Intake extends Subsystem {
         TRANSFER(4),
         TRAP(5),
         AUTOINIT(6),
-        INTAKEPREP(7);
+        INTAKEPREP(7),
+        BLOCKCLEAR(8);
 
         //Instance variable
         private final int val;
@@ -465,7 +466,7 @@ public class Intake extends Subsystem {
         }
 
         if(mPeriodicIO.prevGate_pos != mPeriodicIO.gate_pos) {
-            gate.setPosition(gatePos[mPeriodicIO.gate_pos]);
+            //gate.setPosition(gatePos[mPeriodicIO.gate_pos]);
             mPeriodicIO.prevGate_pos = mPeriodicIO.gate_pos;
         }
         if(mPeriodicIO.prevExtend_pos != mPeriodicIO.extendo_pos) {

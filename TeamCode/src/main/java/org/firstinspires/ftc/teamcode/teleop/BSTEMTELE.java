@@ -193,7 +193,7 @@ public class BSTEMTELE extends OpMode {
 
         switch (teleFSM){
             case IDLE:{
-
+                robot.mDeposit.setLed(team);
                 if (prevtelestate == teleState.SAMPLE) {
                     if (sampletimer.seconds() > 0.6) {
                         if (samplemode) {
@@ -326,12 +326,12 @@ public class BSTEMTELE extends OpMode {
                 }
                 if (spectimer.seconds()>0.5){
                     if (specangled) {
-                        robot.mDeposit.setDiffyPos(-50, 70);
+                        robot.mDeposit.setDiffyPos(90, 0);
                         robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
 
                     }else{
                         if (specplacing) {
-                            robot.mDeposit.setDiffyPos(-50, 70);
+                            robot.mDeposit.setDiffyPos(-40, 70);
                         }
                         robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
                     }
@@ -339,7 +339,7 @@ public class BSTEMTELE extends OpMode {
                 }
                 if (spectimer.seconds()>0.4) {
                     if (specangled) {
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal());
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECPUSH.getVal());
                     }else{
                         if (specplacing) {
                             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal());
@@ -379,8 +379,13 @@ public class BSTEMTELE extends OpMode {
                 }else if(gamepad1.left_bumper){
                     robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
                     stalledintaking = false;
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                     robot.mIntake.setIntakeOpenLoop(-0.6);
+                }else if(gamepad1.y){
+                    robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
+                    stalledintaking = false;
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
+                    robot.mIntake.setIntakeOpenLoop(0.7);
                 }else {
                     stalledintaking = false;
                     robot.mIntake.setIntakeOpenLoop(0);

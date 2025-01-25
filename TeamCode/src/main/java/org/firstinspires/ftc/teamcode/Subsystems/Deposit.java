@@ -54,7 +54,7 @@ public class Deposit extends Subsystem {
     // private double[] pivotPositions = new double[]{.46, .78}; // TELEOP PIVOTS
     // private double[] pivotPositions = new double[]{.47, .78, .52}; // Regionals Gobilda Pivot
     //0.467 straight up
-    private double[] pivotPositions = new double[]{0.915,0.67,0.4, 0, 0.467, 0.73, 0.775, 0.8, 0.284, 0.204,0.25,0.82,0.590}; // Double Wide Axon Pivot
+    private double[] pivotPositions = new double[]{0.915,0.65,0.4, 0, 0.467, 0.73, 0.775, 0.8, 0.284, 0.204,0.25,0.82,0.590,0.63}; // Double Wide Axon Pivot
 
     public enum PIVOT_POS
     {
@@ -72,7 +72,8 @@ public class Deposit extends Subsystem {
         AUTOSPECANGLED(9),
         AUTOSAMPLE(10),
         AUTOINIT(11),
-        AUTOEND(12);
+        AUTOEND(12),
+        SPECPUSH(13);
 
 
         //Instance variable
