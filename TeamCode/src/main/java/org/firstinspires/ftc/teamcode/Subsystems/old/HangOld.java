@@ -251,6 +251,11 @@ public class HangOld extends Subsystem {
         return output;
     }
 
+    @Override
+    public String getDemands() {
+        return "";
+    }
+
     public enum ScrewControlState
     {
         OPEN_LOOP,

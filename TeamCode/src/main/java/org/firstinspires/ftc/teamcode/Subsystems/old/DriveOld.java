@@ -84,6 +84,11 @@ public class DriveOld extends Subsystem {
     }
 
     @Override
+    public String getDemands() {
+        return "";
+    }
+
+    @Override
     public void readPeriodicInputs(double time) {
         // Read all the sensors
 

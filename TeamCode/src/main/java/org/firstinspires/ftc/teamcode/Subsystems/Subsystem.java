@@ -13,6 +13,7 @@ public abstract class Subsystem {
     public abstract void stop();
 
     public abstract String getTelem(double time);
+    public abstract String getDemands();
 
     public abstract void readPeriodicInputs(double time);
 

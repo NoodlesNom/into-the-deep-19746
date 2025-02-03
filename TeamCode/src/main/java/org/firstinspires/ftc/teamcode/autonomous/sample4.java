@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
+import static org.firstinspires.ftc.teamcode.autonomous.gf.OldAutoMaster.team;
+
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.config.Config;
@@ -12,6 +14,7 @@ import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -36,7 +39,7 @@ public class sample4 extends LinearOpMode {
     private boolean genericboolean = false;
 
     ElapsedTime generaltimer = new ElapsedTime();
-    Deadline logging = new Deadline(200, TimeUnit.MILLISECONDS);
+    Deadline logging = new Deadline(250, TimeUnit.MILLISECONDS);
     boolean debug = true;
     ElapsedTime loopTimer = new ElapsedTime();
     public class robotController {
@@ -669,6 +672,15 @@ public class sample4 extends LinearOpMode {
             robot.update(timer.seconds());
             timer.reset();
             robot.autoInit();
+            robot.mDeposit.setLiveLed(team);
+            telemetry.addLine("PRESS A (BOTTOM) FOR BLUE");
+            telemetry.addLine("PRESS B (RIGHT) FOR RED");
+            if (gamepad1.a){
+                team = RevBlinkinLedDriver.BlinkinPattern.BLUE;
+            }
+            if (gamepad1.b){
+                team = RevBlinkinLedDriver.BlinkinPattern.RED;
+            }
 
         }
 

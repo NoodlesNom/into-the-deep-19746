@@ -155,6 +155,11 @@ public class GFDrive extends Subsystem {
     }
 
     @Override
+    public String getDemands() {
+        return "";
+    }
+
+    @Override
     public void readPeriodicInputs(double timestamp) {
         if (lastTime != timestamp)
         {

@@ -89,14 +89,29 @@ public class Drive extends Subsystem {
 
         drive.mPeriodicIO.estimate = drive.updatePoseEstimate();
 
-        drive.mPeriodicIO.flcurrent = drive.leftFront.getCurrent(CurrentUnit.AMPS);
-        drive.mPeriodicIO.frcurrent = drive.rightFront.getCurrent(CurrentUnit.AMPS);
-        drive.mPeriodicIO.blcurrent = drive.leftBack.getCurrent(CurrentUnit.AMPS);
-        drive.mPeriodicIO.brcurrent = drive.rightBack.getCurrent(CurrentUnit.AMPS);
+        drive.mPeriodicIO.flcurrent = 0;//drive.leftFront.getCurrent(CurrentUnit.AMPS);
+        drive.mPeriodicIO.frcurrent = 0;//drive.rightFront.getCurrent(CurrentUnit.AMPS);
+        drive.mPeriodicIO.blcurrent = 0;//drive.leftBack.getCurrent(CurrentUnit.AMPS);
+        drive.mPeriodicIO.brcurrent = 0;//drive.rightBack.getCurrent(CurrentUnit.AMPS);
 
 
     }
-
+    @Override
+    public String getDemands(){
+        boolean debug = true;
+        String output = "";
+        if( debug ) {
+            output =  "   fl.pwr  :: " + drive.mPeriodicIO.lf_pwr + "\n";
+            output += "   fr.pwr  :: " + drive.mPeriodicIO.rf_pwr + "\n";
+            output += "   bl.pwr  :: " + drive.mPeriodicIO.lr_pwr + "\n";
+            output += "   br.pwr  :: " + drive.mPeriodicIO.rr_pwr + "\n";
+//            output += "   fl.amps  :: " + drive.mPeriodicIO.flcurrent + "\n";
+//            output += "   fr.amps  :: " + drive.mPeriodicIO.frcurrent + "\n";
+//            output += "   bl.amps  :: " + drive.mPeriodicIO.blcurrent + "\n";
+//            output += "   br.amps  :: " + drive.mPeriodicIO.brcurrent + "\n";
+        }
+        return output;
+    }
     @Override
     public void writePeriodicOutputs() {
         drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr*1);

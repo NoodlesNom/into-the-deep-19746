@@ -768,6 +768,11 @@ public class LiftOld extends Subsystem {
         return output;
     }
 
+    @Override
+    public String getDemands() {
+        return "";
+    }
+
     public static class PeriodicIO {
         // INPUTS
         public double lastReadTicks;

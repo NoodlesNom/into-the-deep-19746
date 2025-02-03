@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PwmControl;
@@ -12,7 +13,7 @@ import org.firstinspires.ftc.teamcode.util.TimedProfiledServo;
 import org.firstinspires.ftc.teamcode.util.TimedServo;
 
 import java.util.concurrent.TimeUnit;
-
+@Config
 public class Deposit extends Subsystem {
 
     //private Servo gate;
@@ -54,7 +55,7 @@ public class Deposit extends Subsystem {
     // private double[] pivotPositions = new double[]{.46, .78}; // TELEOP PIVOTS
     // private double[] pivotPositions = new double[]{.47, .78, .52}; // Regionals Gobilda Pivot
     //0.467 straight up
-    private double[] pivotPositions = new double[]{0.915,0.65,0.4, 0, 0.467, 0.73, 0.775, 0.8, 0.284, 0.204,0.25,0.82,0.590,0.63}; // Double Wide Axon Pivot
+    public static double[] pivotPositions = new double[]{0.985,0.72,0.47, 0.08, 0.519, 0.8, 0.845, 0.87, 0.354, 0.274,0.32,0.89,0.660,0.7, 0.76}; // Double Wide Axon Pivot
 
     public enum PIVOT_POS
     {
@@ -73,7 +74,8 @@ public class Deposit extends Subsystem {
         AUTOSAMPLE(10),
         AUTOINIT(11),
         AUTOEND(12),
-        SPECPUSH(13);
+        SPECPUSH(13),
+        AUTOCLEAR(14);
 
 
         //Instance variable
@@ -356,6 +358,11 @@ public class Deposit extends Subsystem {
             output +=  " diffyR.tgt  :: " + diffyR.getPosition() + "\n";
         }
         return output;
+    }
+
+    @Override
+    public String getDemands() {
+        return "";
     }
 
     public static class PeriodicIO {

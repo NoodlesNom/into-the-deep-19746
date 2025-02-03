@@ -24,12 +24,16 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Config
-@TeleOp(name = "BSTEM teleop", group = "opMode")
+@TeleOp(name = "SKIBIDI🗣️🗣️🔥💯💯🗣️💯🔥AAAAH", group = "opMode")
 public class BSTEMTELE extends OpMode {
 
     private Robot robot;
     public List<LynxModule> allHubs;
     public static double firstwait = 0.3;
+
+    public static int specplacingpivottime =800;
+
+    public static double[] specplacingprofile = new double[]{1,2,2,2,2,2,2,1,1,1};
     public static double intakewait = 0.15;
     public static double secondwait = 0.07;
     public static int intakepivaottime = 250;
@@ -44,7 +48,7 @@ public class BSTEMTELE extends OpMode {
     // Loop Time Tracker
     private ElapsedTime loopTimer = new ElapsedTime();
     private boolean debugLoopTime = false;
-    private double  outputRate = 0.5;
+    private double  outputRate = 0.25;
     private boolean liftRezeroing = false;
     private boolean intakeRezeroing = false;
     private Deadline logging = new Deadline((long)(outputRate*1000), TimeUnit.MILLISECONDS);
@@ -77,6 +81,7 @@ public class BSTEMTELE extends OpMode {
     private StickyButton clawButton = new StickyButton();
 
 
+    private double prevForwardPwr = 0;
     private int intakeStateHits = 0;
     private int clawToggleHits = 2;
     private ElapsedTime spectimer = new ElapsedTime();
@@ -195,6 +200,7 @@ public class BSTEMTELE extends OpMode {
             case IDLE:{
                 robot.mDeposit.setLed(team);
                 if (prevtelestate == teleState.SAMPLE) {
+                    //if last state was sample wait before coming back down
                     if (sampletimer.seconds() > 0.6) {
                         if (samplemode) {
                             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
@@ -212,18 +218,23 @@ public class BSTEMTELE extends OpMode {
                         robot.mIntake.setExtendoPos(0, timer.seconds());
                     }
                 }else if (samplemode) {
+                    //if sample mode go to transfer pos
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                     robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
                     robot.mDeposit.setDiffyPos(35, 90);
                 }
+                //open claw; 1 = close, 2 = open
                 clawToggleHits = 2;
                 if (prevtelestate!=teleState.INTAKING) {
+                    //dont reset the bot if last state was intaking
                     if (prevtelestate != teleState.SAMPLE) {
+                        //if idle+samplemode, prep for transfer
                         if (samplemode) {
                             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                             robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
                             robot.mDeposit.setDiffyPos(35, 90);
                         } else if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal() || robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.SPECANGLED.getVal()) {
+                            //leave transfer pos
                             if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()) {
                                 robot.mLift.setTargetPos(Lift.LIFT_POS.SPECANGLED.getVal(), timer.seconds());
                             }
@@ -241,6 +252,7 @@ public class BSTEMTELE extends OpMode {
 
 
                     if (prevtelestate == teleState.TRANSFER) {
+                        //wait for lift to leave before raising pivot and diffy
                         if (transfertimer.seconds() > 0.3) {
                             robot.mDeposit.setDiffyPos(0, 0);
                             robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
@@ -249,6 +261,9 @@ public class BSTEMTELE extends OpMode {
                             robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
 
                         }
+                        //idk if this is redundant
+                        //it works so im not removing it
+                        //bite me
                     } else if (prevtelestate == teleState.SAMPLE) {
                         if (sampletimer.seconds() > 0.6) {
                             if (samplemode) {
@@ -267,6 +282,7 @@ public class BSTEMTELE extends OpMode {
                             robot.mIntake.setExtendoPos(0, timer.seconds());
                         }
                     } else {
+                        //reset intake
                         robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                         robot.mIntake.setIntakeOpenLoop(0);
                         robot.mIntake.setExtendoPos(0, timer.seconds());
@@ -285,7 +301,11 @@ public class BSTEMTELE extends OpMode {
             case SPECINTAKE:{
                 robot.mLift.setTargetPos(Lift.LIFT_POS.SPECINTAKE.getVal(), timer.seconds());
                 robot.mDeposit.setDiffyPos(70,-90);
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal());
+                if (samplemode&&(prevtelestate==teleState.IDLE||prevtelestate== teleState.TRANSFER)){
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal(), 1200, specplacingprofile);
+                }else {
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal(), specplacingpivottime, specplacingprofile);
+                }
                 samplemode = false;
                 if (gamepad1.a){
                     clawToggleHits = 1;
@@ -342,7 +362,8 @@ public class BSTEMTELE extends OpMode {
                         robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECPUSH.getVal());
                     }else{
                         if (specplacing) {
-                            robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal());
+                            robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal(), specplacingpivottime , specplacingprofile);
+
                         }else{
                             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECANGLED.getVal());
                         }
@@ -360,7 +381,7 @@ public class BSTEMTELE extends OpMode {
                     robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
                     robot.mDeposit.setDiffyPos(35, 90);
                 }
-                if (gamepad1.right_trigger>0.2&& robot.mIntake.getExtendoPosition()<520) {
+                if (gamepad1.right_trigger>0.2&& robot.mIntake.getExtendoPosition()<550) {
                     robot.mIntake.setExtendoOpenLoop(gamepad1.right_trigger*0.7);
                 }else if (gamepad1.left_trigger>0.2&& robot.mIntake.getExtendoPosition()>20){
                     robot.mIntake.setExtendoOpenLoop(-gamepad1.left_trigger*0.7);
@@ -443,41 +464,6 @@ public class BSTEMTELE extends OpMode {
                 }else if(transfertimer.seconds()>0.7&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.SAMPLE.getVal()){
                     robot.mIntake.setIntakeOpenLoop(-1);
                 }
-//                if (robot.mLift.closeEnough()&&robot.mIntake.closeEnough()&&!transferready){
-//                    robot.mIntake.setExtendoOpenLoop(-0.3);
-//                    robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
-//                    if (transfertimer.seconds()>firstwait){
-//                        robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
-//                        transferready = true;
-//                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRAP.getVal());
-//                        transfertimer.reset();
-//                        robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
-//
-//                    }else if (transfertimer.seconds()>intakewait){
-//                        robot.mIntake.setIntakeOpenLoop(1);
-//                    }
-//                }else if (transferready){
-//                    if (robot.mLift.getLiftTicks()<135){
-//                        clawToggleHits = 1;
-//                        if (transfertimer.seconds()>secondwait) {
-//                            prevtelestate = teleFSM;
-//                            teleFSM = teleState.SAMPLE;
-//
-//                            robot.mIntake.setIntakeOpenLoop(0);
-//                            transfertimer.reset();
-//                            robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
-//                            robot.mIntake.setExtendoPos(Intake.EXTEND_POS.TRANSFER.getVal(), timer.seconds());
-//                        }
-//                    }else{
-//                        transfertimer.reset();
-//                    }
-//
-//                } else {
-//                    transfertimer.reset();
-//                    clawToggleHits = 2;
-//                }
-
-
                 break;
             }
             case SHOOT:{
@@ -546,37 +532,33 @@ public class BSTEMTELE extends OpMode {
                 if (samplesafe){
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLESAFE.getVal(), timer.seconds());
                     if (robot.mLift.getLiftTicks()>730) {
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 300, new double[] {2,3,3,3,3,3,3,2,1,1});
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 600, new double[] {2,3,3,3,3,3,3,2,1,1});
 
                         if (robot.mLift.closeEnough()){
                             robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.GREEN);
-
                         }else{
                             robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.YELLOW);
 
                         }
                         robot.mDeposit.setDiffyPos(-60, -90);
                     }else{
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.IDLE.getVal(), 700, new double[] {2,3,3,3,3,3,3,2,1,1});
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.IDLE.getVal(), 800, new double[] {2,3,3,3,3,3,3,2,1,1});
 
                         robot.mDeposit.setDiffyPos(0, -90);
                     }
                 }else {
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(), timer.seconds());
-                    if (robot.mLift.getLiftTicks()>650) {
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 300, new double[] {2,3,3,3,3,3,3,2,1,1});
-
+                    if (robot.mLift.getLiftTicks()>700) {
                         if (robot.mLift.closeEnough()){
                             robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.GREEN);
                         }else{
                             robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.YELLOW);
                         }
-                        robot.mDeposit.setDiffyPos(-60, -90);
-                    }else{
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.IDLE.getVal(), 700, new double[] {2,3,3,3,3,3,3,2,1,1});
-
-                        robot.mDeposit.setDiffyPos(0, -90);
                     }
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 1000, new double[] {2,3,3,3,3,3,3,2,1,1});
+
+                    robot.mDeposit.setDiffyPos(-60, -90);
+
                 }
 
 
@@ -687,11 +669,17 @@ public class BSTEMTELE extends OpMode {
         double driveInput = -gamepad1.left_stick_y;
         double strafeInput = -gamepad1.left_stick_x;
         double turnInput = -gamepad1.right_stick_x;
-        if (false){
-            driveInput*=0.8;
-            strafeInput*=0.8;
-            turnInput*=0.8;
+        if (Math.abs(robot.mLift.mPeriodicIO.demand)+Math.abs(robot.mIntake.getPowerDemandSum())>2.0||teleFSM == teleState.TRANSFER){
+            driveInput*=0.7;
+            strafeInput*=0.7;
+            turnInput*=0.7;
         }
+
+        if (driveInput<prevForwardPwr && teleFSM == teleState.SAMPLE){
+            driveInput = prevForwardPwr-Math.min(prevForwardPwr-driveInput, 0.1);
+        }
+        prevForwardPwr = driveInput;
+
         robot.mDrive.drive.setDrivePowers(new PoseVelocity2d(new Vector2d(driveInput, strafeInput), turnInput));
 
 
@@ -740,13 +728,14 @@ public class BSTEMTELE extends OpMode {
         //    lastOutput = timer.seconds();
         //}
 
-        boolean debug = false;
+        boolean debug = true;
         if(debug) {
             if(logging.hasExpired())
             {
                 logging.reset();
                 String debugMsg = robot.getTelem(time);
                 debugMsg += String.format("loopTime = %4.0f\n", loopTimer.milliseconds());
+                debugMsg += String.format("tele State = %s\n", teleFSM.name());
                 BotLog.logD("BSDbg",debugMsg);
             }
             loopTimer.reset();

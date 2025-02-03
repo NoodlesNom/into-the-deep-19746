@@ -53,7 +53,7 @@ public class Lift extends Subsystem {
     public static double F = 0;
     private double vF = F;
     public static double MAX_LIFT_PWR = 1;
-    public static double MIN_LIFT_PWR = -1;
+    public static double MIN_LIFT_PWR = -0.8;
 
     // This are from Center Stage (no external encoder)
     //    private final double P = 0.0075 / 1.3;
@@ -70,9 +70,10 @@ public class Lift extends Subsystem {
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
     //
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-    private int[] liftPositions = new int[]{1,130,220,270,760,1040,400,830, 330,330, 960};
+    private int[] liftPositions = new int[]{1,130 ,225,270,760,1040,320,830, 330,330, 960};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
     //120 spec place normal, changed for mega
+    //1.25mm per tick
     public final double SAFE_HEIGHT = 200;
 
     public enum LIFT_POS
@@ -434,7 +435,7 @@ public class Lift extends Subsystem {
     {
         mPeriodicIO.prevLastReadPos = mPeriodicIO.lastReadTicks;
         mPeriodicIO.prevLastReadVel = mPeriodicIO.lastReadVel;
-        mPeriodicIO.current = lift.getCurrent(CurrentUnit.AMPS);
+        mPeriodicIO.current = 0;//lift.getCurrent(CurrentUnit.AMPS);
         mPeriodicIO.lastReadTicks = lift.getCurrentPosition();
         mPeriodicIO.lastReadVel = lift.getVelocity();
     }
@@ -473,11 +474,22 @@ public class Lift extends Subsystem {
 
         return output;
     }
+    @Override
+    public String getDemands(){
+        boolean debug = true;
+        String output = "";
+        if( debug ) {
+            output =  "   lift.pwr  :: " + mPeriodicIO.demand + "\n";
+            //output += "   lift.amps  :: " + mPeriodicIO.current + "\n";
+        }
+        return output;
+    }
 
     public static class PeriodicIO {
         // INPUTS
         public double lastReadTicks;
         public double lastReadVel;
+
 
         // OUTPUTS
         public double demand;

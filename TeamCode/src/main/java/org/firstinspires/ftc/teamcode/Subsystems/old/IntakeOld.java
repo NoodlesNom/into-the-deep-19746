@@ -281,6 +281,11 @@ public class IntakeOld extends Subsystem {
         return output;
     }
 
+    @Override
+    public String getDemands() {
+        return "";
+    }
+
     public static class PeriodicIO {
         // INPUTS
         public double intake_velocity = -1; // velocity of the intake in ticks/sec

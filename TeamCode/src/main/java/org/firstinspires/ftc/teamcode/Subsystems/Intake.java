@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -17,6 +18,8 @@ public class Intake extends Subsystem {
     private DcMotorEx intake;
     private DcMotorEx extendo;
     private Servo pivot;
+
+    private RevColorSensorV3 color;
     private ExtendoControlState mExtendoControlState;
 
     private double tgtTicks;
@@ -155,6 +158,8 @@ public class Intake extends Subsystem {
         vF = F;
         pid.setPID(P, I, D, vF);
 
+        //color = map.get(RevColorSensorV3.class, "color");
+
         nextPID = 0;
 
         setExtendoOpenLoop(0);
@@ -181,6 +186,11 @@ public class Intake extends Subsystem {
     {
         setGatePos(GATE_POS.CATCH.getVal());
         setPivotPos(PIVOT_POS.IDLE.getVal());
+    }
+
+    public void resetExtendoTicks(){
+        extendo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
@@ -254,6 +264,8 @@ public class Intake extends Subsystem {
             updateExtendoPID(timestamp);
         }
     }
+
+
 
     public  void setExtendoPos(int tgtPosArg, double timestamp)
     {
@@ -442,8 +454,8 @@ public class Intake extends Subsystem {
 
     public void readPeriodicInputs(double timestamp)
     {
-        mPeriodicIO.intake_current = intake.getCurrent(CurrentUnit.AMPS);
-        mPeriodicIO.extendo_current = extendo.getCurrent(CurrentUnit.AMPS);
+        mPeriodicIO.intake_current = 0;//intake.getCurrent(CurrentUnit.AMPS);
+        mPeriodicIO.extendo_current = 0;//extendo.getCurrent(CurrentUnit.AMPS);
         mPeriodicIO.prevLastExtendoTicks = mPeriodicIO.lastExtendoTicks;
         mPeriodicIO.prevLastExtendoVel = mPeriodicIO.lastExtendoVel;
 
@@ -503,6 +515,25 @@ public class Intake extends Subsystem {
 
         return output;
     }
+    @Override
+    public String getDemands(){
+        boolean debug = true;
+        String output = "";
+        if( debug ) {
+            output =  "   intake.pwr  :: " + mPeriodicIO.intake_demand + "\n";
+            //output += "   intake.amps  :: " + mPeriodicIO.intake_current + "\n";
+            output += "   extendo.pwr  :: " + mPeriodicIO.extendo_demand + "\n";
+            //output += "   extendo.amps  :: " + mPeriodicIO.extendo_current + "\n";
+        }
+        return output;
+    }
+
+
+    public double getPowerDemandSum(){
+        return Math.abs(mPeriodicIO.extendo_demand)+ Math.abs(mPeriodicIO.intake_demand);
+    }
+
+
 
     public static class PeriodicIO {
         public int pivot_pos;
