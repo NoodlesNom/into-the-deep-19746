@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
+import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.AnalogSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -18,6 +20,10 @@ public class Intake extends Subsystem {
     private DcMotorEx intake;
     private DcMotorEx extendo;
     private Servo pivot;
+
+    private AnalogInput pivotEncoder;
+
+    private Servo claw;
 
     private RevColorSensorV3 color;
     private ExtendoControlState mExtendoControlState;
@@ -43,7 +49,7 @@ public class Intake extends Subsystem {
     // Hardware states
     private PeriodicIO mPeriodicIO;
 
-    private double[] extendoPos = new double[] {1,170,350, 580, 350};
+    private double[] extendoPos = new double[] {1,170,350, 600, 380, 340};
 
     public enum EXTEND_POS
     {
@@ -52,7 +58,8 @@ public class Intake extends Subsystem {
         TRANSFER(1),
         GETOUT(2),
         INTAKING(3),
-        AUTOINTAKEPREPARE(4);
+        AUTOINTAKEPREPARE(4),
+        AUTOINTAKEPREPARESHORT(5);
 
         //Instance variable
         private final int val;
@@ -69,7 +76,7 @@ public class Intake extends Subsystem {
         }
     }
     //0.565 with fixed intake
-    public static double[] pivotPos = new double[] {0, 0.54, 0.04, 0.18, 0.18, 0.18, 0.4, 0.3, 0.44};
+    public static double[] pivotPos = new double[] {0, 0.65, 0.14, 0.32, 0.32, 0.32, 0.5, 0.4, 0.55};
     public enum PIVOT_POS
     {
         //Constants with values
@@ -87,6 +94,29 @@ public class Intake extends Subsystem {
 
         //Constructor to initialize the instance variable
         PIVOT_POS(int v)
+        {
+            val = v;
+        }
+
+        public int getVal()
+        {
+            return val;
+        }
+    }
+
+    private double[] clawPos = new double[]{0, 0.16};
+
+    public enum CLAW_POS
+    {
+        //Constants with values
+        CLOSED(1),
+        OPEN(0);
+
+        //Instance variable
+        private final int val;
+
+        //Constructor to initialize the instance variable
+        CLAW_POS(int v)
         {
             val = v;
         }
@@ -151,6 +181,8 @@ public class Intake extends Subsystem {
         extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         extendo.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
+        claw = map.get(Servo.class, "intakeclaw");
+
         pid = new MiniPID(P, I, D, F);
         pid.reset();
         pid.setOutputLimits(MIN_EXTENDO_PWR, MAX_EXTENDO_PWR);
@@ -168,6 +200,9 @@ public class Intake extends Subsystem {
 
         // servos
         pivot = map.get(Servo.class, "pivot");
+
+        pivotEncoder = map.get(AnalogInput.class, "pivot encoder");
+
 
         gate = map.get(Servo.class, "gate");
 
@@ -249,6 +284,12 @@ public class Intake extends Subsystem {
         //BotLog.logD(" Intake 1 :: ", "Pos %d, %5.2f", pos, intakePos[mPeriodicIO.pivot_pos]  );
     }
 
+    public  void setClawPos(int pos)
+    {
+        mPeriodicIO.claw_pos = pos;
+        //BotLog.logD(" Intake 1 :: ", "Pos %d, %5.2f", pos, intakePos[mPeriodicIO.pivot_pos]  );
+    }
+
     public void setExtendoTicks(int tgtTicksArg, double timestamp)
     {
         mExtendoControlState = ExtendoControlState.PID_CONTROL;
@@ -265,7 +306,13 @@ public class Intake extends Subsystem {
         }
     }
 
-
+    public void setOutputLimits(double min, double max){
+        if (min!=MIN_EXTENDO_PWR||max!=MAX_EXTENDO_PWR) {
+            MIN_EXTENDO_PWR = min;
+            MAX_EXTENDO_PWR = max;
+            pid.setOutputLimits(MIN_EXTENDO_PWR, MAX_EXTENDO_PWR);
+        }
+    }
 
     public  void setExtendoPos(int tgtPosArg, double timestamp)
     {
@@ -364,6 +411,11 @@ public class Intake extends Subsystem {
         return mPeriodicIO.lastExtendoTicks;
     }
 
+    public double getPivotEncoderPos()
+    {
+        return mPeriodicIO.pivotEncoderPos;
+    }
+
     public double getTargetExtendoPosition()
     {
         return extendoPos[mPeriodicIO.extendo_pos];
@@ -409,7 +461,7 @@ public class Intake extends Subsystem {
     }
     public boolean closeEnough()
     {
-        boolean nonZero = Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20 && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
+        boolean nonZero = Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20 && Math.abs(mPeriodicIO.lastExtendoVel) < 200; // TODO: What is a resonable velocity
         boolean nearZero = ( (Math.abs(tgtTicks - mPeriodicIO.lastExtendoTicks) <= 20) || (mPeriodicIO.lastExtendoTicks<0) )  && Math.abs(mPeriodicIO.lastExtendoVel) < 100; // TODO: What is a resonable velocity
 
         if (tgtTicks < 20) {
@@ -458,6 +510,7 @@ public class Intake extends Subsystem {
         mPeriodicIO.extendo_current = 0;//extendo.getCurrent(CurrentUnit.AMPS);
         mPeriodicIO.prevLastExtendoTicks = mPeriodicIO.lastExtendoTicks;
         mPeriodicIO.prevLastExtendoVel = mPeriodicIO.lastExtendoVel;
+        mPeriodicIO.pivotEncoderPos = pivotEncoder.getVoltage()/3.3*360;
 
         mPeriodicIO.lastExtendoTicks = extendo.getCurrentPosition();
         mPeriodicIO.lastExtendoVel = extendo.getVelocity();
@@ -475,6 +528,11 @@ public class Intake extends Subsystem {
         if(mPeriodicIO.prevPivot_pos != mPeriodicIO.pivot_pos) {
             pivot.setPosition(pivotPos[mPeriodicIO.pivot_pos]);
             mPeriodicIO.prevPivot_pos = mPeriodicIO.pivot_pos;
+        }
+
+        if(mPeriodicIO.prevClaw_pos != mPeriodicIO.claw_pos) {
+            claw.setPosition(clawPos[mPeriodicIO.claw_pos]);
+            mPeriodicIO.prevClaw_pos = mPeriodicIO.claw_pos;
         }
 
         if(mPeriodicIO.prevGate_pos != mPeriodicIO.gate_pos) {
@@ -537,6 +595,8 @@ public class Intake extends Subsystem {
 
     public static class PeriodicIO {
         public int pivot_pos;
+
+        public int claw_pos;
         public int gate_pos;
 
         public double intake_current = 0;
@@ -553,6 +613,10 @@ public class Intake extends Subsystem {
         public double intake_demand;
 
         public int prevPivot_pos = -1;
+
+        public double pivotEncoderPos =-1;
+
+        public int prevClaw_pos = -1;
         public int prevGate_pos = -1;
         public int prevExtend_pos = -1;
         public double prevIntake_demand = -2;

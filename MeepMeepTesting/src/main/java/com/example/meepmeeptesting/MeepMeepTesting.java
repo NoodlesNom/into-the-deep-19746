@@ -19,12 +19,18 @@ public class MeepMeepTesting {
 
 
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(62.5, 23-72, Math.toRadians(90)))
-                        .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(46,23-72, Math.toRadians(90)), Math.toRadians(180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 70))
-                .splineToLinearHeading(new Pose2d(36,15-72, Math.toRadians(90)), Math.toRadians(270),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 70))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(10-72, 18-72, Math.toRadians(70)))
+//                        .strafeToLinearHeading(new Vector2d(62,19-72), Math.toRadians(70))
+//                        .waitSeconds(0.2)
+//                        .strafeToLinearHeading(new Vector2d(59,19-72), Math.toRadians(90))
+//                .waitSeconds(0.2)
+//                .strafeToLinearHeading(new Vector2d(48,19-72), Math.toRadians(90))
+//                .waitSeconds(0.2)
+//                .strafeToLinearHeading(new Vector2d(37,8-72), Math.toRadians(90))
+                .splineTo(new Vector2d(-57,-31), Math.toRadians(70),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-45, 80))
 
-                .splineToLinearHeading(new Pose2d(36,7.25-72, Math.toRadians(90)), Math.toRadians(270),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 70))
+                .splineTo(new Vector2d(48-72,60.5-72), Math.toRadians(0),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-45, 80))
+
 
 
 

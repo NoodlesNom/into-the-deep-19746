@@ -70,7 +70,7 @@ public class Lift extends Subsystem {
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
     //
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-    private int[] liftPositions = new int[]{1,130 ,225,270,760,1040,320,830, 330,330, 960};
+    private int[] liftPositions = new int[]{1,130 ,225,330,760,1040,320,830, 340,340, 960, 280};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
     //120 spec place normal, changed for mega
     //1.25mm per tick
@@ -89,7 +89,8 @@ public class Lift extends Subsystem {
         SAMPLESAFE(7),
         TRANSFERPREP(8),
         TRANSFER(9),
-        AUTOSAMPLE(10);
+        AUTOSAMPLE(10),
+        TRANSFERDOWN(11),;
 
         //Instance variable
         private final int val;

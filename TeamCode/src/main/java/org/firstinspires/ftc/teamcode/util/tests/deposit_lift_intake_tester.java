@@ -49,6 +49,8 @@ public class deposit_lift_intake_tester extends LinearOpMode {
     private StickyButton liftModeStickyButton = new StickyButton();
 
     private ServoImplEx claw;
+
+    private ServoImplEx intakeclaw;
     private ServoImplEx pivotL;
     private ServoImplEx pivotR;
 
@@ -63,6 +65,7 @@ public class deposit_lift_intake_tester extends LinearOpMode {
 
     public static double pivot_pos = 0.5;
     public static double claw_pos = 0.3;
+    public static double intake_claw_pos = 0;
     public static double intakepos = 0.1;
     public static boolean move = false;
 
@@ -140,7 +143,9 @@ public class deposit_lift_intake_tester extends LinearOpMode {
         pivotR.setPosition(0.467);
 
         claw = hardwareMap.get(ServoImplEx .class, "claw");
+        intakeclaw = hardwareMap.get(ServoImplEx .class, "intakeclaw");
         claw.setPosition(claw_pos);
+        intakeclaw.setPosition(intake_claw_pos);
         diffyL = hardwareMap.get(ServoImplEx .class, "diffyL");
         diffyR = hardwareMap.get(ServoImplEx .class, "diffyR");
         diffyR.setDirection(ServoImplEx.Direction.REVERSE);
@@ -161,6 +166,7 @@ public class deposit_lift_intake_tester extends LinearOpMode {
             mapControls();
             if (move) {
                 claw.setPosition(claw_pos);
+                intakeclaw.setPosition(intake_claw_pos);
                 pivotL.setPosition(pivot_pos - 0.02);
                 pivotR.setPosition(pivot_pos);
 

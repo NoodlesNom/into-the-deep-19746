@@ -10,8 +10,10 @@
             <goBILDAPinpointRR name="pinpoint" port="1" bus="0" />
             <Servo name="hangL" port="0" />
             <Servo name="pivot" port="4" />
-            <Servo name="gate" port="2" />
+            <Servo name="gate" port="1" />
+            <Servo name="intakeclaw" port="2" />
             <RevBlinkinLedDriver name="blinkin" port="5" />
+            <AnalogInput name = "pivot encoder" port = "0"/>
         </LynxModule>
     </LynxUsbDevice>
     <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2D39HA" parentModuleAddress="2">
