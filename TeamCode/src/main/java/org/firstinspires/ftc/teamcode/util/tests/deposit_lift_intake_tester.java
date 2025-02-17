@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.util.tests;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -36,6 +38,9 @@ public class deposit_lift_intake_tester extends LinearOpMode {
     // *                \.          .'
     // *                  \________/
     // *
+    public static double RedThreshold = 1.25;
+    public static double BlueThreshold = 2.5;
+    public static double GreenThreshold = 1.1;
     private StickyButton liftIdxIncStickyButton = new StickyButton();
     private StickyButton liftIdxDecStickyButton = new StickyButton();
 
@@ -71,6 +76,8 @@ public class deposit_lift_intake_tester extends LinearOpMode {
 
     private Lift lift;
     private ElapsedTime myTimer;
+
+    private RevColorSensorV3 color;
 
     public static int liftTicks = 1;
     private int liftTicksMax = 900;
@@ -142,6 +149,9 @@ public class deposit_lift_intake_tester extends LinearOpMode {
         pivotL.setPosition(0.447);
         pivotR.setPosition(0.467);
 
+        color = hardwareMap.get(RevColorSensorV3.class, "color");
+
+
         claw = hardwareMap.get(ServoImplEx .class, "claw");
         intakeclaw = hardwareMap.get(ServoImplEx .class, "intakeclaw");
         claw.setPosition(claw_pos);
@@ -202,6 +212,14 @@ public class deposit_lift_intake_tester extends LinearOpMode {
             telemetry.addData("lift Enc: ", lift.getLiveLiftPosition());
             telemetry.addLine();
 
+            telemetry.addLine("R: "+ color.red());
+            telemetry.addLine("G: "+ color.green());
+            telemetry.addLine("B: "+ color.blue());
+
+            telemetry.addLine("redDetected: "+ detectedRed());
+            telemetry.addLine("yellowDetected: "+ detectedYellow());
+            telemetry.addLine("blueDetected: "+ detectedBlue());
+
             telemetry.update();
 
             if (idxMode)
@@ -211,6 +229,8 @@ public class deposit_lift_intake_tester extends LinearOpMode {
                 lift.setTargetTicks(liftTicks, myTimer.seconds());
             }
             lift.update(myTimer.seconds());
+
+
 
             boolean debug = true;
             if(debug)
@@ -222,5 +242,18 @@ public class deposit_lift_intake_tester extends LinearOpMode {
                 }
             }
         }
+    }
+    public boolean  detectedBlue(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        return (colors.blue / colors.red) > BlueThreshold;
+    }
+    public boolean  detectedRed(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        return (colors.red / colors.blue) > RedThreshold && (colors.red / colors.green) > GreenThreshold;
+    }
+
+    public boolean  detectedYellow(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        return (colors.red / colors.blue) > RedThreshold && (colors.red / colors.green) < GreenThreshold;
     }
 }

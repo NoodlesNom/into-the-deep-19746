@@ -1,12 +1,14 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.hardware.broadcom.BroadcomColorSensor;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.AnalogSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -21,10 +23,14 @@ public class Intake extends Subsystem {
     private DcMotorEx extendo;
     private Servo pivot;
 
-    private AnalogInput pivotEncoder;
+    //private AnalogInput pivotEncoder;
 
     private Servo claw;
 
+
+    private int redDetections =0;
+    private int greenDetections =0;
+    private int blueDetections =0;
     private RevColorSensorV3 color;
     private ExtendoControlState mExtendoControlState;
 
@@ -36,6 +42,9 @@ public class Intake extends Subsystem {
     private int PIDCount = 0;
     private int PIDSkipCount = 0;
     private double prevPIDTime = 0.0;
+    public static double RedThreshold = 1.25;
+    public static double BlueThreshold = 2.5;
+    public static double GreenThreshold = 1;
     private MiniPID pid;
     public static double P = 0.0075/ 1 ;
     public static double I = 0.0015 / 1;
@@ -76,7 +85,7 @@ public class Intake extends Subsystem {
         }
     }
     //0.565 with fixed intake
-    public static double[] pivotPos = new double[] {0, 0.65, 0.14, 0.32, 0.32, 0.32, 0.5, 0.4, 0.55};
+    public static double[] pivotPos = new double[] {0, 0.58, 0.09, 0.25, 0.25, 0.25, 0.45, 0.35, 0.51, 0.11};
     public enum PIVOT_POS
     {
         //Constants with values
@@ -87,7 +96,8 @@ public class Intake extends Subsystem {
         TRAP(5),
         AUTOINIT(6),
         INTAKEPREP(7),
-        BLOCKCLEAR(8);
+        BLOCKCLEAR(8),
+        HANG(9);
 
         //Instance variable
         private final int val;
@@ -104,7 +114,7 @@ public class Intake extends Subsystem {
         }
     }
 
-    private double[] clawPos = new double[]{0, 0.16};
+    private double[] clawPos = new double[]{0.05, 0.21};
 
     public enum CLAW_POS
     {
@@ -190,7 +200,8 @@ public class Intake extends Subsystem {
         vF = F;
         pid.setPID(P, I, D, vF);
 
-        //color = map.get(RevColorSensorV3.class, "color");
+        color = map.get(RevColorSensorV3.class, "color");
+        color.enableLed(true);
 
         nextPID = 0;
 
@@ -201,7 +212,7 @@ public class Intake extends Subsystem {
         // servos
         pivot = map.get(Servo.class, "pivot");
 
-        pivotEncoder = map.get(AnalogInput.class, "pivot encoder");
+        //pivotEncoder = map.get(AnalogInput.class, "pivot encoder");
 
 
         gate = map.get(Servo.class, "gate");
@@ -510,7 +521,7 @@ public class Intake extends Subsystem {
         mPeriodicIO.extendo_current = 0;//extendo.getCurrent(CurrentUnit.AMPS);
         mPeriodicIO.prevLastExtendoTicks = mPeriodicIO.lastExtendoTicks;
         mPeriodicIO.prevLastExtendoVel = mPeriodicIO.lastExtendoVel;
-        mPeriodicIO.pivotEncoderPos = pivotEncoder.getVoltage()/3.3*360;
+        //mPeriodicIO.pivotEncoderPos = pivotEncoder.getVoltage()/3.3*360;
 
         mPeriodicIO.lastExtendoTicks = extendo.getCurrentPosition();
         mPeriodicIO.lastExtendoVel = extendo.getVelocity();
@@ -550,6 +561,47 @@ public class Intake extends Subsystem {
             mPeriodicIO.prevextendo_demand = mPeriodicIO.extendo_demand;
         }
     }
+
+    public boolean  detectedBlue(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        if ((colors.blue / colors.red) > BlueThreshold){
+            blueDetections++;
+        }else{
+            blueDetections = 0;
+        }
+        if (blueDetections>4){
+            blueDetections = 4;
+        }
+        return blueDetections == 4;
+    }
+    public boolean  detectedRed(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        if ((colors.red / colors.blue) > RedThreshold && (colors.red / colors.green) > GreenThreshold){
+            redDetections++;
+        }else{
+            redDetections = 0;
+        }
+        if (redDetections>4){
+            redDetections = 4;
+        }
+        return redDetections == 4;
+    }
+
+    public boolean  detectedYellow(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        if ((colors.red / colors.blue) > RedThreshold && (colors.red / colors.green) < GreenThreshold){
+            greenDetections++;
+        }else{
+            greenDetections = 0;
+        }
+        if (greenDetections>4){
+            greenDetections = 4;
+        }
+        return greenDetections == 4;
+    }
+
+
+
 
     @Override
     public String getTelem(double time)

@@ -31,15 +31,23 @@ import org.firstinspires.ftc.teamcode.util.StickyButton;
 import java.util.concurrent.TimeUnit;
 
 @Config
-@Autonomous(name = "6 sample 💸💸", group = "Autonomous")
+@Autonomous(name = "6 sample RETRY", group = "Autonomous")
 
-public class sample6 extends LinearOpMode {
+public class sample6retry extends LinearOpMode {
     public Robot robot;
     public ElapsedTime timer;
+
+    private int cycle = 0;
+
+    public ElapsedTime autotimer;
     private boolean genericboolean = false;
+    private boolean failed;
+    private String failedtimes = "0";
 
     public static int blockx1 = 2;
     public static int blockx2 = 2;
+    public static int blockx3 = 2;
+
     private StickyButton intakeposup = new StickyButton();
     private StickyButton intakeposdown = new StickyButton();
     private StickyButton intakeposleft = new StickyButton();
@@ -47,6 +55,7 @@ public class sample6 extends LinearOpMode {
     private StickyButton intakeposright = new StickyButton();
     public static int blocky1 = 10;
     public static int blocky2 = 10;
+    public static int blocky3 = 11;
     private PinpointDrive drive;
 
     private int block = 0;
@@ -54,6 +63,21 @@ public class sample6 extends LinearOpMode {
     Deadline logging = new Deadline(250, TimeUnit.MILLISECONDS);
     boolean debug = true;
     ElapsedTime loopTimer = new ElapsedTime();
+    public class CustomAction implements Action {
+        private Action a, b;
+
+        public CustomAction(Action a, Action b) {
+            this.a = a;
+            this.b = b;
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            a.run(telemetryPacket);
+            return b.run(telemetryPacket);
+
+        }
+    }
     public class robotController {
 
         public class Update implements Action {
@@ -255,61 +279,128 @@ public class sample6 extends LinearOpMode {
         public class Pull implements Action {
             private boolean stopresetting = false;
             private boolean reject = false;
+            private boolean detected = false;
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                if ((robot.mIntake.detectedBlue()&&team.name().equals("RED"))||(robot.mIntake.detectedRed()&&team.name().equals("BLUE"))){
-                    robot.mIntake.setIntakeOpenLoop(-0.8);
-                    reject = true;
-                }
-
-                if (generaltimer.seconds()>1.9){
-
-                    if(!reject){robot.mIntake.setIntakeOpenLoop(0);}
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
-                    robot.mIntake.setExtendoPos(0,timer.seconds());
-                    block++;
-                    return false;
-                }else if(generaltimer.seconds()>1.8){
-                    robot.mIntake.setOutputLimits(-1,1);
-                    robot.mIntake.setClawPos(1);
-                }else if(generaltimer.seconds()>1){
-                    if (block==0) {
-                        robot.mIntake.setExtendoTicks((int) (((blockx1+5) * 25.4) / 1.25), timer.seconds());
-                    }else{
-                        robot.mIntake.setExtendoTicks((int) (((blockx2+10) * 25.4) / 1.25), timer.seconds());
+                BotLog.logD("in pull state, failed = ", ""+failed);
+                if (failed||(robot.mIntake.detectedBlue()&&team.name().equals("RED"))||(robot.mIntake.detectedRed()&&team.name().equals("BLUE"))){
+                    if (!failed){
+                        generaltimer.reset();
                     }
-                }else if(generaltimer.seconds()>0.7){
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
-                    if(!reject){robot.mIntake.setIntakeOpenLoop(1);}
+                    failed= true;
+                    if (failedtimes.equals("1")||(failedtimes.equals("01"))){
+                        robot.mIntake.setExtendoTicks((int) ((blockx3 * 25.4) / 1.25), timer.seconds());
 
-
-                }else if(generaltimer.seconds()>0.1){
-                    if (block==0) {
-                        robot.mIntake.setExtendoTicks((int) (((blockx1-2) * 25.4) / 1.25), timer.seconds());
-                    }else{
-                        robot.mIntake.setExtendoTicks((int) (((blockx2-2) * 25.4) / 1.25), timer.seconds());
-                    }
-                }else if(robot.mIntake.closeEnough()&&genericboolean){
-                    if(!reject){robot.mIntake.setIntakeOpenLoop(0.5);}
-
-                    stopresetting=true;
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
-                }else if(!genericboolean&&robot.mIntake.getTargetExtendoIdx()!=Intake.EXTEND_POS.INTAKING.getVal()) {
-                    if (block==0) {
-                        robot.mIntake.setExtendoTicks((int) ((blockx1 * 25.4) / 1.25), timer.seconds());
-                        BotLog.logD("TARGET VS ACTUAL: ", "" + (60.5+blocky1-10), drive.pose.position.y);
-                    }else{
+                    }else if(failedtimes.equals("11")   ||failedtimes.equals("10")){
                         robot.mIntake.setExtendoTicks((int) ((blockx2 * 25.4) / 1.25), timer.seconds());
-                        BotLog.logD("TARGET VS ACTUAL: ", "" + (60.5+blocky2-10), drive.pose.position.y);
-
+                    }
+                    stopresetting = true;
+                    robot.mIntake.setClawPos(0);
+                    robot.mIntake.setIntakeOpenLoop(-0.5);
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
+                    if (generaltimer.seconds()>0.2){
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+                        return false;
                     }
 
-                    genericboolean = true;
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
-                    robot.mIntake.setOutputLimits(-1,0.5);
+
+
                 }
-                if (!stopresetting){
-                    generaltimer.reset();
+                if (!failed) {
+                    if (generaltimer.seconds() > 1.7) {
+
+                        if (!reject) {
+                            robot.mIntake.setIntakeOpenLoop(0);
+                        }
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
+                        robot.mIntake.setExtendoPos(0, timer.seconds());
+                        block++;
+                        if (!detected){
+                            failed = true;
+                            timer.reset();
+                        }
+                        return false;
+                    } else if (generaltimer.seconds() > 1.6) {
+
+                        robot.mIntake.setOutputLimits(-1, 1);
+                        if (!reject) robot.mIntake.setClawPos(1);
+                    } else if (generaltimer.seconds() > 0.7) {
+                        if (failedtimes.equals("1")||(failedtimes.equals("01"))){
+                            robot.mIntake.setExtendoTicks((int) (((blockx3+5) * 25.4) / 1.25), timer.seconds());
+
+                        }else if(failedtimes.equals("11")||failed||failedtimes.equals("10")){
+                            robot.mIntake.setExtendoTicks((int) (((blockx2+10) * 25.4) / 1.25), timer.seconds());
+                        }else {
+                            if (block == 0) {
+                                robot.mIntake.setExtendoTicks((int) (((blockx1+5) * 25.4) / 1.25), timer.seconds());
+                                BotLog.logD("TARGET VS ACTUAL: ", "" + (60.5 + blocky1 - 10), drive.pose.position.y);
+                            } else {
+                                robot.mIntake.setExtendoTicks((int) (((blockx2+10) * 25.4) / 1.25), timer.seconds());
+                                BotLog.logD("TARGET VS ACTUAL: ", "" + (60.5 + blocky2 - 10), drive.pose.position.y);
+
+                            }
+                        }
+
+                    }else if (generaltimer.seconds() > 0.6) {
+                        if (!reject) {
+                            robot.mIntake.setIntakeOpenLoop(1);
+                        }
+
+
+                    } else if (generaltimer.seconds() > 0.5) {
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+
+
+                    } else if (generaltimer.seconds() > 0.1) {
+                        if (failedtimes.equals("1")||(failedtimes.equals("01"))){
+                            robot.mIntake.setExtendoTicks((int) (((blockx3-2) * 25.4) / 1.25), timer.seconds());
+
+                        }else if(failedtimes.equals("11")||failed||failedtimes.equals("10")){
+                            robot.mIntake.setExtendoTicks((int) (((blockx2-2) * 25.4) / 1.25), timer.seconds());
+                        }else {
+                            if (block == 0) {
+                                robot.mIntake.setExtendoTicks((int) (((blockx1-2) * 25.4) / 1.25), timer.seconds());
+                                BotLog.logD("TARGET VS ACTUAL: ", "" + (60.5 + blocky1 - 10), drive.pose.position.y);
+                            } else {
+                                robot.mIntake.setExtendoTicks((int) (((blockx2-2) * 25.4) / 1.25), timer.seconds());
+                                BotLog.logD("TARGET VS ACTUAL: ", "" + (60.5 + blocky2 - 10), drive.pose.position.y);
+
+                            }
+                        }
+                    } else if (robot.mIntake.closeEnough() && genericboolean) {
+                        if (!reject) {
+                            robot.mIntake.setIntakeOpenLoop(0.6);
+                        }
+
+                        stopresetting = true;
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
+                    } else if (!genericboolean && robot.mIntake.getTargetExtendoIdx() != Intake.EXTEND_POS.INTAKING.getVal()) {
+                        if (failedtimes.equals("1")||(failedtimes.equals("01"))){
+                            robot.mIntake.setExtendoTicks((int) ((blockx3 * 25.4) / 1.25), timer.seconds());
+
+                        }else if(failedtimes.equals("11")||failed||failedtimes.equals("10")){
+                            robot.mIntake.setExtendoTicks((int) ((blockx2 * 25.4) / 1.25), timer.seconds());
+                        }else {
+                            if (block == 0) {
+                                robot.mIntake.setExtendoTicks((int) ((blockx1 * 25.4) / 1.25), timer.seconds());
+                                BotLog.logD("TARGET VS ACTUAL: ", "" + (60.5 + blocky1 - 10), drive.pose.position.y);
+                            } else {
+                                robot.mIntake.setExtendoTicks((int) ((blockx2 * 25.4) / 1.25), timer.seconds());
+                                BotLog.logD("TARGET VS ACTUAL: ", "" + (60.5 + blocky2 - 10), drive.pose.position.y);
+
+                            }
+                        }
+
+                        genericboolean = true;
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+                        robot.mIntake.setOutputLimits(-1, 0.5);
+                    }
+                    if (!stopresetting) {
+                        generaltimer.reset();
+                    }
+                    if (robot.mIntake.detectedYellow()||(robot.mIntake.detectedBlue()&&team.name().equals("BLUE"))||(robot.mIntake.detectedRed()&&team.name().equals("RED"))){
+                        detected= true;
+                    }
                 }
                 return true;
             }
@@ -515,9 +606,11 @@ public class sample6 extends LinearOpMode {
             return new Sample4();
         }
 
+
         public class Sample5 implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
+                cycle = 1;
 
                 if (robot.mLift.getLiftTicks()>500||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
                     if (!genericboolean&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.AUTOSAMPLE.getVal()&&robot.mDeposit.getPivotPos() != Deposit.PIVOT_POS.TRANSFER.getVal()&&!robot.mLift.closeEnough()) {
@@ -528,7 +621,7 @@ public class sample6 extends LinearOpMode {
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                     }
                     if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
-                        if (generaltimer.seconds()>0.25){
+                        if (generaltimer.seconds()>0.15){
                             robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                             robot.mIntake.setExtendoTicks((int) ((blockx2 * 25.4) / 1.25), timer.seconds());
 
@@ -538,7 +631,7 @@ public class sample6 extends LinearOpMode {
                             genericboolean = true;
                             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(),1200, new double[] {1,2,3,4,4,4,3,2,1,1});
                             return false;
-                        }else if (generaltimer.seconds()>0.2){
+                        }else if (generaltimer.seconds()>0.1){
                             robot.mDeposit.setClawPos(2);
                         }
                     }else{
@@ -564,6 +657,7 @@ public class sample6 extends LinearOpMode {
         public class Sample6 implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
+                cycle = 2;
                 if (robot.mLift.getLiftTicks()>500||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
                     if (!genericboolean&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.AUTOSAMPLE.getVal()&&(!robot.mLift.closeEnough()||robot.mDeposit.getPivotPos()!= Deposit.PIVOT_POS.AUTOSAMPLE.getVal())) {
                         robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
@@ -573,11 +667,11 @@ public class sample6 extends LinearOpMode {
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                     }
                     if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
-                        if (generaltimer.seconds()>0.3){
+                        if (generaltimer.seconds()>0.15){
                             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOEND.getVal(),800, new double[] {1,2,3,4,4,4,3,2,1,1});
                             robot.mIntake.setExtendoPos(0,timer.seconds());
                             robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                            robot.mDeposit.setDiffyPos(20,90);
+                            robot.mDeposit.setDiffyPos(-30,-90);
                             robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                             robot.mLift.setTargetPos(Lift.LIFT_POS.DOWN.getVal(), timer.seconds());
                             robot.mDeposit.setClawPos(1);
@@ -585,7 +679,7 @@ public class sample6 extends LinearOpMode {
                             robot.mDeposit.setDiffyPos(30,-90);
                             genericboolean = true;
                             return false;
-                        }else if (generaltimer.seconds()>0.2){
+                        }else if (generaltimer.seconds()>0.1){
                             robot.mDeposit.setClawPos(2);
                         }
                     }else{
@@ -658,14 +752,14 @@ public class sample6 extends LinearOpMode {
 
                 if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
                     if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
-                        if (generaltimer.seconds()>1.3){
+                        if (generaltimer.seconds()>0.8){
                             robot.mIntake.setIntakeOpenLoop(0);
                             robot.mIntake.setClawPos(1);
                             return false;
                         }
-                        else if (generaltimer.seconds()>1.1){
+                        else if (generaltimer.seconds()>0.7){
                             robot.mIntake.setClawPos(1);
-                        }else if (generaltimer.seconds()>0.9){
+                        }else if (generaltimer.seconds()>0.6){
                             robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
                         }else if (generaltimer.seconds()>0){
                             robot.mIntake.setIntakeOpenLoop(1);
@@ -700,6 +794,7 @@ public class sample6 extends LinearOpMode {
         public class ResetTimer implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
+                failed = false;
                 generaltimer.reset();
                 genericboolean = false;
                 return false;
@@ -819,7 +914,7 @@ public class sample6 extends LinearOpMode {
                         controller.intakeDownInstant()
 
                 ))
-                .waitSeconds(0.8)
+                .waitSeconds(0.7)
                 .stopAndAdd(new SequentialAction(
                         controller.openClaw()
                 ))
@@ -848,7 +943,7 @@ public class sample6 extends LinearOpMode {
 
 
 
-        boolean block1 = true;
+        int block = 0;
         boolean has_adjust_2 = false;
         while (!isStopRequested() && !opModeIsActive()) {
             intakeposleft.update(gamepad1.dpad_left);
@@ -870,12 +965,12 @@ public class sample6 extends LinearOpMode {
                 team = RevBlinkinLedDriver.BlinkinPattern.RED;
             }
             if (switchblock.getState()){
-                block1=!block1;
+                block++;
             }
             telemetry.addLine("USE DPAD TO ADJUST INTAKE POS BY INCHES");
             telemetry.addLine("PRESS X TO ADJUST WHICH INTAKE");
             telemetry.addLine("IF DONT ADJUST INTAKE 2, WILL BE SAME AS 1. 2 ADJUSTED = " +has_adjust_2);
-            if (block1){
+            if (block%3==0){
                 telemetry.addLine("ADJUSTING FIRST INTAKE");
                 if (intakeposup.getState()){
                     blocky1 +=1;
@@ -886,7 +981,7 @@ public class sample6 extends LinearOpMode {
                 }else if (intakeposright.getState()){
                     blockx1 +=1;
                 }
-            }else{
+            }else if  (block % 3 == 1){
                 has_adjust_2 = true;
                 telemetry.addLine("ADJUSTING SECOND INTAKE");
                 if (intakeposup.getState()){
@@ -898,10 +993,23 @@ public class sample6 extends LinearOpMode {
                 }else if (intakeposright.getState()){
                     blockx2 +=1;
                 }
+            }else if  (block % 3 == 2){
+                telemetry.addLine("ADJUSTING FALLBACK INTAKE");
+                if (intakeposup.getState()){
+                    blocky3 +=1;
+                }else if (intakeposdown.getState()&& blocky3 >0){
+                    blocky3 -=1;
+                }else if (intakeposleft.getState()&& blockx3 >0){
+                    blockx3 -=1;
+                }else if (intakeposright.getState()){
+                    blockx3 +=1;
+                }
             }
 
             telemetry.addLine("CURR INTAKE POS 1: "+ (blocky1-10) + ", " + blockx1);
             telemetry.addLine("CURR INTAKE POS 2: "+ (blocky2-10) + ", " + blockx2);
+            telemetry.addLine("CURR FALLBACK POS: "+ (blocky3-10) + ", " + blockx3);
+            telemetry.addLine("DO NOT MAKE FALLBACK FIRST NUMBER SAME AS ANY OTHERS, WILL ADD ONE IF YOU DO");
             if (!has_adjust_2){
                 blockx2 =blockx1;
                 blocky2 =blocky1;
@@ -910,6 +1018,12 @@ public class sample6 extends LinearOpMode {
 
             telemetry.update();
 
+        }
+        if (blocky2==blocky3){
+            blocky3++;
+        }
+        if (blocky1==blocky3){
+            blocky3++;
         }
 
         Action sub1 = drive.actionBuilder(new Pose2d(7,19, Math.toRadians(83)))
@@ -923,12 +1037,12 @@ public class sample6 extends LinearOpMode {
 
         Action sample5 = drive.actionBuilder(new Pose2d(48,60.5+ blocky1 -10, Math.toRadians(0)))
                 .setReversed(true)
-                .splineTo(new Vector2d(10,18), Math.toRadians(70-180),new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-30, 80))
+                .splineTo(new Vector2d(12,20), Math.toRadians(70-180),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-30, 80))
                 .build();
 
         Action park = drive.actionBuilder(new Pose2d(12,20, Math.toRadians(83)))
                 .splineTo(new Vector2d(42,60.5), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineTo(new Vector2d(47,60.5), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 85))
+                .splineTo(new Vector2d(48,60.5), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 85))
 
                 .build();
         Action sub2 = drive.actionBuilder(new Pose2d(10,18, Math.toRadians(70)))
@@ -942,8 +1056,20 @@ public class sample6 extends LinearOpMode {
                 .build();
         Action sample6 = drive.actionBuilder(new Pose2d(48,60.5+ blocky2 -10, Math.toRadians(0)))
                 .setReversed(true)
-                .splineTo(new Vector2d(10,18), Math.toRadians(70-180),new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-30, 80))
+                .splineTo(new Vector2d(12,20), Math.toRadians(70-180),new TranslationalVelConstraint(55), new ProfileAccelConstraint(-30, 80))
 
+                .build();
+        Action fallback01 = drive.actionBuilder(new Pose2d(48,60.5+ blocky2 -10, Math.toRadians(0)))
+                .setReversed(false)
+                .strafeToLinearHeading(new Vector2d(48,60.5+blocky3-10), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .build();
+        Action fallback1 = drive.actionBuilder(new Pose2d(48,60.5+ blocky1 -10, Math.toRadians(0)))
+                .setReversed(false)
+                .strafeToLinearHeading(new Vector2d(48,60.5+blocky3-10), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .build();
+        Action fallback11 = drive.actionBuilder(new Pose2d(48,60.5+blocky3-10, Math.toRadians(0)))
+                .setReversed(false)
+                .strafeToLinearHeading(new Vector2d(48,60.5 +blocky2-10), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
                 .build();
 
         int startPosition = visionOutputPosition;
@@ -953,11 +1079,13 @@ public class sample6 extends LinearOpMode {
         robot.mIntake.setExtendoPos(0, timer.seconds());
         blockx1+=7;
         blockx2+=7;
+
+        blockx3+=7;
         blocky1+=0;
         blocky2+=0;
         if (isStopRequested()) return;
         Actions.runBlocking(
-                new ParallelAction(
+                new CustomAction(
                         controller.updateRobot(),
                         new SequentialAction(
                                 preload_intake1,
@@ -988,43 +1116,230 @@ public class sample6 extends LinearOpMode {
                                 controller.resetTimer(),
                                 sub1,
                                 controller.resetTimer(),
-                                controller.pull(),
-                                new ParallelAction(
-                                        sample5,
-                                        new SequentialAction(
-                                                controller.resetTimer(),
-                                                controller.transfer(),
-                                                controller.resetTimer(),
-                                                controller.sample5()
-                                        )
-                                ),
-                                controller.resetTimer(),
-                                sub2,
-                                controller.resetTimer(),
-                                controller.pull(),
-                                new ParallelAction(
-                                        sample6,
-                                        new SequentialAction(
-                                                controller.resetTimer(),
-                                                controller.transfer(),
-                                                controller.resetTimer(),
-                                                controller.sample6()
-                                        )
-                                ),
-
-
-                                park,
-                                controller.teleopPrep()
-
-
-
-
-
-
+                                controller.pull()
                         )
 
                 )
         );
+        //failed0
+
+        if (!failed){
+            failedtimes="0";
+            Actions.runBlocking(
+                    new CustomAction(
+                            controller.updateRobot(),
+                            new SequentialAction(
+                                    new ParallelAction(
+                                            sample5,
+                                            new SequentialAction(
+                                                    controller.resetTimer(),
+                                                    controller.transfer(),
+                                                    controller.resetTimer(),
+                                                    controller.sample5()
+                                            )
+                                    ),
+                                    controller.resetTimer(),
+                                    sub2,
+                                    controller.resetTimer(),
+                                    controller.pull()
+                            )
+                    )
+            );
+            //failed00
+
+            if (!failed){
+                failedtimes="00";
+                Actions.runBlocking(
+                    new CustomAction(
+                            controller.updateRobot(),
+                            new SequentialAction(
+                                    new ParallelAction(
+                                            sample6,
+                                            new SequentialAction(
+                                                    controller.resetTimer(),
+                                                    controller.transfer(),
+                                                    controller.extendoPrepareInstant(),
+                                                    controller.resetTimer(),
+                                                    controller.sample6()
+                                            )
+                                    ),
+
+
+                                    park,
+                                    controller.teleopPrep()
+                            )
+                    )
+                );
+            }else{
+                //failed01
+                failedtimes="01";
+                BotLog.logD("reached: ", "failed 01");
+                sample6 = drive.actionBuilder(new Pose2d(48,60.5+ blocky3 -10, Math.toRadians(0)))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(11,19), Math.toRadians(70-180),new TranslationalVelConstraint(55), new ProfileAccelConstraint(-30, 80))
+                        .build();
+                Actions.runBlocking(
+                            new CustomAction(
+
+                            controller.updateRobot(),
+                            new SequentialAction(
+                                    fallback01,
+                                    controller.resetTimer(),
+                                    controller.pull()
+                            )
+                    )
+                );
+                //failed010
+
+                if (!failed){
+                    failedtimes="010";
+                    Actions.runBlocking(
+                            new CustomAction(
+                                    controller.updateRobot(),
+                                    new SequentialAction(
+                                            new ParallelAction(
+                                                    sample6,
+                                                    new SequentialAction(
+                                                            controller.resetTimer(),
+                                                            controller.transfer(),
+                                                            controller.extendoPrepareInstant(),
+                                                            controller.resetTimer(),
+                                                            controller.sample6()
+                                                    )
+                                            ),
+                                            controller.teleopPrep()
+                                    )
+                            )
+                    );
+                }else{
+                    //failed011
+                    failedtimes="011";
+                }
+            }
+            //failed1
+
+        }else{
+            failedtimes="1";
+            BotLog.logD("reached: ", "failed 1");
+            sample5 = drive.actionBuilder(new Pose2d(48,60.5+ blocky3 -10, Math.toRadians(0)))
+                    .setReversed(true)
+                    .splineTo(new Vector2d(11,19), Math.toRadians(70-180),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-30, 80))
+                    .build();
+
+            Actions.runBlocking(
+                    new CustomAction(
+                            controller.updateRobot(),
+                            new SequentialAction(
+                                    fallback1,
+                                    controller.resetTimer(),
+                                    controller.pull()
+                            )
+                    )
+            );
+            //failed10
+            BotLog.logD("reached: ", "passed failed 1");
+
+            if (!failed){
+                failedtimes="10";
+                Actions.runBlocking(
+                        new CustomAction(
+                                controller.updateRobot(),
+                                new SequentialAction(
+                                        new ParallelAction(
+                                                sample5,
+                                                new SequentialAction(
+                                                        controller.resetTimer(),
+                                                        controller.transfer(),
+                                                        controller.resetTimer(),
+                                                        controller.sample5()
+                                                )
+                                        ),
+                                        controller.resetTimer(),
+                                        sub2,
+                                        controller.resetTimer(),
+                                        controller.pull()
+                                )
+                        )
+                );
+                //failed100
+
+                if (!failed){
+                    failedtimes="100";
+                    Actions.runBlocking(
+                            new CustomAction(
+                                    controller.updateRobot(),
+                                    new SequentialAction(
+                                            new ParallelAction(
+                                                    sample6,
+                                                    new SequentialAction(
+                                                            controller.resetTimer(),
+                                                            controller.transfer(),
+                                                            controller.extendoPrepareInstant(),
+                                                            controller.resetTimer(),
+                                                            controller.sample6()
+                                                    )
+                                            ),
+                                            controller.teleopPrep()
+                                    )
+                            )
+                    );
+                }else{
+                    //failed101
+                    failedtimes="101";
+                }
+            }else{
+                //failed11
+                failedtimes="11";
+                BotLog.logD("reached: ", "failed 11");
+                sample6 = drive.actionBuilder(new Pose2d(48,60.5+ blocky2 -10, Math.toRadians(0)))
+                        .setReversed(true)
+                        .splineTo(new Vector2d(11,19), Math.toRadians(70-180),new TranslationalVelConstraint(55), new ProfileAccelConstraint(-30, 80))
+
+                        .build();
+
+                Actions.runBlocking(
+                        new CustomAction(
+                                controller.updateRobot(),
+                                new SequentialAction(
+                                        fallback11,
+                                        controller.resetTimer(),
+                                        controller.pull()
+                                )
+                        )
+                );
+                //failed110
+
+                if (!failed){
+                    failedtimes="110";
+                    Actions.runBlocking(
+                            new CustomAction(
+                                    controller.updateRobot(),
+                                    new SequentialAction(
+                                            new ParallelAction(
+                                                    sample6,
+                                                    new SequentialAction(
+                                                            controller.resetTimer(),
+                                                            controller.transfer(),
+                                                            controller.extendoPrepareInstant(),
+                                                            controller.resetTimer(),
+                                                            controller.sample6()
+                                                    )
+                                            ),
+                                            park,
+                                            controller.teleopPrep()
+                                    )
+                            )
+                    );
+                }else{
+                    //failed111
+                    failedtimes="111";
+                }
+
+            }
+
+
+        }
+
         robot.stop();
     }
 }

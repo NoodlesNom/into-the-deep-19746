@@ -8,12 +8,13 @@
             <goBILDA5202SeriesMotor name="fr" port="3" />
             <LynxEmbeddedIMU name="imuCH" port="0" bus="0" />
             <goBILDAPinpointRR name="pinpoint" port="1" bus="0" />
-            <Servo name="hangL" port="0" />
+            <RevColorSensorV3 name = "color" port = "0" bus = "1" />
+            <ContinuousRotationServo name="hangR" port="0" />
             <Servo name="pivot" port="4" />
             <Servo name="gate" port="1" />
             <Servo name="intakeclaw" port="2" />
             <RevBlinkinLedDriver name="blinkin" port="5" />
-            <AnalogInput name = "pivot encoder" port = "0"/>
+            <AnalogInput name="rightwinchencoder" port="1" />
         </LynxModule>
     </LynxUsbDevice>
     <LynxUsbDevice name="Expansion Hub Portal 1" serialNumber="DQ2D39HA" parentModuleAddress="2">
@@ -23,12 +24,13 @@
             <goBILDA5202SeriesMotor name="fl" port="2" />
             <goBILDA5202SeriesMotor name="hang" port="3" />
             <Servo name="claw" port="0" />
-            <Servo name="hangR" port="1" />
+            <ContinuousRotationServo name="hangL" port="1" />
             <Servo name="diffyL" port="2" />
             <Servo name="pivotL" port="3" />
             <Servo name="diffyR" port="4" />
             <Servo name="pivotR" port="5" />
             <LynxEmbeddedIMU name="imuEH" port="0" bus="0" />
+            <AnalogInput name="leftwinchencoder" port="1" />
         </LynxModule>
     </LynxUsbDevice>
 ?.</Robot>

@@ -26,6 +26,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Lift;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.PinpointDrive;
 import org.firstinspires.ftc.teamcode.util.BotLog;
+import org.firstinspires.ftc.teamcode.util.StickyButton;
 
 import java.util.concurrent.TimeUnit;
 
@@ -36,8 +37,19 @@ import java.util.concurrent.TimeUnit;
 public class spec6 extends LinearOpMode {
     public Robot robot;
     public ElapsedTime timer;
-    ElapsedTime WallTimer = new ElapsedTime();
+    ElapsedTime generaltimer = new ElapsedTime();
     boolean debug = true;
+
+    private boolean failed = true;
+    private boolean genericboolean = false;
+    public static int blockx = 2;
+    public static int blocky = 2;
+
+    private StickyButton intakeposup = new StickyButton();
+    private StickyButton intakeposdown = new StickyButton();
+    private StickyButton intakeposleft = new StickyButton();
+    private StickyButton switchblock = new StickyButton();
+    private StickyButton intakeposright = new StickyButton();
     ElapsedTime loopTimer = new ElapsedTime();
     Deadline logging = new Deadline(100, TimeUnit.MILLISECONDS);
 
@@ -147,6 +159,59 @@ public class spec6 extends LinearOpMode {
             return new DiffyPlace();
         }
 
+        public class Pull implements Action {
+            private boolean stopresetting = false;
+            private boolean reject = false;
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if ((robot.mIntake.detectedBlue()&&team.name().equals("RED"))||(robot.mIntake.detectedRed()&&team.name().equals("BLUE"))){
+                    robot.mIntake.setIntakeOpenLoop(-0.8);
+                    reject = true;
+                }
+
+                if (generaltimer.seconds()>1.7){
+
+                    if(!reject){robot.mIntake.setIntakeOpenLoop(0);}
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
+                    robot.mIntake.setExtendoPos(0,timer.seconds());
+                    return false;
+                }else if(generaltimer.seconds()>1.6){
+                    robot.mIntake.setOutputLimits(-1,1);
+                    robot.mIntake.setClawPos(1);
+                }else if(generaltimer.seconds()>1){
+
+                    robot.mIntake.setExtendoTicks((int) (((blockx+5) * 25.4) / 1.25), timer.seconds());
+
+                }else if(generaltimer.seconds()>0.6){
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+                    if(!reject){robot.mIntake.setIntakeOpenLoop(1);}
+
+
+                }else if(generaltimer.seconds()>0.1){
+                    robot.mIntake.setExtendoTicks((int) (((blockx-2) * 25.4) / 1.25), timer.seconds());
+                }else if(robot.mIntake.closeEnough()&&genericboolean){
+                    if(!reject){robot.mIntake.setIntakeOpenLoop(0.5);}
+
+                    stopresetting=true;
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
+                }else if(!genericboolean&&robot.mIntake.getTargetExtendoIdx()!=Intake.EXTEND_POS.INTAKING.getVal()) {
+                    robot.mIntake.setExtendoTicks((int) (((blockx) * 25.4) / 1.25), timer.seconds());
+
+                    genericboolean = true;
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+                    robot.mIntake.setOutputLimits(-1,0.5);
+                }
+                if (!stopresetting){
+                    generaltimer.reset();
+                }
+                return true;
+            }
+        }
+
+        public Action pull() {
+            return new Pull();
+        }
+
 
         public class DiffyPlaceLast implements Action {
 
@@ -162,7 +227,34 @@ public class spec6 extends LinearOpMode {
             return new DiffyPlaceLast();
         }
 
+        public class subPrepareInstant implements Action {
 
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mIntake.setClawPos(0);
+                robot.mIntake.setExtendoTicks((int) ((blocky * 25.4) / 1.25), timer.seconds());
+                robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+                return false;
+            }
+        }
+
+        public Action subPrepareInstant() {
+            return new subPrepareInstant();
+        }
+
+        public class intakePrepareInstant implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mIntake.setClawPos(0);
+                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.AUTOINTAKEPREPARE.getVal(), timer.seconds());
+                return false;
+            }
+        }
+
+        public Action intakePrepareInstant() {
+            return new intakePrepareInstant();
+        }
         public class DiffyRelease implements Action {
 
             @Override
@@ -232,7 +324,42 @@ public class spec6 extends LinearOpMode {
             return new RobotReset();
         }
 
+        public class Intakeing implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
 
+                if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
+                    if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
+                        if (generaltimer.seconds()>1.3){
+                            robot.mIntake.setIntakeOpenLoop(0);
+                            robot.mIntake.setClawPos(1);
+                            return false;
+                        }
+                        else if (generaltimer.seconds()>1.1){
+                            robot.mIntake.setClawPos(1);
+                        }else if (generaltimer.seconds()>0.9){
+                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
+                        }else if (generaltimer.seconds()>0){
+                            robot.mIntake.setIntakeOpenLoop(1);
+                            robot.mIntake.setClawPos(0);
+                            robot.mIntake.setExtendoPos(Intake.EXTEND_POS.INTAKING.getVal(), timer.seconds());
+                            robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
+                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+                        }
+                    }else{
+                        generaltimer.reset();
+                    }
+                }else{
+                    generaltimer.reset();
+                }
+                return true;
+            }
+        }
+
+
+        public Action intakeing() {
+            return new Intakeing();
+        }
 
         public class LiftPlaceInstant implements Action {
 
@@ -251,13 +378,13 @@ public class spec6 extends LinearOpMode {
         public class ClearWall implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                if (WallTimer.seconds()>1){
-                    WallTimer.reset();
-                }else if (WallTimer.seconds()>0.4){
+                if (generaltimer.seconds()>1){
+                    generaltimer.reset();
+                }else if (generaltimer.seconds()>0.4){
                     robot.mDeposit.setDiffyPos(-40, 67);
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
                     return false;
-                }else if (WallTimer.seconds()>0.2) {
+                }else if (generaltimer.seconds()>0.2) {
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal(), 800 , new double[] {1,2,2,2,2,2,2,1,1,1});
                 }else{
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SPECCLEAR.getVal(), timer.seconds());
@@ -275,10 +402,10 @@ public class spec6 extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket packet) {
 
                 robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                if (WallTimer.seconds()>0.6){
+                if (generaltimer.seconds()>0.6){
                     robot.mIntake.zerofinish(timer.seconds());
                     return false;
-                }else if (WallTimer.seconds()>0.5){
+                }else if (generaltimer.seconds()>0.5){
                     robot.mIntake.setExtendoOpenLoop(0);
                     robot.mIntake.rezero();
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SPECINTAKE.getVal(), timer.seconds());
@@ -299,7 +426,8 @@ public class spec6 extends LinearOpMode {
         public class ResetTimer implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                WallTimer.reset();
+                generaltimer.reset();
+                genericboolean = false;
                 return false;
             }
         }
@@ -320,6 +448,41 @@ public class spec6 extends LinearOpMode {
             return new LiftUpInstant();
         }
 
+        public class PivotShoot implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                return false;
+            }
+        }
+
+        public Action pivotShoot() {
+            return new PivotShoot();
+        }
+
+        public class Shoot implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                if (generaltimer.seconds()>0.3) {
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
+                    robot.mIntake.setIntakeOpenLoop(0);
+                    return false;
+                }else{
+                    robot.mIntake.setIntakeOpenLoop(-0.9);
+                }
+                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
+                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                if (!robot.mIntake.closeEnough()){
+                    generaltimer.reset();
+                }
+                return true;
+            }
+        }
+
+        public Action shoot() {
+            return new Shoot();
+        }
+
         public class LiftDownInstant implements Action {
 
             @Override
@@ -338,7 +501,7 @@ public class spec6 extends LinearOpMode {
     public void runOpMode() {
         timer = new ElapsedTime();
         robotController controller = new robotController();
-        Pose2d initialPose = new Pose2d((24-7.25+10), 7.25, Math.toRadians(90));
+        Pose2d initialPose = new Pose2d((10-7.25), 7.25, Math.toRadians(90));
         //claw is 1.5 inches to the right
         robot = new Robot(this, initialPose , hardwareMap);
         PinpointDrive drive = new PinpointDrive(this.hardwareMap, initialPose);
@@ -346,26 +509,8 @@ public class spec6 extends LinearOpMode {
         // vision here that outputs position
         int visionOutputPosition = 1;
 
-        Action push = drive.actionBuilder(initialPose)
-                .stopAndAdd(new SequentialAction(
-                        controller.liftIntakeInstant(),
-                        controller.openClaw(),
-                        controller.diffyIntake(),
-                        controller.pivotDown()
-                ))
-                .strafeToLinearHeading(new Vector2d(62,19), Math.toRadians(70))
 
-                .splineToLinearHeading(new Pose2d(36,6.5, Math.toRadians(90)), Math.toRadians(270),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 80))
-                .stopAndAdd(new SequentialAction(
-                        controller.closeClaw()
-                ))
-                .waitSeconds(0.1)
-                .stopAndAdd(new SequentialAction(
-                        controller.resetTimer(),
-                        controller.liftClearInstant()
-                ))
-                .waitSeconds(0.05)
-                .build();
+
         Action sub1 = drive.actionBuilder(new Pose2d(36,6.5, Math.toRadians(90)))
                 .setReversed(false)
                 .setTangent(Math.toRadians(145))
@@ -531,18 +676,40 @@ public class spec6 extends LinearOpMode {
 
 
         while (!isStopRequested() && !opModeIsActive()) {
+            intakeposleft.update(gamepad1.dpad_left);
+            intakeposright.update(gamepad1.dpad_right);
+            intakeposup.update(gamepad1.dpad_up);
+            intakeposdown.update(gamepad1.dpad_down);
+            switchblock.update(gamepad1.x);
             robot.update(timer.seconds());
             timer.reset();
             robot.autoInit();
             robot.mDeposit.setLiveLed(team);
             telemetry.addLine("PRESS A (BOTTOM) FOR BLUE");
             telemetry.addLine("PRESS B (RIGHT) FOR RED");
+            telemetry.addLine("CURRENT COLOR: " + team.name());
             if (gamepad1.a){
                 team = RevBlinkinLedDriver.BlinkinPattern.BLUE;
             }
             if (gamepad1.b){
                 team = RevBlinkinLedDriver.BlinkinPattern.RED;
             }
+            telemetry.addLine("USE DPAD TO ADJUST INTAKE POS BY INCHES");
+            if (intakeposup.getState()){
+                blocky +=1;
+            }else if (intakeposdown.getState()&& blocky >0){
+                blocky -=1;
+            }else if (intakeposleft.getState()&& blockx >0){
+                blockx -=1;
+            }else if (intakeposright.getState()){
+                blockx +=1;
+            }
+
+            telemetry.addLine("CURR INTAKE POS: "+ (blockx) + ", " + blocky);
+
+
+            telemetry.update();
+
 
         }
 
@@ -552,13 +719,83 @@ public class spec6 extends LinearOpMode {
         waitForStart();
         robot.mIntake.setExtendoPos(0, timer.seconds());
 
+        blockx+=5;
+
+        Action preload = drive.actionBuilder(initialPose)
+                .strafeToLinearHeading(new Vector2d(blockx, 41), Math.toRadians(90))
+                .stopAndAdd(new SequentialAction(
+                        controller.openClaw(),
+                        controller.diffyPlace(),
+                        controller.resetTimer()
+                ))
+                .build();
+        Action shoot1 = drive.actionBuilder(new Pose2d(blockx, 41, Math.toRadians(90)))
+                .setReversed(true)
+                .afterTime(0.5,new SequentialAction(
+                        controller.liftUpInstant(),
+                        controller.pivotShoot()
+                ))
+                .splineToLinearHeading(new Pose2d(59,19, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .stopAndAdd(new SequentialAction(
+                        controller.resetTimer(),
+                        controller.shoot()
+                ))
+                .build();
+        Action intake1 = drive.actionBuilder(new Pose2d(59, 19, Math.toRadians(90)))
+                .setReversed(false)
+                .splineToLinearHeading(new Pose2d(59,26, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .build();
+
+        Action shoot2 = drive.actionBuilder(new Pose2d(59, 26, Math.toRadians(90)))
+                .setReversed(false)
+                .splineToLinearHeading(new Pose2d(62,19, Math.toRadians(70)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .build();
+        Action intake2 = drive.actionBuilder(new Pose2d(62, 19, Math.toRadians(70)))
+                .setReversed(false)
+                .splineToLinearHeading(new Pose2d(64,22, Math.toRadians(70)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .build();
+        Action shoot3 = drive.actionBuilder(new Pose2d(64, 22, Math.toRadians(90)))
+                .setReversed(false)
+                .splineToLinearHeading(new Pose2d(48,19, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .build();
+        Action intake3 = drive.actionBuilder(new Pose2d(48, 19, Math.toRadians(90)))
+                .setReversed(false)
+                .splineToLinearHeading(new Pose2d(48,22, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .build();
+        Action wall = drive.actionBuilder(new Pose2d(48, 22, Math.toRadians(90)))
+                .setReversed(false)
+                .splineToLinearHeading(new Pose2d(37,7, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .build();
 
         if (isStopRequested()) return;
         Actions.runBlocking(
                 new ParallelAction(
                         controller.updateRobot(),
                         new SequentialAction(
-                                push,
+                                preload,
+                                controller.pull(),
+                                shoot1,
+                                new ParallelAction(
+                                        intake1,
+                                        controller.intakeing()
+                                ),
+                                new ParallelAction(
+                                        shoot2,
+                                        controller.shoot()
+                                ),
+                                new ParallelAction(
+                                        intake2,
+                                        controller.intakeing()
+                                ),
+                                new ParallelAction(
+                                        shoot3,
+                                        controller.shoot()
+                                ),
+                                new ParallelAction(
+                                        intake3,
+                                        controller.intakeing()
+                                ),
+                                wall,
                                 new ParallelAction(
                                         sub1,
                                         controller.clearWall()
