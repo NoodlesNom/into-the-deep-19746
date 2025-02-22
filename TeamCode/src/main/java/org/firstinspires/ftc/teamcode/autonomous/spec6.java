@@ -42,7 +42,7 @@ public class spec6 extends LinearOpMode {
 
     private boolean failed = true;
     private boolean genericboolean = false;
-    public static int blockx = 0;
+    public static double blockx = 0;
     public static int blocky = 2;
 
     private StickyButton intakeposup = new StickyButton();
@@ -371,12 +371,16 @@ public class spec6 extends LinearOpMode {
                 robot.mIntake.setOutputLimits(-1,0.8);
                 if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
                     if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
-                        if (generaltimer.seconds()>1.2||(intaken)){
+                        if (generaltimer.seconds()>1||(intaken&&generaltimer.seconds()>0.1)){
                             robot.mIntake.setIntakeOpenLoop(0);
-                            robot.mIntake.setClawPos(1);
+
                             robot.mIntake.setExtendoPos(0, timer.seconds());
                             robot.mIntake.setOutputLimits(-1,1);
                             return false;
+                        }else if  (intaken){
+                            robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
+                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                            robot.mIntake.setClawPos(1);
                         }else if (generaltimer.seconds()>0){
                             robot.mIntake.setIntakeOpenLoop(1);
                             robot.mIntake.setClawPos(0);
@@ -384,6 +388,7 @@ public class spec6 extends LinearOpMode {
                             robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                             robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                         }
+
                     }else{
                         generaltimer.reset();
                     }
@@ -431,7 +436,7 @@ public class spec6 extends LinearOpMode {
                     robot.mIntake.setIntakeOpenLoop(0);
                 }else{
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SPECCLEAR.getVal(), timer.seconds());
-                    robot.mIntake.setIntakeOpenLoop(-0.7);
+                    robot.mIntake.setIntakeOpenLoop(-0.8);
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
                 }
                 return true;
@@ -560,7 +565,7 @@ public class spec6 extends LinearOpMode {
                 if (!robot.mIntake.closeEnoughAuto()){
                     generaltimer.reset();
                 }
-                if (generaltimer.seconds()>0.3) {
+                if (generaltimer.seconds()>0.4) {
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
                     robot.mIntake.setIntakeOpenLoop(0);
 
@@ -820,9 +825,9 @@ public class spec6 extends LinearOpMode {
             }else if (intakeposdown.getState()&& blocky >0){
                 blocky -=1;
             }else if (intakeposleft.getState()&& blockx >-6){
-                blockx -=1;
+                blockx -=0.5;
             }else if (intakeposright.getState()&& blockx <6){
-                blockx +=1;
+                blockx +=0.5;
             }
 
             telemetry.addLine("CURR INTAKE POS: "+ (blockx) + ", " + blocky);

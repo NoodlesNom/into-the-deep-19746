@@ -14,6 +14,10 @@ import com.acmerobotics.roadrunner.MinVelConstraint;
 import com.acmerobotics.roadrunner.MotorFeedforward;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.Pose2dDual;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.teamcode.autonomous.rr.Drawing;
+
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.Time;
 import com.acmerobotics.roadrunner.TimeTrajectory;
@@ -25,6 +29,7 @@ import com.acmerobotics.roadrunner.VelConstraint;
 import com.acmerobotics.roadrunner.ftc.DownsampledWriter;
 import com.acmerobotics.roadrunner.ftc.Encoder;
 import com.acmerobotics.roadrunner.ftc.FlightRecorder;
+import com.acmerobotics.roadrunner.ftc.GoBildaPinpointDriver;
 import com.acmerobotics.roadrunner.ftc.LazyImu;
 import com.acmerobotics.roadrunner.ftc.LynxFirmware;
 import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
@@ -34,6 +39,7 @@ import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -44,7 +50,6 @@ import org.firstinspires.ftc.teamcode.autonomous.rr.messages.DriveCommandMessage
 import org.firstinspires.ftc.teamcode.autonomous.rr.messages.MecanumCommandMessage;
 import org.firstinspires.ftc.teamcode.autonomous.rr.messages.MecanumLocalizerInputsMessage;
 import org.firstinspires.ftc.teamcode.autonomous.rr.messages.PoseMessage;
-import org.firstinspires.ftc.teamcode.autonomous.rr.Drawing;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.Localizer;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.TwoDeadWheelLocalizer;
 
@@ -54,44 +59,45 @@ import java.util.LinkedList;
 import java.util.List;
 
 @Config
-public final class MecanumDrivePeriodic {
+public class MecanumDrivePeriodic {
     public PeriodicIO mPeriodicIO;
     public static class Params {
         // IMU orientation
         // TODO: fill in these values based on
         //   see https://ftc-docs.firstinspires.org/en/latest/programming_resources/imu/imu.html?highlight=imu#physical-hub-mounting
         public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
-                RevHubOrientationOnRobot.LogoFacingDirection.UP;
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
         public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT;
+                RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
         // drive model parameters
-        public double inPerTick = 0.00292800628;
-        public double lateralInPerTick = 0.00231;
-        public double trackWidthTicks = 4587;
+        public double inPerTick = 1;
+        public double lateralInPerTick = 0.7854662115012618;
+        public double trackWidthTicks = 11.754;
 
         // feedforward paramet  ers (in tick units)
-        public double kS = 1.23;
-        public double kV = 0.00035;
-        public double kA = 0.000089;
+        public double kS = 1.1095926279;
+        public double kV = 0.133;
+        public double kA = 0.04;
 
         // path profile parameters (in inches)
-        public double maxWheelVel = 50;
-        public double minProfileAccel = -30;
-        public double maxProfileAccel = 50;
+        public double maxWheelVel = 60;
+        public double minProfileAccel = -40;
+        public double maxProfileAccel = 85;
 
         // turn profile parameters (in radians)
-        public double maxAngVel = Math.PI; // shared with path
-        public double maxAngAccel = Math.PI;
+        public double maxAngVel = 5; // shared with path
+        public double maxAngAccel = 3.14;
 
         // path controller gains
-        public double axialGain = 8;
-        public double lateralGain = 8;
-        public double headingGain = 8; // shared with turn
+        public double axialGain = 4;
+        public double lateralGain = 6;
+        public double headingGain = 9
+                ; // shared with turn
 
-        public double axialVelGain = 1;
-        public double lateralVelGain = 1;
-        public double headingVelGain = 1.2; // shared with turn
+        public double axialVelGain = 0;
+        public double lateralVelGain = 0;
+        public double headingVelGain = 0; // shared with turn
     }
 
     public static Params PARAMS = new Params();
@@ -113,12 +119,12 @@ public final class MecanumDrivePeriodic {
 
     public final VoltageSensor voltageSensor;
 
-    public final LazyImu lazyImu;
+    public LazyImu lazyImu;
 
     public final Localizer localizer;
     public Pose2d pose;
 
-    private final LinkedList<Pose2d> poseHistory = new LinkedList<>();
+    public final LinkedList<Pose2d> poseHistory = new LinkedList<>();
 
     private final DownsampledWriter estimatedPoseWriter = new DownsampledWriter("ESTIMATED_POSE", 50_000_000);
     private final DownsampledWriter targetPoseWriter = new DownsampledWriter("TARGET_POSE", 50_000_000);
@@ -148,7 +154,7 @@ public final class MecanumDrivePeriodic {
         }
 
         @Override
-        public  Twist2dDual<Time> update() {
+        public Twist2dDual<Time> update() {
             PositionVelocityPair leftFrontPosVel = leftFront.getPositionAndVelocity();
             PositionVelocityPair leftBackPosVel = leftBack.getPositionAndVelocity();
             PositionVelocityPair rightBackPosVel = rightBack.getPositionAndVelocity();
@@ -237,7 +243,6 @@ public final class MecanumDrivePeriodic {
         //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotor.Direction.REVERSE);
         leftBack.setDirection(DcMotor.Direction.REVERSE);
-
         // TODO: make sure your config has an IMU with this name (can be BNO or BHI)
         //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
         lazyImu = new LazyImu(hardwareMap, "imuCH", new RevHubOrientationOnRobot(
@@ -245,8 +250,7 @@ public final class MecanumDrivePeriodic {
 
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
 
-        localizer = new TwoDeadWheelLocalizer(hardwareMap, lazyImu.get(), PARAMS.inPerTick);
-
+        localizer = new DriveLocalizer();
 
         FlightRecorder.write("MECANUM_PARAMS", PARAMS);
     }
@@ -260,10 +264,10 @@ public final class MecanumDrivePeriodic {
             maxPowerMag = Math.max(maxPowerMag, power.value());
         }
 
-        mPeriodicIO.lf_pwr = wheelVels.leftFront.get(0) / maxPowerMag;
+        mPeriodicIO.lf_pwr = wheelVels.leftFront.get(0) / maxPowerMag*0.99;
         mPeriodicIO.lr_pwr = wheelVels.leftBack.get(0) / maxPowerMag;
-        mPeriodicIO.rf_pwr = wheelVels.rightFront.get(0) / maxPowerMag;
-        mPeriodicIO.rr_pwr = wheelVels.rightBack.get(0) / maxPowerMag;
+        mPeriodicIO.rf_pwr = wheelVels.rightFront.get(0) / maxPowerMag*0.98;
+        mPeriodicIO.rr_pwr = wheelVels.rightBack.get(0) / maxPowerMag*0.975;
     }
 
     public final class FollowTrajectoryAction implements Action {
@@ -309,7 +313,7 @@ public final class MecanumDrivePeriodic {
             Pose2dDual<Time> txWorldTarget = timeTrajectory.get(t);
             targetPoseWriter.write(new PoseMessage(txWorldTarget.value()));
 
-            PoseVelocity2d robotVelRobot = mPeriodicIO.estimate;
+            PoseVelocity2d robotVelRobot = mPeriodicIO.vel;
             PoseVelocity2dDual<Time> command= new HolonomicController(
                     PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
                     PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
@@ -331,10 +335,10 @@ public final class MecanumDrivePeriodic {
                     voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
             ));
 
-            mPeriodicIO.lf_pwr = leftFrontPower;
+            mPeriodicIO.lf_pwr = leftFrontPower*0.99;
             mPeriodicIO.lr_pwr = leftBackPower;
-            mPeriodicIO.rf_pwr = rightFrontPower;
-            mPeriodicIO.rr_pwr = rightBackPower;
+            mPeriodicIO.rf_pwr = rightFrontPower*0.98;
+            mPeriodicIO.rr_pwr = rightBackPower*0.975;
 
             p.put("x", pose.position.x);
             p.put("y", pose.position.y);
@@ -404,7 +408,7 @@ public final class MecanumDrivePeriodic {
 
 
 
-            PoseVelocity2d robotVelRobot = mPeriodicIO.estimate;
+            PoseVelocity2d robotVelRobot = mPeriodicIO.vel;
             PoseVelocity2dDual<Time> command= new HolonomicController(
                     PARAMS.axialGain, PARAMS.lateralGain, PARAMS.headingGain,
                     PARAMS.axialVelGain, PARAMS.lateralVelGain, PARAMS.headingVelGain
@@ -425,10 +429,10 @@ public final class MecanumDrivePeriodic {
                     voltage, leftFrontPower, leftBackPower, rightBackPower, rightFrontPower
             ));
 
-            mPeriodicIO.lf_pwr = leftFrontPower;
-            mPeriodicIO.lr_pwr = leftBackPower;
-            mPeriodicIO.rf_pwr = rightFrontPower;
-            mPeriodicIO.rr_pwr = rightBackPower;
+            mPeriodicIO.lf_pwr = feedforward.compute(wheelVels.leftFront) / voltage*0.99;
+            mPeriodicIO.lr_pwr = feedforward.compute(wheelVels.leftBack) / voltage;
+            mPeriodicIO.rf_pwr = feedforward.compute(wheelVels.rightBack) / voltage*0.975;
+            mPeriodicIO.rr_pwr = feedforward.compute(wheelVels.rightFront) / voltage*0.98;
 
             Canvas c = p.fieldOverlay();
             drawPoseHistory(c);
@@ -501,7 +505,12 @@ public final class MecanumDrivePeriodic {
     public static class PeriodicIO
     {
         //INPUTS
-        public PoseVelocity2d estimate;
+        public Pose2d estimate;
+
+        public Pose2D pinpointestimate;
+
+        public GoBildaPinpointDriver.DeviceStatus status;
+        public PoseVelocity2d vel;
         public double flcurrent= 0;
         public double frcurrent= 0;
         public double blcurrent= 0;

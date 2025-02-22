@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDrivePeriodic;
+import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.PinpointDrivePeriodic;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 
 public class Drive extends Subsystem {
@@ -46,7 +47,7 @@ public class Drive extends Subsystem {
 
     public boolean hold = false;
 
-    public MecanumDrivePeriodic drive;
+    public PinpointDrivePeriodic drive;
     private double[] winchPos = new double[] {55, 700, -10, 740};
 
     public enum EXTEND_POS
@@ -72,7 +73,7 @@ public class Drive extends Subsystem {
         }
     }
     public Drive(HardwareMap map) {
-        drive = new MecanumDrivePeriodic(map,new Pose2d(0,0,0));
+        drive = new PinpointDrivePeriodic(map,new Pose2d(0,0,0));
         leftwinchencoder = map.get(AnalogInput.class, "leftwinchencoder");
         rightwinchencoder = map.get(AnalogInput.class, "rightwinchencoder");
         winchL = map.get(CRServoImplEx.class, "hangL");
@@ -81,7 +82,7 @@ public class Drive extends Subsystem {
     }
 
     public Drive(HardwareMap map, Pose2d initialPose) {
-        drive = new MecanumDrivePeriodic(map, initialPose);
+        drive = new PinpointDrivePeriodic(map, initialPose);
 
         leftwinchencoder = map.get(AnalogInput.class, "leftwinchencoder");
         rightwinchencoder = map.get(AnalogInput.class, "rightwinchencoder");
@@ -150,8 +151,11 @@ public class Drive extends Subsystem {
     public void readPeriodicInputs(double time) {
         // Read all the sensors
 
-        drive.mPeriodicIO.estimate = drive.updatePoseEstimate();
-
+        drive.pinpoint.update();
+        drive.mPeriodicIO.estimate = drive.pinpoint.getPositionRR();
+        drive.mPeriodicIO.pinpointestimate = drive.pinpoint.getPosition();
+        drive.mPeriodicIO.status = drive.pinpoint.getDeviceStatus();
+        drive.mPeriodicIO.vel = drive.pinpoint.getVelocityRR();
         drive.mPeriodicIO.flcurrent = 0;//drive.leftFront.getCurrent(CurrentUnit.AMPS);
         drive.mPeriodicIO.frcurrent = 0;//drive.rightFront.getCurrent(CurrentUnit.AMPS);
         drive.mPeriodicIO.blcurrent = 0;//drive.leftBack.getCurrent(CurrentUnit.AMPS);
@@ -160,6 +164,7 @@ public class Drive extends Subsystem {
         rightwinchpos = (rightwinchencoder.getVoltage() / 3.3 * 360);
         leftdelta = leftwinchpos - leftwinchprevious;
 
+        drive.mPeriodicIO.volts = drive.voltageSensor.getVoltage();
         if (leftdelta > 180) leftdelta -= 360;
         if (leftdelta < -180) leftdelta += 360;
         leftwinchadjusted += leftdelta;
