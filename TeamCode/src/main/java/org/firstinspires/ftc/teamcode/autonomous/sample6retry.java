@@ -307,7 +307,21 @@ public class sample6retry extends LinearOpMode {
 
                 }
                 if (!failed) {
-                    if (generaltimer.seconds() > 1.7) {
+                    if (detected){
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+
+                        if (generaltimer.seconds() > 0.2) {
+                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
+                            robot.mIntake.setExtendoPos(0, timer.seconds());
+                            robot.mIntake.setIntakeOpenLoop(0);
+                            return false;
+                        }else if (generaltimer.seconds() > 0.1) {
+                            robot.mIntake.setOutputLimits(-1, 1);
+                            robot.mIntake.setClawPos(1);
+                        }else{
+                            robot.mIntake.setIntakeOpenLoop(1);
+                        }
+                    }else if (generaltimer.seconds() > 1.7) {
 
                         if (!reject) {
                             robot.mIntake.setIntakeOpenLoop(0);
@@ -325,6 +339,12 @@ public class sample6retry extends LinearOpMode {
                         robot.mIntake.setOutputLimits(-1, 1);
                         if (!reject) robot.mIntake.setClawPos(1);
                     } else if (generaltimer.seconds() > 0.7) {
+
+
+                    }else if (generaltimer.seconds() > 0.6) {
+                        if (!reject) {
+                            robot.mIntake.setIntakeOpenLoop(1);
+                        }
                         if (failedtimes.equals("1")||(failedtimes.equals("01"))){
                             robot.mIntake.setExtendoTicks((int) (((blockx3+5) * 25.4) / 1.25), timer.seconds());
 
@@ -340,12 +360,6 @@ public class sample6retry extends LinearOpMode {
 
                             }
                         }
-
-                    }else if (generaltimer.seconds() > 0.6) {
-                        if (!reject) {
-                            robot.mIntake.setIntakeOpenLoop(1);
-                        }
-
 
                     } else if (generaltimer.seconds() > 0.5) {
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
@@ -393,12 +407,15 @@ public class sample6retry extends LinearOpMode {
 
                         genericboolean = true;
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
-                        robot.mIntake.setOutputLimits(-1, 0.5);
+                        robot.mIntake.setOutputLimits(-1, 0.7);
                     }
                     if (!stopresetting) {
                         generaltimer.reset();
                     }
                     if (robot.mIntake.detectedYellow()||(robot.mIntake.detectedBlue()&&team.name().equals("BLUE"))||(robot.mIntake.detectedRed()&&team.name().equals("RED"))){
+                        if (!detected){
+                            generaltimer.reset();
+                        }
                         detected= true;
                     }
                 }

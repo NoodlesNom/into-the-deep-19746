@@ -42,7 +42,7 @@ public class spec6 extends LinearOpMode {
 
     private boolean failed = true;
     private boolean genericboolean = false;
-    public static int blockx = 2;
+    public static int blockx = 0;
     public static int blocky = 2;
 
     private StickyButton intakeposup = new StickyButton();
@@ -112,7 +112,7 @@ public class spec6 extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal(), 900 , new double[] {1,2,2,2,2,2,2,1,1,1});
+                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal(), 800 , new double[] {1,2,2,2,2,2,2,1,1,1});
                 return false;
             }
         }
@@ -162,47 +162,85 @@ public class spec6 extends LinearOpMode {
         public class Pull implements Action {
             private boolean stopresetting = false;
             private boolean reject = false;
+            private boolean detected = false;
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if ((robot.mIntake.detectedBlue()&&team.name().equals("RED"))||(robot.mIntake.detectedRed()&&team.name().equals("BLUE"))){
                     robot.mIntake.setIntakeOpenLoop(-0.8);
                     reject = true;
                 }
-
-                if (generaltimer.seconds()>1.7){
-
-                    if(!reject){robot.mIntake.setIntakeOpenLoop(0);}
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
-                    robot.mIntake.setExtendoPos(0,timer.seconds());
-                    return false;
-                }else if(generaltimer.seconds()>1.6){
-                    robot.mIntake.setOutputLimits(-1,1);
-                    robot.mIntake.setClawPos(1);
-                }else if(generaltimer.seconds()>1){
-
-                    robot.mIntake.setExtendoTicks((int) (((blockx+5) * 25.4) / 1.25), timer.seconds());
-
-                }else if(generaltimer.seconds()>0.6){
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
-                    if(!reject){robot.mIntake.setIntakeOpenLoop(1);}
-
-
-                }else if(generaltimer.seconds()>0.1){
-                    robot.mIntake.setExtendoTicks((int) (((blockx-2) * 25.4) / 1.25), timer.seconds());
-                }else if(robot.mIntake.closeEnough()&&genericboolean){
-                    if(!reject){robot.mIntake.setIntakeOpenLoop(0.5);}
-
-                    stopresetting=true;
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
-                }else if(!genericboolean&&robot.mIntake.getTargetExtendoIdx()!=Intake.EXTEND_POS.INTAKING.getVal()) {
-                    robot.mIntake.setExtendoTicks((int) (((blockx) * 25.4) / 1.25), timer.seconds());
-
-                    genericboolean = true;
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
-                    robot.mIntake.setOutputLimits(-1,0.5);
+                if ((robot.mIntake.detectedBlue()&&team.name().equals("BLUE"))||(robot.mIntake.detectedRed()&&team.name().equals("RED"))||robot.mIntake.detectedYellow()){
+                    if (!detected){
+                        generaltimer.reset();
+                    }
+                    detected = true;
+                    BotLog.logD("deteted", detected+"");
                 }
-                if (!stopresetting){
-                    generaltimer.reset();
+                if (detected){
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+
+                    if (generaltimer.seconds() > 0.3) {
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                        return false;
+                    } else if (generaltimer.seconds() > 0.2) {
+
+                        robot.mIntake.setExtendoPos(0, timer.seconds());
+                        robot.mIntake.setIntakeOpenLoop(-0.8);
+                    } else if (generaltimer.seconds() > 0.1) {
+                        robot.mIntake.setOutputLimits(-1, 1);
+                        robot.mIntake.setClawPos(1);
+                    }else{
+                        robot.mIntake.setIntakeOpenLoop(1);
+                    }
+                }else {
+                    if (generaltimer.seconds() > 1.8) {
+
+                        if (!reject) {
+                            robot.mIntake.setIntakeOpenLoop(-0.8);
+                        }
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                        robot.mIntake.setExtendoPos(0, timer.seconds());
+                        return false;
+                    } else if (generaltimer.seconds() > 1.7) {
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+                        if (!reject) {
+                            robot.mIntake.setIntakeOpenLoop(-0.8);
+                        }
+                        robot.mIntake.setExtendoPos(0, timer.seconds());
+
+                    } else if (generaltimer.seconds() > 1.6) {
+                        robot.mIntake.setOutputLimits(-1, 1);
+                        robot.mIntake.setClawPos(1);
+                    } else if (generaltimer.seconds() > 0.7) {
+
+                        robot.mIntake.setExtendoTicks((int) (((blocky + 10) * 25.4) / 1.25), timer.seconds());
+                        if (!reject) {
+                            robot.mIntake.setIntakeOpenLoop(1);
+                        }
+                    } else if (generaltimer.seconds() > 0.6) {
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+
+
+
+                    } else if (generaltimer.seconds() > 0.1) {
+                        robot.mIntake.setExtendoTicks((int) (((blocky - 3) * 25.4) / 1.25), timer.seconds());
+                    } else if (robot.mIntake.closeEnough() && genericboolean) {
+                        if (!reject) {
+                            robot.mIntake.setIntakeOpenLoop(0.4);
+                        }
+
+                        stopresetting = true;
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
+                    } else if (!genericboolean && robot.mIntake.getTargetExtendoIdx() != Intake.EXTEND_POS.INTAKING.getVal()) {
+                        robot.mIntake.setExtendoTicks((int) (((blocky) * 25.4) / 1.25), timer.seconds());
+
+                        genericboolean = true;
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
+                        robot.mIntake.setOutputLimits(-1, 0.7);
+                    }
+                    if (!stopresetting) {
+                        generaltimer.reset();
+                    }
                 }
                 return true;
             }
@@ -299,6 +337,7 @@ public class spec6 extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 robot.mLift.setTargetPos(Lift.LIFT_POS.SPECCLEAR.getVal(), timer.seconds());
+                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
                 return false;
             }
         }
@@ -325,20 +364,19 @@ public class spec6 extends LinearOpMode {
         }
 
         public class Intakeing implements Action {
+
+            private boolean intaken = false;
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-
+                robot.mIntake.setOutputLimits(-1,0.8);
                 if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
                     if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
-                        if (generaltimer.seconds()>1.3){
+                        if (generaltimer.seconds()>1.2||(intaken)){
                             robot.mIntake.setIntakeOpenLoop(0);
                             robot.mIntake.setClawPos(1);
+                            robot.mIntake.setExtendoPos(0, timer.seconds());
+                            robot.mIntake.setOutputLimits(-1,1);
                             return false;
-                        }
-                        else if (generaltimer.seconds()>1.1){
-                            robot.mIntake.setClawPos(1);
-                        }else if (generaltimer.seconds()>0.9){
-                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.BLOCKCLEAR.getVal());
                         }else if (generaltimer.seconds()>0){
                             robot.mIntake.setIntakeOpenLoop(1);
                             robot.mIntake.setClawPos(0);
@@ -347,6 +385,10 @@ public class spec6 extends LinearOpMode {
                             robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                         }
                     }else{
+                        generaltimer.reset();
+                    }
+                    if (((robot.mIntake.detectedBlue()&&team.name().equals("BLUE"))||(robot.mIntake.detectedRed()&&team.name().equals("RED")))&&!intaken){
+                        intaken = true;
                         generaltimer.reset();
                     }
                 }else{
@@ -381,13 +423,16 @@ public class spec6 extends LinearOpMode {
                 if (generaltimer.seconds()>1){
                     generaltimer.reset();
                 }else if (generaltimer.seconds()>0.4){
-                    robot.mDeposit.setDiffyPos(-40, 67);
+                    robot.mDeposit.setDiffyPos(-40, 113);
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
                     return false;
                 }else if (generaltimer.seconds()>0.2) {
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal(), 800 , new double[] {1,2,2,2,2,2,2,1,1,1});
+                    robot.mIntake.setIntakeOpenLoop(0);
                 }else{
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SPECCLEAR.getVal(), timer.seconds());
+                    robot.mIntake.setIntakeOpenLoop(-0.7);
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
                 }
                 return true;
             }
@@ -448,6 +493,20 @@ public class spec6 extends LinearOpMode {
             return new LiftUpInstant();
         }
 
+        public class SpecPlace implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
+                robot.mDeposit.setDiffyPos(-40, 67);
+                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal(), 600, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
+                return false;
+            }
+        }
+
+        public Action specPlace() {
+            return new SpecPlace();
+        }
+
         public class PivotShoot implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
@@ -460,27 +519,94 @@ public class spec6 extends LinearOpMode {
             return new PivotShoot();
         }
 
+        public class ExtendoPrepareInstant implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mIntake.setClawPos(0);
+                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.AUTOINTAKEPREPARE.getVal(), timer.seconds());
+                robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
+                return false;
+            }
+        }
+
+        public Action extendoPrepareInstant() {
+            return new ExtendoPrepareInstant();
+        }
+        public class ExtendoInInstant implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mIntake.setClawPos(0);
+                robot.mDeposit.setClawPos(0);
+                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal());
+                robot.mDeposit.setDiffyPos(80,-90);
+                robot.mIntake.setExtendoPos(0, timer.seconds());
+                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                return false;
+            }
+        }
+
+        public Action extendoInInstant() {
+            return new ExtendoInInstant();
+        }
+
+
         public class Shoot implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
+                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                if (!robot.mIntake.closeEnoughAuto()){
+                    generaltimer.reset();
+                }
                 if (generaltimer.seconds()>0.3) {
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
                     robot.mIntake.setIntakeOpenLoop(0);
+
                     return false;
-                }else{
+                }else  if (generaltimer.seconds()>0.1) {
                     robot.mIntake.setIntakeOpenLoop(-0.9);
+                }else if   (robot.mIntake.closeEnoughAuto()){
+
+                    robot.mIntake.setClawPos(0);
+                    robot.mIntake.setIntakeOpenLoop(0);
+                }else {
+                    robot.mIntake.setClawPos(1);
+                    robot.mIntake.setIntakeOpenLoop(-0.8);
                 }
-                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
-                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-                if (!robot.mIntake.closeEnough()){
-                    generaltimer.reset();
-                }
+
                 return true;
             }
         }
 
         public Action shoot() {
             return new Shoot();
+        }
+        public class ShootLast implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
+                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                if (!robot.mIntake.closeEnoughAuto()){
+                    generaltimer.reset();
+                }
+                if (generaltimer.seconds()>0.3) {
+                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
+                    robot.mIntake.setIntakeOpenLoop(0);
+
+                    return false;
+                }else  if   (robot.mIntake.closeEnoughAuto()){
+                    robot.mIntake.setIntakeOpenLoop(-0.7);
+                    robot.mIntake.setClawPos(0);
+                }
+
+                return true;
+            }
+        }
+
+        public Action shootLast() {
+            return new ShootLast();
         }
 
         public class LiftDownInstant implements Action {
@@ -511,12 +637,11 @@ public class spec6 extends LinearOpMode {
 
 
 
-        Action sub1 = drive.actionBuilder(new Pose2d(36,6.5, Math.toRadians(90)))
+        Action sub1 = drive.actionBuilder(new Pose2d(39,6, Math.toRadians(90)))
                 .setReversed(false)
-                .setTangent(Math.toRadians(145))
-                .splineToLinearHeading(new Pose2d(-3, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(-5, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(-5, 41 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
+                .splineToLinearHeading(new Pose2d(-2, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
+                .splineToLinearHeading(new Pose2d(-4, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
+                .splineToLinearHeading(new Pose2d(-4, 40.5 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
 
                 .stopAndAdd(new SequentialAction(
                         controller.openClaw(),
@@ -525,30 +650,28 @@ public class spec6 extends LinearOpMode {
                 ))
                 .build();
 
-        Action human1 = drive.actionBuilder(new Pose2d(-5,41, Math.toRadians(90)))
+        Action human1 = drive.actionBuilder(new Pose2d(-4,40.5, Math.toRadians(90)))
                 .setReversed(true)
                 .setTangent(Math.toRadians(90-180))
-                .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 .stopAndAdd(new SequentialAction(
                         controller.closeClaw()
                 ))
-                .waitSeconds(0.1)
+                .waitSeconds(0.05)
                 .stopAndAdd(new SequentialAction(
                         controller.resetTimer(),
                         controller.liftClearInstant()
                 ))
-                .waitSeconds(0.05)
-
                 .build();
 
         Action sub2 = drive.actionBuilder(new Pose2d(36,6.5, Math.toRadians(90)))
                 .setReversed(false)
                 .setTangent(Math.toRadians(145))
-                .splineToLinearHeading(new Pose2d(-1, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(-3, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(-3, 41 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
+                .splineToLinearHeading(new Pose2d(-1, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(-3, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(-3, 40.5 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 .stopAndAdd(new SequentialAction(
                         controller.openClaw(),
                         controller.diffyPlace(),
@@ -556,29 +679,28 @@ public class spec6 extends LinearOpMode {
                 ))
                 .build();
 
-        Action human2 = drive.actionBuilder(new Pose2d(-3,41, Math.toRadians(90)))
+        Action human2 = drive.actionBuilder(new Pose2d(-3,40.5, Math.toRadians(90)))
                 .setReversed(true)
                 .setTangent(Math.toRadians(90-180))
-                .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 .stopAndAdd(new SequentialAction(
                         controller.closeClaw()
                 ))
-                .waitSeconds(0.1)
+                .waitSeconds(0.05)
                 .stopAndAdd(new SequentialAction(
                         controller.resetTimer(),
                         controller.liftClearInstant()
                 ))
-                .waitSeconds(0.05)
                 .build();
 
         Action sub3 = drive.actionBuilder(new Pose2d(36,6.5, Math.toRadians(90)))
                 .setReversed(false)
                 .setTangent(Math.toRadians(145))
-                .splineToLinearHeading(new Pose2d(1, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(-1, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(-1, 41 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
+                .splineToLinearHeading(new Pose2d(1, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(-1, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(-1, 40.5 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 .stopAndAdd(new SequentialAction(
                         controller.openClaw(),
                         controller.diffyPlace(),
@@ -586,29 +708,28 @@ public class spec6 extends LinearOpMode {
                 ))
                 .build();
 
-        Action human3 = drive.actionBuilder(new Pose2d(-1,41, Math.toRadians(90)))
+        Action human3 = drive.actionBuilder(new Pose2d(-1,40.5, Math.toRadians(90)))
                 .setReversed(true)
                 .setTangent(Math.toRadians(90-180))
-                .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 .stopAndAdd(new SequentialAction(
                         controller.closeClaw()
                 ))
-                .waitSeconds(0.1)
+                .waitSeconds(0.05)
                 .stopAndAdd(new SequentialAction(
                         controller.resetTimer(),
                         controller.liftClearInstant()
                 ))
-                .waitSeconds(0.05)
 
                 .build();
         Action sub4 = drive.actionBuilder(new Pose2d(36,6.5, Math.toRadians(90)))
                 .setReversed(false)
                 .setTangent(Math.toRadians(145))
-                .splineToLinearHeading(new Pose2d(3, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(1, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(1, 41 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
+                .splineToLinearHeading(new Pose2d(3, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(1, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(1, 40.5 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 .stopAndAdd(new SequentialAction(
                         controller.openClaw(),
                         controller.diffyPlace(),
@@ -616,29 +737,28 @@ public class spec6 extends LinearOpMode {
                 ))
                 .build();
 
-        Action human4 = drive.actionBuilder(new Pose2d(1,41, Math.toRadians(90)))
+        Action human4 = drive.actionBuilder(new Pose2d(1,40.5, Math.toRadians(90)))
                 .setReversed(true)
                 .setTangent(Math.toRadians(90-180))
-                .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 .stopAndAdd(new SequentialAction(
                         controller.closeClaw()
                 ))
-                .waitSeconds(0.1)
+                .waitSeconds(0.05)
                 .stopAndAdd(new SequentialAction(
                         controller.resetTimer(),
                         controller.liftClearInstant()
                 ))
-                .waitSeconds(0.05)
 
                 .build();
         Action sub5 = drive.actionBuilder(new Pose2d(36,6.5, Math.toRadians(90)))
                 .setReversed(false)
                 .setTangent(Math.toRadians(145))
-                .splineToLinearHeading(new Pose2d(5, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(3, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
-                .splineToLinearHeading(new Pose2d(3, 41 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(50 ), new ProfileAccelConstraint(-40, 75))
+                .splineToLinearHeading(new Pose2d(5, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(3, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
+                .splineToLinearHeading(new Pose2d(3, 40.5 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 .stopAndAdd(new SequentialAction(
                         controller.openClaw(),
                         controller.diffyPlaceLast(),
@@ -646,7 +766,7 @@ public class spec6 extends LinearOpMode {
                 ))
                 .build();
 
-        Action human5 = drive.actionBuilder(new Pose2d(3,41, Math.toRadians(90)))
+        Action human5 = drive.actionBuilder(new Pose2d(3,40.5, Math.toRadians(90)))
                 .setReversed(true)
                 .splineTo(new Vector2d(48, 12), Math.toRadians(-15),new TranslationalVelConstraint(90 ), new ProfileAccelConstraint(-100, 90))
                 .stopAndAdd(new SequentialAction(
@@ -699,9 +819,9 @@ public class spec6 extends LinearOpMode {
                 blocky +=1;
             }else if (intakeposdown.getState()&& blocky >0){
                 blocky -=1;
-            }else if (intakeposleft.getState()&& blockx >0){
+            }else if (intakeposleft.getState()&& blockx >-6){
                 blockx -=1;
-            }else if (intakeposright.getState()){
+            }else if (intakeposright.getState()&& blockx <6){
                 blockx +=1;
             }
 
@@ -719,52 +839,97 @@ public class spec6 extends LinearOpMode {
         waitForStart();
         robot.mIntake.setExtendoPos(0, timer.seconds());
 
-        blockx+=5;
+        blocky+=7;
+        Action preload;
+        if (blockx-initialPose.position.x<-3) {
+            preload = drive.actionBuilder(initialPose)
+                    .stopAndAdd(controller.specPlace())
+                    .afterTime(0.75, controller.subPrepareInstant())
+                    .setTangent(Math.toRadians(120))
+                    .splineToLinearHeading(new Pose2d(blockx, 24, Math.toRadians(90)), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 85))
+                    .splineToLinearHeading(new Pose2d(blockx, 41.5, Math.toRadians(90)), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 85))
+                    .stopAndAdd(new SequentialAction(
+                            controller.openClaw(),
+                            controller.diffyPlace(),
+                            controller.resetTimer()
+                    ))
+                    .build();
+        } else if (blockx-initialPose.position.x>3) {
+             preload = drive.actionBuilder(initialPose)
+                    .stopAndAdd(controller.specPlace())
+                    .afterTime(0.75, controller.subPrepareInstant())
+                     .setTangent(Math.toRadians(60))
 
-        Action preload = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(new Vector2d(blockx, 41), Math.toRadians(90))
-                .stopAndAdd(new SequentialAction(
-                        controller.openClaw(),
-                        controller.diffyPlace(),
-                        controller.resetTimer()
-                ))
-                .build();
+                     .splineToLinearHeading(new Pose2d(blockx, 24, Math.toRadians(90)), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 85))
+                    .splineToLinearHeading(new Pose2d(blockx, 41.5, Math.toRadians(90)), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 85))
+                    .stopAndAdd(new SequentialAction(
+                            controller.openClaw(),
+                            controller.diffyPlace(),
+                            controller.resetTimer()
+                    ))
+                    .build();
+        }else {
+            preload = drive.actionBuilder(initialPose)
+                    .stopAndAdd(controller.specPlace())
+                    .afterTime(0.75, controller.subPrepareInstant())
+                    .splineToLinearHeading(new Pose2d(blockx, 24, Math.toRadians(90)), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 85))
+                    .splineToLinearHeading(new Pose2d(blockx, 41.5, Math.toRadians(90)), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-30, 85))
+                    .stopAndAdd(new SequentialAction(
+                            controller.openClaw(),
+                            controller.diffyPlace(),
+                            controller.resetTimer()
+                    ))
+                    .build();
+        }
         Action shoot1 = drive.actionBuilder(new Pose2d(blockx, 41, Math.toRadians(90)))
                 .setReversed(true)
                 .afterTime(0.5,new SequentialAction(
                         controller.liftUpInstant(),
                         controller.pivotShoot()
                 ))
-                .splineToLinearHeading(new Pose2d(59,19, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                .stopAndAdd(new SequentialAction(
+                .afterDisp(62, new SequentialAction(
                         controller.resetTimer(),
                         controller.shoot()
                 ))
+                .splineToLinearHeading(new Pose2d(57.5,17, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+
                 .build();
-        Action intake1 = drive.actionBuilder(new Pose2d(59, 19, Math.toRadians(90)))
+        Action intake1 = drive.actionBuilder(new Pose2d(57.5, 17, Math.toRadians(90)))
                 .setReversed(false)
-                .splineToLinearHeading(new Pose2d(59,26, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .strafeToLinearHeading(new Vector2d(57.5,21), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
                 .build();
 
-        Action shoot2 = drive.actionBuilder(new Pose2d(59, 26, Math.toRadians(90)))
+        Action shoot2 = drive.actionBuilder(new Pose2d(57.5, 21, Math.toRadians(90)))
                 .setReversed(false)
-                .splineToLinearHeading(new Pose2d(62,19, Math.toRadians(70)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .strafeToLinearHeading(new Vector2d(61,17), Math.toRadians(75),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
                 .build();
-        Action intake2 = drive.actionBuilder(new Pose2d(62, 19, Math.toRadians(70)))
+        Action intake2 = drive.actionBuilder(new Pose2d(61, 17, Math.toRadians(75)))
                 .setReversed(false)
-                .splineToLinearHeading(new Pose2d(64,22, Math.toRadians(70)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .strafeToLinearHeading(new Vector2d(63,23), Math.toRadians(75),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
                 .build();
-        Action shoot3 = drive.actionBuilder(new Pose2d(64, 22, Math.toRadians(90)))
+        Action shoot3 = drive.actionBuilder(new Pose2d(63, 23, Math.toRadians(75)))
                 .setReversed(false)
-                .splineToLinearHeading(new Pose2d(48,19, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .strafeToLinearHeading(new Vector2d(48,17), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
                 .build();
-        Action intake3 = drive.actionBuilder(new Pose2d(48, 19, Math.toRadians(90)))
+        Action intake3 = drive.actionBuilder(new Pose2d(48, 17, Math.toRadians(90)))
                 .setReversed(false)
-                .splineToLinearHeading(new Pose2d(48,22, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .stopAndAdd(controller.pivotDown())
+
+                .strafeToLinearHeading(new Vector2d(48,22), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
                 .build();
         Action wall = drive.actionBuilder(new Pose2d(48, 22, Math.toRadians(90)))
                 .setReversed(false)
-                .splineToLinearHeading(new Pose2d(37,7, Math.toRadians(90)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .stopAndAdd(controller.extendoInInstant())
+                .strafeToLinearHeading(new Vector2d(39,6), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                .stopAndAdd(new SequentialAction(
+                        controller.closeClaw()
+                ))
+                .waitSeconds(0.1)
+                .stopAndAdd(new SequentialAction(
+                        controller.resetTimer(),
+                        controller.liftClearInstant()
+                ))
+                .waitSeconds(0.05)
                 .build();
 
         if (isStopRequested()) return;
@@ -775,27 +940,40 @@ public class spec6 extends LinearOpMode {
                                 preload,
                                 controller.pull(),
                                 shoot1,
+                                controller.resetTimer(),
                                 new ParallelAction(
                                         intake1,
+
                                         controller.intakeing()
                                 ),
+                                controller.resetTimer(),
+
                                 new ParallelAction(
                                         shoot2,
                                         controller.shoot()
                                 ),
+                                controller.resetTimer(),
+
                                 new ParallelAction(
                                         intake2,
                                         controller.intakeing()
                                 ),
+                                controller.resetTimer(),
+
                                 new ParallelAction(
                                         shoot3,
                                         controller.shoot()
                                 ),
+                                controller.resetTimer(),
+
                                 new ParallelAction(
                                         intake3,
                                         controller.intakeing()
                                 ),
+                                controller.resetTimer(),
+
                                 wall,
+                                controller.resetTimer(),
                                 new ParallelAction(
                                         sub1,
                                         controller.clearWall()

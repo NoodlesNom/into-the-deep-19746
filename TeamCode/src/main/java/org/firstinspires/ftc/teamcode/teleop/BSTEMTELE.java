@@ -353,10 +353,10 @@ public class BSTEMTELE extends OpMode {
                 }else if (shoottimer.seconds()>0.5){
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                     robot.mIntake.setIntakeOpenLoop(-0.9);
-                    robot.mIntake.setClawPos(0);
+
                 }else{
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-
+                    robot.mIntake.setClawPos(0);
                 }
                 if (spectimer.seconds()>0.5){
                     if (specangled) {
@@ -505,9 +505,10 @@ public class BSTEMTELE extends OpMode {
                 }else if (shoottimer.seconds()>0.6){
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                     robot.mIntake.setIntakeOpenLoop(-0.9);
-                    robot.mIntake.setClawPos(0);
+
                 }else if (shoottimer.seconds()>0.3){
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
+                    robot.mIntake.setClawPos(0);
 
                 }
                 break;

@@ -255,6 +255,8 @@ public class sample6 extends LinearOpMode {
         public class Pull implements Action {
             private boolean stopresetting = false;
             private boolean reject = false;
+            private boolean detected = false;
+
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 if ((robot.mIntake.detectedBlue()&&team.name().equals("RED"))||(robot.mIntake.detectedRed()&&team.name().equals("BLUE"))){
