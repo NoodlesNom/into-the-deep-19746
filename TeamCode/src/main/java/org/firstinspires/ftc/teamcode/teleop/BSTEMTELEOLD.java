@@ -3,18 +3,8 @@ package org.firstinspires.ftc.teamcode.teleop;
 
 import static org.firstinspires.ftc.teamcode.autonomous.gf.OldAutoMaster.team;
 
-import androidx.annotation.NonNull;
-
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ParallelAction;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.PoseVelocity2d;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
@@ -27,480 +17,25 @@ import org.firstinspires.ftc.teamcode.Subsystems.Deposit;
 import org.firstinspires.ftc.teamcode.Subsystems.Intake;
 import org.firstinspires.ftc.teamcode.Subsystems.Lift;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.StickyButton;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Config
-@TeleOp(name = "BSTEM🗣️️🔥💯TELEOP", group = "opMode")
-public class BSTEMTELE extends OpMode {
-    private List<Action> runningActions = new ArrayList<>();
+@TeleOp(name = "OLD TELE (NO AUTO SPEC)", group = "opMode")
+public class BSTEMTELEOLD extends OpMode {
 
     private Robot robot;
     public static int rejectingTime = 500;
     private Deadline rejecting = new Deadline(rejectingTime, TimeUnit.MILLISECONDS);
 
     private boolean reject = true;
-    private boolean autoSpec=false;
-    private int angle = 123;
-    private boolean ResetAutoSpec=false;
     public List<LynxModule> allHubs;
     public static double firstwait = 0.3;
 
-    private FtcDashboard dash = FtcDashboard.getInstance();
-
     public static int specplacingpivottime =800;
-    public class robotController {
-
-
-        public class OpenClaw implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                clawToggleHits=0;
-                return false;
-            }
-        }
-
-        public Action openClaw() {
-            return new robotController.OpenClaw();
-        }
-
-        public class CloseClaw implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                clawToggleHits=1;
-                return false;
-            }
-        }
-
-        public Action closeClaw() {
-            return new robotController.CloseClaw();
-        }
-
-        public class PivotDown implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal(), 800 , new double[] {1,2,2,2,2,2,2,1,1,1});
-                return false;
-            }
-        }
-
-        public Action pivotDown() {
-            return new robotController.PivotDown();
-        }
-
-        public class PivotUp implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal());
-                return false;
-            }
-        }
-        public Action pivotUp() {
-            return new robotController.PivotUp();
-        }
-
-        public class DiffyIntake implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setDiffyPos(80,-90);
-                return false;
-            }
-        }
-        public Action diffyIntake() {
-            return new robotController.DiffyIntake();
-        }
-
-        public class DiffyPlace implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setDiffyPos(90,90);
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOCLEAR.getVal());
-                BotLog.logD("BSDbg", "END OF PLACING TRAJECTORY AHHHHHHHHHHH");
-                return false;
-            }
-        }
-        public Action diffyPlace() {
-            return new robotController.DiffyPlace();
-        }
-
-
-
-        public class DiffyPlaceLast implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setDiffyPos(90,90);
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECPUSH.getVal());
-                BotLog.logD("BSDbg", "END OF PLACING TRAJECTORY AHHHHHHHHHHH");
-                return false;
-            }
-        }
-        public Action diffyPlaceLast() {
-            return new robotController.DiffyPlaceLast();
-        }
-
-
-
-        public class intakePrepareInstant implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mIntake.setClawPos(0);
-                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.AUTOINTAKEPREPARE.getVal(), timer.seconds());
-                return false;
-            }
-        }
-
-        public Action intakePrepareInstant() {
-            return new robotController.intakePrepareInstant();
-        }
-        public class DiffyRelease implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal());
-                return false;
-            }
-        }
-        public Action diffyRelease() {
-            return new robotController.DiffyRelease();
-        }
-
-        public class LiftDown implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(0, timer.seconds());
-                return !robot.mLift.closeEnough();
-            }
-        }
-
-        public Action liftDown() {
-            return new robotController.LiftDown();
-        }
-
-        public class LiftIntakeInstant implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(2, timer.seconds());
-                return false;
-            }
-        }
-
-        public Action liftIntakeInstant() {
-            return new robotController.LiftIntakeInstant();
-        }
-
-
-        public class LiftClearInstant implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(Lift.LIFT_POS.SPECCLEAR.getVal(), timer.seconds());
-                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-                return false;
-            }
-        }
-
-        public Action liftClearInstant() {
-            return new robotController.LiftClearInstant();
-        }
-
-        public class RobotReset implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(Lift.LIFT_POS.DOWN.getVal(), timer.seconds());
-                robot.mIntake.setExtendoOpenLoop(-0.4);
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.IDLE.getVal());
-                robot.mDeposit.setDiffyPos(0,0);
-
-                return false;
-            }
-        }
-
-        public Action robotReset() {
-            return new robotController.RobotReset();
-        }
-
-        public class Intakeing implements Action {
-
-            private boolean intaken = false;
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mIntake.setOutputLimits(-1,0.8);
-                if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
-                    if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
-                        if (generaltimer.seconds()>1||(intaken&&generaltimer.seconds()>0.1)){
-                            robot.mIntake.setIntakeOpenLoop(0);
-
-                            robot.mIntake.setExtendoPos(0, timer.seconds());
-                            robot.mIntake.setOutputLimits(-1,1);
-                            return false;
-                        }else if  (intaken){
-                            robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
-                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-                            robot.mIntake.setClawPos(1);
-                        }else if (generaltimer.seconds()>0){
-                            robot.mIntake.setIntakeOpenLoop(1);
-                            robot.mIntake.setClawPos(0);
-                            robot.mIntake.setExtendoPos(Intake.EXTEND_POS.INTAKING.getVal(), timer.seconds());
-                            robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
-                            robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
-                        }
-
-                    }else{
-                        generaltimer.reset();
-                    }
-                    if (((robot.mIntake.detectedBlue()&&team.name().equals("BLUE"))||(robot.mIntake.detectedRed()&&team.name().equals("RED")))&&!intaken){
-                        intaken = true;
-                        generaltimer.reset();
-                    }
-                }else{
-                    generaltimer.reset();
-                }
-                return true;
-            }
-        }
-
-
-        public Action intakeing() {
-            return new robotController.Intakeing();
-        }
-
-        public class LiftPlaceInstant implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(1, timer.seconds());
-                return false;
-            }
-        }
-
-        public Action liftPlaceInstant() {
-            return new robotController.LiftPlaceInstant();
-        }
-
-
-        public class ClearWall implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                if (generaltimer.seconds()>1){
-                    generaltimer.reset();
-                }else if (generaltimer.seconds()>0.4){
-                    robot.mDeposit.setDiffyPos(-40, 113);
-                    robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
-                    return false;
-                }else if (generaltimer.seconds()>0.2) {
-                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal(), 800 , new double[] {1,2,2,2,2,2,2,1,1,1});
-                    robot.mIntake.setIntakeOpenLoop(0);
-                }else{
-                    robot.mLift.setTargetPos(Lift.LIFT_POS.SPECCLEAR.getVal(), timer.seconds());
-                    robot.mIntake.setIntakeOpenLoop(-0.8);
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-                }
-                return true;
-            }
-        }
-
-        public Action clearWall() {
-            return new robotController.ClearWall();
-        }
-
-        public class IntakeReset implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-
-                robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                if (generaltimer.seconds()>0.6){
-                    //robot.mIntake.zerofinish(timer.seconds());
-
-                }else if (generaltimer.seconds()>0.5){
-                    //robot.mIntake.setExtendoOpenLoop(0);
-                    //robot.mIntake.rezero();
-                    robot.mLift.setTargetPos(Lift.LIFT_POS.SPECINTAKE.getVal(), timer.seconds());
-                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal(), 900 , new double[] {1,2,2,2,2,2,2,1,1,1});
-                    robot.mDeposit.setClawPos(3);
-                    robot.mDeposit.setDiffyPos(80,-90);
-                    return false;
-                }else{
-                    //robot.mIntake.setExtendoOpenLoop(-0.5);
-                }
-                return true;
-            }
-        }
-
-        public Action intakeReset() {
-            return new robotController.IntakeReset();
-        }
-
-
-        public class LiftUpInstant implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(2, timer.seconds());
-                return false;
-            }
-        }
-
-        public Action liftUpInstant() {
-            return new robotController.LiftUpInstant();
-        }
-
-        public class SpecPlace implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
-                robot.mDeposit.setDiffyPos(-40, 67);
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal(), 600, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
-                return false;
-            }
-        }
-
-        public Action specPlace() {
-            return new robotController.SpecPlace();
-        }
-
-        public class PivotShoot implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-                return false;
-            }
-        }
-
-        public Action pivotShoot() {
-            return new robotController.PivotShoot();
-        }
-
-        public class ExtendoPrepareInstant implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mIntake.setClawPos(0);
-                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.AUTOINTAKEPREPARE.getVal(), timer.seconds());
-                robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
-                return false;
-            }
-        }
-
-        public Action extendoPrepareInstant() {
-            return new robotController.ExtendoPrepareInstant();
-        }
-        public class ExtendoInInstant implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mIntake.setClawPos(0);
-                robot.mDeposit.setClawPos(0);
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal());
-                robot.mDeposit.setDiffyPos(80,-90);
-                robot.mIntake.setExtendoPos(0, timer.seconds());
-                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-                return false;
-            }
-        }
-
-        public Action extendoInInstant() {
-            return new robotController.ExtendoInInstant();
-        }
-
-
-        public class Shoot implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
-                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-                if (!robot.mIntake.closeEnoughAuto()){
-                    generaltimer.reset();
-                }
-                if (generaltimer.seconds()>0.4) {
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                    robot.mIntake.setIntakeOpenLoop(0);
-
-                    return false;
-                }else  if (generaltimer.seconds()>0.1) {
-                    robot.mIntake.setIntakeOpenLoop(-0.9);
-                }else if   (robot.mIntake.closeEnoughAuto()){
-
-                    robot.mIntake.setClawPos(0);
-                    robot.mIntake.setIntakeOpenLoop(0);
-                }else {
-                    robot.mIntake.setClawPos(1);
-                    robot.mIntake.setIntakeOpenLoop(-0.8);
-                }
-
-                return true;
-            }
-        }
-
-        public Action shoot() {
-            return new robotController.Shoot();
-        }
-        public class ResetTimer implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                generaltimer.reset();
-                return false;
-            }
-        }
-
-        public Action resetTimer() {
-            return new robotController.ResetTimer();
-        }
-        public class ShootLast implements Action {
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
-                robot.mIntake.setPivotPos(Intake.PIVOT_POS.LAUNCH.getVal());
-                if (!robot.mIntake.closeEnoughAuto()){
-                    generaltimer.reset();
-                }
-                if (generaltimer.seconds()>0.3) {
-                    robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                    robot.mIntake.setIntakeOpenLoop(0);
-
-                    return false;
-                }else  if   (robot.mIntake.closeEnoughAuto()){
-                    robot.mIntake.setIntakeOpenLoop(-0.7);
-                    robot.mIntake.setClawPos(0);
-                }
-
-                return true;
-            }
-        }
-
-        public Action shootLast() {
-            return new robotController.ShootLast();
-        }
-
-        public class LiftDownInstant implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(0, timer.seconds());
-                return false;
-            }
-        }
-
-        public Action liftDownInstant() {
-            return new robotController.LiftDownInstant();
-        }
-    }
-    robotController controller;
-
 
     public static double[] specplacingprofile = new double[]{1,2,2,2,2,2,2,1,1,1};
     public static double intakewait = 0.15;
@@ -543,7 +78,6 @@ public class BSTEMTELE extends OpMode {
     private boolean samplemode = false;
 
     private StickyButton angledbutton = new StickyButton();
-    private StickyButton autoSpecButton = new StickyButton();
     private StickyButton mode = new StickyButton();
 
     private StickyButton intakeStepsButton = new StickyButton();
@@ -568,11 +102,9 @@ public class BSTEMTELE extends OpMode {
 
     private ElapsedTime shoottimer = new ElapsedTime();
     private int pivotToggleHits = 2;
-    private boolean firstTeleopLoop = false;
+    private boolean firstTeleopLoop = true;
     private boolean enableCurrentReporting = true;
     private boolean firstStateLoop = true;
-
-    private double offset = 0;
 
     private boolean transferready = false;
 
@@ -589,54 +121,14 @@ public class BSTEMTELE extends OpMode {
         HANG,
         NOTHING,
         REZERO,
-        SAFTEY,
-        AUTOSPECPLACE,
-        AUTOSPECINTAKE
+        SAFTEY
     }
 
     private teleState teleFSM = teleState.IDLE;
     private teleState prevtelestate = teleState.IDLE;
-    Action sub;
-    Action human;
 
     public void init() {
-        telemetry.addLine("Creating robot");
-        telemetry.update();
-        robot = new Robot(this);
-        if(!firstTeleopLoop){
-            controller = new robotController();
-            sub = robot.mDrive.drive.actionBuilder(new Pose2d(36,6.5, Math.toRadians(90)))
-                    .setReversed(false)
-                    .setTangent(Math.toRadians(145))
-                    .splineToLinearHeading(new Pose2d(9, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
-                    .splineToLinearHeading(new Pose2d(7, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
-                    .splineToLinearHeading(new Pose2d(7, 40.5 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
 
-                    .stopAndAdd(new SequentialAction(
-                            controller.openClaw(),
-                            controller.diffyPlace(),
-                            controller.resetTimer()
-                    ))
-                    .build();
-            human = robot.mDrive.drive.actionBuilder(new Pose2d(7,40.5, Math.toRadians(90)))
-                    .setReversed(true)
-                    .setTangent(Math.toRadians(90-180))
-                    .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                    .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                    .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                    .stopAndAdd(new SequentialAction(
-                            controller.closeClaw()
-                    ))
-                    .waitSeconds(0.05)
-                    .stopAndAdd(new SequentialAction(
-                            controller.resetTimer(),
-                            controller.liftClearInstant()
-                    ))
-                    //.waitSeconds(0.05)
-
-                    .build();
-
-        }
         firstTeleopLoop = true;
         //PhotonCore.start(hardwareMap);
         allHubs = hardwareMap.getAll(LynxModule.class);
@@ -650,7 +142,9 @@ public class BSTEMTELE extends OpMode {
 
 
 
-
+        telemetry.addLine("Creating robot");
+        telemetry.update();
+        robot = new Robot(this);
 
         telemetry.addLine("Initing robot");
         telemetry.update();
@@ -683,7 +177,6 @@ public class BSTEMTELE extends OpMode {
     {
         clawButton.update(gamepad1.a||gamepad2.b);
         rejectToggle.update(gamepad1.start);
-        autoSpecButton.update(gamepad1.dpad_right);
 
         if (rejectToggle.getState()){
             reject = !reject;
@@ -745,7 +238,7 @@ public class BSTEMTELE extends OpMode {
                 }
                 //open claw; 1 = close, 2 = open
                 clawToggleHits = 2;
-                if (prevtelestate!= teleState.INTAKING) {
+                if (prevtelestate!=teleState.INTAKING) {
                     //dont reset the bot if last state was intaking
                     if (prevtelestate != teleState.SAMPLE) {
                         //if idle+samplemode, prep for transfer
@@ -821,7 +314,7 @@ public class BSTEMTELE extends OpMode {
             case SPECINTAKE:{
                 robot.mLift.setTargetPos(Lift.LIFT_POS.SPECINTAKE.getVal(), timer.seconds());
                 robot.mDeposit.setDiffyPos(70,-90);
-                if (samplemode&&(prevtelestate== teleState.IDLE||prevtelestate== teleState.TRANSFER)){
+                if (samplemode&&(prevtelestate==teleState.IDLE||prevtelestate== teleState.TRANSFER)){
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal(), 1200, specplacingprofile);
                 }else {
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECINTAKE.getVal(), specplacingpivottime, specplacingprofile);
@@ -872,7 +365,7 @@ public class BSTEMTELE extends OpMode {
 
                     }else{
                         if (specplacing) {
-                            robot.mDeposit.setDiffyPos(-40, 70);
+                            robot.mDeposit.setDiffyPos(-40, 113);
                         }
                         robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
                     }
@@ -1053,69 +546,6 @@ public class BSTEMTELE extends OpMode {
                 }
                 break;
             }
-            case AUTOSPECPLACE:{
-                robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.WHITE);
-                if (runningActions.isEmpty()){
-                    runningActions.add(
-                            new SequentialAction(
-                                    controller.resetTimer(),
-                                    new ParallelAction(
-                                            sub,
-                                            controller.clearWall()
-                                    )
-                            ));
-                    human = robot.mDrive.drive.actionBuilder(new Pose2d(7+offset,40.5, Math.toRadians(90)))
-                            .setReversed(true)
-                            .setTangent(Math.toRadians(90-180))
-                            .splineToLinearHeading(new Pose2d(33+offset, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                            .splineToLinearHeading(new Pose2d(36+offset, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                            .splineToLinearHeading(new Pose2d(36+offset, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                            .stopAndAdd(new SequentialAction(
-                                    controller.closeClaw()
-                            ))
-                            .waitSeconds(0.05)
-                            .stopAndAdd(new SequentialAction(
-                                    controller.resetTimer(),
-                                    controller.liftClearInstant()
-                            ))
-                            //.waitSeconds(0.05)
-
-                            .build();
-                    prevtelestate=teleFSM;
-                    teleFSM = teleState.AUTOSPECINTAKE;
-                    //offset-=0.25;
-                }
-                break;
-            }
-            case AUTOSPECINTAKE:{
-                robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.WHITE);
-                if (runningActions.isEmpty()){
-                    runningActions.add(
-                            new SequentialAction(
-                                    controller.resetTimer(),
-                                    new ParallelAction(
-                                            human,
-                                            controller.intakeReset()
-                                    )
-                            ));
-                    sub = robot.mDrive.drive.actionBuilder(new Pose2d(36+offset,6.5, Math.toRadians(90)))
-                            .setReversed(false)
-                            .setTangent(Math.toRadians(145))
-                            .splineToLinearHeading(new Pose2d(9+offset, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
-                            .splineToLinearHeading(new Pose2d(7+offset, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
-                            .splineToLinearHeading(new Pose2d(7+offset, 40.5,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
-
-                            .stopAndAdd(new SequentialAction(
-                                    controller.openClaw(),
-                                    controller.diffyPlace(),
-                                    controller.resetTimer()
-                            ))
-                            .build();
-                    prevtelestate=teleFSM;
-                    teleFSM = teleState.AUTOSPECPLACE;
-                }
-                break;
-            }
             case SAFTEY:{
                 robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPECANGLED.getVal());
                 robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(),timer.seconds());
@@ -1224,14 +654,14 @@ public class BSTEMTELE extends OpMode {
 
             robot.mLift.setTargetPos(Lift.LIFT_POS.SPECCLEAR.getVal(), timer.seconds());
         }
-        if (gamepad1.right_trigger>0.2&&teleFSM!= teleState.INTAKING){
+        if (gamepad1.right_trigger>0.2&&teleFSM!=teleState.INTAKING){
 
             robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
             prevtelestate = teleFSM;
             teleFSM = teleState.INTAKING;
         }
 
-        if (gamepad2.a||(gamepad1.a&&teleFSM== teleState.INTAKING&&samplemode)){
+        if (gamepad2.a||(gamepad1.a&&teleFSM==teleState.INTAKING&&samplemode)){
             robot.mIntake.setClawPos(1);
             robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
             robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
@@ -1286,7 +716,7 @@ public class BSTEMTELE extends OpMode {
         if (angledbutton.getState()){
             specangled = !specangled;
         }
-        if (gamepad1.b||(gamepad2.b&&teleFSM!= teleState.INTAKING)){
+        if (gamepad1.b||(gamepad2.b&&teleFSM!=teleState.INTAKING)){
             stalledintaking = false;
             straightenTimer.reset();
             straighten = true;
@@ -1328,65 +758,8 @@ public class BSTEMTELE extends OpMode {
         }
         prevForwardPwr = driveInput;
 
-        if (teleFSM!=teleState.AUTOSPECINTAKE&&teleFSM!=teleState.AUTOSPECPLACE) {
-            runningActions.clear();
-            if (ResetAutoSpec){
-                ResetAutoSpec=false;
-                offset=0;
-                sub = robot.mDrive.drive.actionBuilder(new Pose2d(36,6.5, Math.toRadians(90)))
-                        .setReversed(false)
-                        .setTangent(Math.toRadians(145))
-                        .splineToLinearHeading(new Pose2d(9, 31 ,Math.toRadians(90)), Math.toRadians(145),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
-                        .splineToLinearHeading(new Pose2d(7, 36 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
-                        .splineToLinearHeading(new Pose2d(7, 40.5 ,Math.toRadians(90)), Math.toRadians(90),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 80))
+        robot.mDrive.drive.setDrivePowers(new PoseVelocity2d(new Vector2d(driveInput, strafeInput), turnInput));
 
-                        .stopAndAdd(new SequentialAction(
-                                controller.openClaw(),
-                                controller.diffyPlace(),
-                                controller.resetTimer()
-                        ))
-                        .build();
-                human = robot.mDrive.drive.actionBuilder(new Pose2d(7,40.5, Math.toRadians(90)))
-                        .setReversed(true)
-                        .setTangent(Math.toRadians(90-180))
-                        .splineToLinearHeading(new Pose2d(33, 20 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                        .splineToLinearHeading(new Pose2d(36, 12 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                        .splineToLinearHeading(new Pose2d(36, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                        .stopAndAdd(new SequentialAction(
-                                controller.closeClaw()
-                        ))
-                        .waitSeconds(0.05)
-                        .stopAndAdd(new SequentialAction(
-                                controller.resetTimer(),
-                                controller.liftClearInstant()
-                        ))
-                        //.waitSeconds(0.05)
-
-                        .build();
-
-            }
-            robot.mDrive.drive.setDrivePowers(new PoseVelocity2d(new Vector2d(driveInput, strafeInput), turnInput));
-        }else{
-            if (!gamepad1.atRest()){
-                prevtelestate = teleFSM;
-                teleFSM = teleState.NOTHING;
-
-            }
-            TelemetryPacket packet = new TelemetryPacket();
-            List<Action> newActions = new ArrayList<>();
-            for (Action action : runningActions) {
-                if (teleFSM!=teleState.AUTOSPECINTAKE&&teleFSM!=teleState.AUTOSPECPLACE){
-                    break;
-                }
-                action.preview(packet.fieldOverlay());
-                if (action.run(packet)) {
-                    newActions.add(action);
-                }
-            }
-
-            runningActions = newActions;
-            dash.sendTelemetryPacket(packet);
-        }
 
 
 
@@ -1397,7 +770,7 @@ public class BSTEMTELE extends OpMode {
 
 
 
-        if (clawButton.getState()&&!(teleFSM== teleState.INTAKING&&samplemode)&&teleFSM!= teleState.SPECINTAKE&&teleFSM!= teleState.TRANSFER){
+        if (clawButton.getState()&&!(teleFSM==teleState.INTAKING&&samplemode)&&teleFSM!=teleState.SPECINTAKE&&teleFSM!=teleState.TRANSFER){
             clawToggleHits++;
             if (specplacing){
                 specplacing= false;
@@ -1419,25 +792,7 @@ public class BSTEMTELE extends OpMode {
         if (gamepad2.share){
             hangtimer.reset();
             prevtelestate = teleFSM;
-            teleFSM= teleState.HANG;
-        }
-
-        if (autoSpecButton.getState()&&robot.mDeposit.getPivotPos()==3){
-            clawToggleHits=1;
-            robot.mDrive.drive.pose= new Pose2d(39,6.5,Math.toRadians(90));
-            //robot.mDrive.drive.pinpoint.setPosition(new Pose2d(39,6,Math.toRadians(90)));
-            //robot.mDrive.drive.pinpoint.setPositionRR(new Pose2d(39,6,Math.toRadians(90)));
-            runningActions.add(
-                    new SequentialAction(
-                            controller.resetTimer(),
-                            new ParallelAction(
-                                    sub,
-                                    controller.clearWall()
-                            )
-            ));
-            ResetAutoSpec=true;
-            prevtelestate=teleFSM;
-            teleFSM=teleState.AUTOSPECINTAKE;
+            teleFSM=teleState.HANG;
         }
 
 
@@ -1520,19 +875,19 @@ public class BSTEMTELE extends OpMode {
             BotLog.logD("lt_teleop :: ", String.format("%s", loopTimer.milliseconds() - startTime));
         }
 
-//        telemetry.addData("fl current", robot.mDrive.drive.mPeriodicIO.flcurrent);
-//        telemetry.addData("fr current", robot.mDrive.drive.mPeriodicIO.frcurrent);
-//        telemetry.addData("bl current", robot.mDrive.drive.mPeriodicIO.blcurrent);
-//        telemetry.addData("br current", robot.mDrive.drive.mPeriodicIO.brcurrent);
-//        telemetry.addData("intake current", robot.mIntake.getIntakeCurrent());
-//        telemetry.addData("intake pos", robot.mIntake.getPivotEncoderPos());
-//        telemetry.addData("extendo pos", robot.mIntake.getExtendoPosition());
-//        telemetry.addData("extendo target", robot.mIntake.getTargetExtendoPosition());
-//        telemetry.addData("lift current", robot.mLift.getLiftCurrent());
-//        telemetry.addData("lift pos", robot.mLift.getLiftTicks());
-//        telemetry.addData("lift target", robot.mLift.getLiftTargetTicks());
-//        telemetry.addData("left winch pos: ", robot.mDrive.leftwinchadjusted);
-//        telemetry.addData("right winch pos: ", robot.mDrive.rightwinchadjusted);
+        telemetry.addData("fl current", robot.mDrive.drive.mPeriodicIO.flcurrent);
+        telemetry.addData("fr current", robot.mDrive.drive.mPeriodicIO.frcurrent);
+        telemetry.addData("bl current", robot.mDrive.drive.mPeriodicIO.blcurrent);
+        telemetry.addData("br current", robot.mDrive.drive.mPeriodicIO.brcurrent);
+        telemetry.addData("intake current", robot.mIntake.getIntakeCurrent());
+        telemetry.addData("intake pos", robot.mIntake.getPivotEncoderPos());
+        telemetry.addData("extendo pos", robot.mIntake.getExtendoPosition());
+        telemetry.addData("extendo target", robot.mIntake.getTargetExtendoPosition());
+        telemetry.addData("lift current", robot.mLift.getLiftCurrent());
+        telemetry.addData("lift pos", robot.mLift.getLiftTicks());
+        telemetry.addData("lift target", robot.mLift.getLiftTargetTicks());
+        telemetry.addData("left winch pos: ", robot.mDrive.leftwinchadjusted);
+        telemetry.addData("right winch pos: ", robot.mDrive.rightwinchadjusted);
 
 
         telemetry.update();

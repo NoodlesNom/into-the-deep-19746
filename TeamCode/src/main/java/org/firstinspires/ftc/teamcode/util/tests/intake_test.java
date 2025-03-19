@@ -17,7 +17,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 public class intake_test extends LinearOpMode {
 
     private ServoImplEx pivot;
-    private ServoImplEx gate;
 
     private DcMotorEx intake;
     public static double gatepos = 0;
@@ -25,15 +24,13 @@ public class intake_test extends LinearOpMode {
 
     public static double intakepower = 0;
     public static boolean move = false;
+    public static boolean powered = true;
     @Override
     public void runOpMode() throws InterruptedException {
         ElapsedTime timer = new ElapsedTime();
         pivot = hardwareMap.get(ServoImplEx .class, "pivot");
         pivot.setPosition(0);
 
-
-        gate = hardwareMap.get(ServoImplEx .class, "gate");
-        gate.setPosition(0);
 
         intake = hardwareMap.get(DcMotorEx.class, "intake");
         intake.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
@@ -49,10 +46,20 @@ public class intake_test extends LinearOpMode {
         while (!isStopRequested()) {
             telemetry.update();
             if (move) {
-                pivot.setPosition(pivotpos);
-                gate.setPosition(gatepos);
+                if (powered) {
+                    pivot.setPosition(pivotpos);
+                }
                 intake.setPower(intakepower);
                 telemetry.addData("current", intake.getCurrent(CurrentUnit.AMPS));
+            }
+            if (powered){
+                if (!pivot.isPwmEnabled()) {
+                    pivot.setPwmEnable();
+                }
+            }else{
+                if (pivot.isPwmEnabled()) {
+                    pivot.setPwmDisable();
+                }
             }
         }
     }

@@ -13,6 +13,7 @@
             <Servo name="pivot" port="4" />
             <Servo name="gate" port="1" />
             <Servo name="intakeclaw" port="2" />
+            <Servo name="PTO" port="3" />
             <RevBlinkinLedDriver name="blinkin" port="5" />
             <AnalogInput name="rightwinchencoder" port="1" />
         </LynxModule>
@@ -23,8 +24,8 @@
             <goBILDA5202SeriesMotor name="extendo" port="1" />
             <goBILDA5202SeriesMotor name="fl" port="2" />
             <goBILDA5202SeriesMotor name="hang" port="3" />
-            <Servo name="claw" port="0" />
-            <ContinuousRotationServo name="hangL" port="1" />
+            <Servo name="claw" port="1" />
+            <ContinuousRotationServo name="hangL" port="0" />
             <Servo name="diffyL" port="2" />
             <Servo name="pivotL" port="3" />
             <Servo name="diffyR" port="4" />

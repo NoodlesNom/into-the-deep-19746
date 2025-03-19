@@ -258,7 +258,7 @@ public class spec5 extends LinearOpMode {
                 if (WallTimer.seconds()>1){
                     WallTimer.reset();
                 }else if (WallTimer.seconds()>0.4){
-                    robot.mDeposit.setDiffyPos(-40, 67);
+                    robot.mDeposit.setDiffyPos(-40, 113);
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
                     return false;
                 }else if (WallTimer.seconds()>0.2) {

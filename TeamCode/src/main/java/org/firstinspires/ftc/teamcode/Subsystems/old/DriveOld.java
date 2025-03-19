@@ -92,7 +92,7 @@ public class DriveOld extends Subsystem {
     public void readPeriodicInputs(double time) {
         // Read all the sensors
 
-        drive.mPeriodicIO.estimate = drive.updatePoseEstimate();
+        //drive.mPeriodicIO.estimate = drive.updatePoseEstimate();
 
         drive.mPeriodicIO.volts = drive.voltageSensor.getVoltage();
 

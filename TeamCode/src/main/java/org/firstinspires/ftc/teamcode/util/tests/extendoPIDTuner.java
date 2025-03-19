@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.util.tests;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -13,7 +14,7 @@ import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.StickyButton;
 
 import java.util.concurrent.TimeUnit;
-
+@Config
 @TeleOp(name = "extendoPIDTuner")
 public class extendoPIDTuner extends LinearOpMode {
 
@@ -50,10 +51,13 @@ public class extendoPIDTuner extends LinearOpMode {
     private Intake extendo;
     private ElapsedTime myTimer;
 
-    private int extendoTicks = 1;
+    public static int extendoTicks = 1;
+    public static boolean  inches = true;
     private int extendoTicksMax = 900;
     private int smallTicks = 100;
     private int bigTicks = 200;
+
+    public static int pivot = 8;
     private int extendoPosIdx = 0;
     private boolean idxMode = true;
 
@@ -151,9 +155,14 @@ public class extendoPIDTuner extends LinearOpMode {
             {
                 extendo.setExtendoPos(extendoPosIdx, myTimer.seconds());
             } else {
-                extendo.setExtendoTicks(extendoTicks, myTimer.seconds());
+                if (inches) {
+                    extendo.setExtendoTicks((int) ((extendoTicks * 25.4) / 1.25), myTimer.seconds());
+                }else{
+                    extendo.setExtendoTicks(extendoTicks, myTimer.seconds());
+                }
             }
             extendo.update(myTimer.seconds());
+            extendo.setPivotPos(pivot);
 
             boolean debug = true;
             if(debug)

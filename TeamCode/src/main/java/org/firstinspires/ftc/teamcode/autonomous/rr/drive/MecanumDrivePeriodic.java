@@ -72,7 +72,7 @@ public class MecanumDrivePeriodic {
 
         // drive model parameters
         public double inPerTick = 1;
-        public double lateralInPerTick = 0.7854662115012618;
+        public double lateralInPerTick = 1;
         public double trackWidthTicks = 11.754;
 
         // feedforward paramet  ers (in tick units)
@@ -505,11 +505,11 @@ public class MecanumDrivePeriodic {
     public static class PeriodicIO
     {
         //INPUTS
-        public Pose2d estimate;
+        //public Pose2d estimate;
 
-        public Pose2D pinpointestimate;
+        //public Pose2D pinpointestimate;
 
-        public GoBildaPinpointDriver.DeviceStatus status;
+        //public GoBildaPinpointDriver.DeviceStatus status;
         public PoseVelocity2d vel;
         public double flcurrent= 0;
         public double frcurrent= 0;

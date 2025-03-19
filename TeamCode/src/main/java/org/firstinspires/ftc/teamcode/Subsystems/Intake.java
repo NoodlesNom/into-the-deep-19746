@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -21,7 +22,7 @@ public class Intake extends Subsystem {
     // Hardware
     private DcMotorEx intake;
     private DcMotorEx extendo;
-    private Servo pivot;
+    private ServoImplEx pivot;
 
     //private AnalogInput pivotEncoder;
 
@@ -43,12 +44,14 @@ public class Intake extends Subsystem {
     private int PIDSkipCount = 0;
     private double prevPIDTime = 0.0;
     public static double RedThreshold = 1.25;
-    public static double BlueThreshold = 2.5;
+    public static double BlueThreshold = 2.25;
     public static double GreenThreshold = 1;
     private MiniPID pid;
     public static double P = 0.0075/ 1 ;
     public static double I = 0.0015 / 1;
-    public static double D = 0.045 / 1;
+    public static double D = 0.045 *1;
+
+    public static double crush = 0.2;
     public static double F = 0;
     private double vF = F;
     public static double MAX_EXTENDO_PWR = 1;
@@ -58,7 +61,7 @@ public class Intake extends Subsystem {
     // Hardware states
     private PeriodicIO mPeriodicIO;
 
-    private double[] extendoPos = new double[] {1,170,350, 600, 380, 340};
+    private double[] extendoPos = new double[] {1,170,350, 650, 440, 380};
 
     public enum EXTEND_POS
     {
@@ -85,7 +88,7 @@ public class Intake extends Subsystem {
         }
     }
     //0.565 with fixed intake
-    public static double[] pivotPos = new double[] {0, 0.58, 0.11, 0.25, 0.25, 0.25, 0.45, 0.35, 0.51, 0.11};
+    public static double[] pivotPos = new double[] {0, 0.58, 0.12, 0.25, 0.25, 0.25, 0.45, 0.35, 0.51, 0.11};
     public enum PIVOT_POS
     {
         //Constants with values
@@ -189,11 +192,12 @@ public class Intake extends Subsystem {
         extendo.setDirection(DcMotorEx.Direction.REVERSE);
         extendo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        extendo.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        extendo.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
         claw = map.get(Servo.class, "intakeclaw");
 
         pid = new MiniPID(P, I, D, F);
+        pid.ReduceErrorAtSetpoint = crush;
         pid.reset();
         pid.setOutputLimits(MIN_EXTENDO_PWR, MAX_EXTENDO_PWR);
         pid.setOutputRampRate(0.35);
@@ -210,7 +214,7 @@ public class Intake extends Subsystem {
         //intake.setVelocityPIDFCoefficients(10 * Math.PI, 3 * Math.PI, 0, 3 * Math.PI);
 
         // servos
-        pivot = map.get(Servo.class, "pivot");
+        pivot = map.get(ServoImplEx.class, "pivot");
 
         //pivotEncoder = map.get(AnalogInput.class, "pivot encoder");
 
@@ -325,6 +329,17 @@ public class Intake extends Subsystem {
         }
     }
 
+    public void pwmdisable(){
+        if (pivot.isPwmEnabled()) {
+            pivot.setPwmDisable();
+        }
+    }
+    public void pwmenable(){
+        if (!pivot.isPwmEnabled()) {
+
+            pivot.setPwmEnable();
+        }
+    }
     public  void setExtendoPos(int tgtPosArg, double timestamp)
     {
         tgtPosArg = Math.min(tgtPosArg,(extendoPos.length-1));

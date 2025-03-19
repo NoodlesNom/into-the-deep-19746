@@ -45,7 +45,7 @@ public class MiniPID{
 
     private double setpointRange=0;
 
-    public static double ReduceErrorAtSetpoint=0.45;
+    public double ReduceErrorAtSetpoint=0.45;
     public boolean logging = false;
 
     public double outputLog=0, PoutputLog=0, IoutputLog=0, DoutputLog=0, FoutputLog=0, timeAdjLog=0, minOutputLog=0, maxOutputLog=0, errorSumLog=0 ;

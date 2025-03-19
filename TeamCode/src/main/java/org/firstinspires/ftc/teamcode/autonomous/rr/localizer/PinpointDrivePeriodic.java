@@ -129,7 +129,8 @@ public class PinpointDrivePeriodic extends MecanumDrivePeriodic {
             // Potential alternate solution: timestamp the pose set and backtrack it based on speed?
             pinpoint.setPosition(pose);
         }
-        pose = mPeriodicIO.estimate;
+        pinpoint.update();
+        pose = pinpoint.getPositionRR();
         lastPinpointPose = pose;
 
         // RR standard
@@ -139,10 +140,10 @@ public class PinpointDrivePeriodic extends MecanumDrivePeriodic {
         }
 
         FlightRecorder.write("ESTIMATED_POSE", new PoseMessage(pose));
-        FlightRecorder.write("PINPOINT_RAW_POSE",new FTCPoseMessage(mPeriodicIO.pinpointestimate));
-        FlightRecorder.write("PINPOINT_STATUS",mPeriodicIO.status);
+        FlightRecorder.write("PINPOINT_RAW_POSE",new PinpointDrive.FTCPoseMessage(pinpoint.getPosition()));
+        FlightRecorder.write("PINPOINT_STATUS",pinpoint.getDeviceStatus());
 
-        return mPeriodicIO.vel;
+        return pinpoint.getVelocityRR();
     }
 
 

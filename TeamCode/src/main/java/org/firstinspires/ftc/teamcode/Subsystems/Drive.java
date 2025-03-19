@@ -150,12 +150,8 @@ public class Drive extends Subsystem {
     @Override
     public void readPeriodicInputs(double time) {
         // Read all the sensors
-
-        drive.pinpoint.update();
-        drive.mPeriodicIO.estimate = drive.pinpoint.getPositionRR();
-        drive.mPeriodicIO.pinpointestimate = drive.pinpoint.getPosition();
-        drive.mPeriodicIO.status = drive.pinpoint.getDeviceStatus();
-        drive.mPeriodicIO.vel = drive.pinpoint.getVelocityRR();
+        drive.mPeriodicIO.vel = drive.updatePoseEstimate();
+        //drive.mPeriodicIO.status = drive.pinpoint.getDeviceStatus();
         drive.mPeriodicIO.flcurrent = 0;//drive.leftFront.getCurrent(CurrentUnit.AMPS);
         drive.mPeriodicIO.frcurrent = 0;//drive.rightFront.getCurrent(CurrentUnit.AMPS);
         drive.mPeriodicIO.blcurrent = 0;//drive.leftBack.getCurrent(CurrentUnit.AMPS);
