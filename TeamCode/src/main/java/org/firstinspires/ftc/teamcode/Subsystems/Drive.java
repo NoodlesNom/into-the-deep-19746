@@ -5,14 +5,11 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
-import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDrivePeriodic;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.PinpointDrivePeriodic;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 
@@ -23,8 +20,13 @@ public class Drive extends Subsystem {
     private AnalogInput leftwinchencoder;
     private AnalogInput rightwinchencoder;
 
+    private int pto_count = 100;
+
+    public static boolean ptoEnabled = false;
+
     private CRServoImplEx winchL;
     private CRServoImplEx winchR;
+    private ServoImplEx pto;
 
     private double winchTarget = 55;
 
@@ -33,7 +35,12 @@ public class Drive extends Subsystem {
     private double rightdelta;
     public double leftwinchadjusted = 0;
 
+    public boolean ptoReady = false;
+
     private double winchLdemand = -2;
+
+    private int pto_pos=-1;
+    private int prev_pto_pos=-1;
     private double prevwinchLdemand = -2;
     private double winchRdemand = -2;
     private double prevwinchRdemand = -2;
@@ -48,21 +55,44 @@ public class Drive extends Subsystem {
     public boolean hold = false;
 
     public PinpointDrivePeriodic drive;
-    private double[] winchPos = new double[] {55, 700, -10, 740};
+    private double[] winchPos = new double[] {55, 750, 30};
 
-    public enum EXTEND_POS
+    public enum HANG_POS
     {
         //Constants with values
         IDLE(0),
         UP(1),
-        DOWN(2),
-        UPSAFTEY(3);
+        DOWN(2);
+        //UPSAFTEY(3);
 
         //Instance variable
         private final int val;
 
         //Constructor to initialize the instance variable
-        EXTEND_POS(int v)
+        HANG_POS(int v)
+        {
+            val = v;
+        }
+
+        public int getVal()
+        {
+            return val;
+        }
+    }
+
+    private double[] ptoPos = new double[] {0.81, 0.38};
+
+    public enum PTO_POS
+    {
+        //Constants with values
+        DISENGAGED(0),
+        ENGAGED(1);
+
+        //Instance variable
+        private final int val;
+
+        //Constructor to initialize the instance variable
+        PTO_POS(int v)
         {
             val = v;
         }
@@ -78,6 +108,7 @@ public class Drive extends Subsystem {
         rightwinchencoder = map.get(AnalogInput.class, "rightwinchencoder");
         winchL = map.get(CRServoImplEx.class, "hangL");
         winchR = map.get(CRServoImplEx.class, "hangR");
+        pto = map.get(ServoImplEx.class, "PTO");
         winchL.setDirection(CRServoImplEx.Direction.REVERSE);
     }
 
@@ -105,11 +136,13 @@ public class Drive extends Subsystem {
 
     @Override
     public void autoInit() {
-
+        disengagePto();
+        setWinchPos(0);
     }
 
     @Override
     public void teleopInit() {
+        disengagePto();
 
     }
 
@@ -149,6 +182,7 @@ public class Drive extends Subsystem {
 
     @Override
     public void readPeriodicInputs(double time) {
+        pto_count++;
         // Read all the sensors
         drive.mPeriodicIO.vel = drive.updatePoseEstimate();
         //drive.mPeriodicIO.status = drive.pinpoint.getDeviceStatus();
@@ -176,10 +210,24 @@ public class Drive extends Subsystem {
     }
 
     public void setWinchPosTicks(double pos){
-        winchTarget = Range.clip(pos, -20, 800);
+        winchTarget = pos;
+    }
+
+    public void engagePto(){
+
+        if (drive.mPeriodicIO.vel.linearVel.norm()<2) {
+            pto_pos = 1;
+        }
+        ptoEnabled=true;
+    }
+
+    public void disengagePto(){
+        pto_pos = 0;
+        ptoEnabled=false;
+
     }
     public void setWinchPos(int pos){
-        winchTarget = Range.clip(winchPos[pos], -20, 800);
+        winchTarget = winchPos[pos];
     }
     @Override
     public String getDemands(){
@@ -199,11 +247,26 @@ public class Drive extends Subsystem {
     }
     @Override
     public void writePeriodicOutputs() {
+        if (pto_count>20) {
+            if (ptoEnabled){
+                ptoReady=true;
+                drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr *-100);
+                drive.leftBack.setPower(drive.mPeriodicIO.lf_pwr*-100);
+                drive.rightBack.setPower(0);
+                drive.rightFront.setPower(0);
+            }else {
 
-        drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr*1);
-        drive.leftBack.setPower(drive.mPeriodicIO.lr_pwr*1);
-        drive.rightBack.setPower(drive.mPeriodicIO.rr_pwr*1);
-        drive.rightFront.setPower(drive.mPeriodicIO.rf_pwr*1);
+                drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr * 1);
+                drive.leftBack.setPower(drive.mPeriodicIO.lr_pwr * 1);
+                drive.rightBack.setPower(drive.mPeriodicIO.rr_pwr * 1);
+                drive.rightFront.setPower(drive.mPeriodicIO.rf_pwr * 1);
+            }
+        }else{
+            drive.leftFront.setPower(0);
+            drive.leftBack.setPower(0);
+            drive.rightBack.setPower(0);
+            drive.rightFront.setPower(0);
+        }
 
         if (Math.abs(winchLdemand-prevwinchLdemand)>0.05){
             prevwinchLdemand = winchLdemand;
@@ -212,6 +275,14 @@ public class Drive extends Subsystem {
         if (Math.abs(winchRdemand-prevwinchRdemand)>0.05){
             prevwinchRdemand = winchRdemand;
             winchR.setPower(winchRdemand);
+        }
+        if (pto_pos!=prev_pto_pos){
+            prev_pto_pos = pto_pos;
+            if (pto_pos!=0) {
+                pto_count = 0;
+                ptoReady= false;
+            }
+            pto.setPosition(ptoPos[pto_pos]);
         }
 
     }

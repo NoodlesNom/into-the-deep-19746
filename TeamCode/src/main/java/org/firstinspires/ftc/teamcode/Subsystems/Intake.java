@@ -88,19 +88,21 @@ public class Intake extends Subsystem {
         }
     }
     //0.565 with fixed intake
-    public static double[] pivotPos = new double[] {0, 0.58, 0.12, 0.25, 0.25, 0.25, 0.45, 0.35, 0.51, 0.11};
+    public static double[] pivotPos = new double[] {0, 0.58, 0.12, 0.255, 0.255, 0.255, 0.45, 0.35, 0.51, 0.11, 0.52, 0.1};
     public enum PIVOT_POS
     {
         //Constants with values
         INTAKING(1),
-        LAUNCH(2),
+        LAUNCH(2), 
         IDLE(3),
         TRANSFER(4),
         TRAP(5),
         AUTOINIT(6),
         INTAKEPREP(7),
         BLOCKCLEAR(8),
-        HANG(9);
+        HANG(9),
+        INTAKINGTALL(10),
+        SHOOTLOW(11);
 
         //Instance variable
         private final int val;
@@ -190,7 +192,7 @@ public class Intake extends Subsystem {
 
         extendo = map.get(DcMotorEx.class, "extendo");
         extendo.setDirection(DcMotorEx.Direction.REVERSE);
-        extendo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        //extendo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         extendo.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
@@ -227,6 +229,8 @@ public class Intake extends Subsystem {
     @Override
     public void autoInit()
     {
+        extendo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         setGatePos(GATE_POS.CATCH.getVal());
         setPivotPos(PIVOT_POS.AUTOINIT.getVal());
     }
@@ -617,7 +621,31 @@ public class Intake extends Subsystem {
 
 
 
+    public boolean  detectedImmediateBlue(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        if ((colors.blue / colors.red) > BlueThreshold){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    public boolean  detectedImmeditaeRed(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        if ((colors.red / colors.blue) > RedThreshold && (colors.red / colors.green) > GreenThreshold){
+            return true;
+        }else{
+            return false;
+        }
+    }
 
+    public boolean  detectedImmediateYellow(){
+        NormalizedRGBA colors = color.getNormalizedColors();
+        if ((colors.red / colors.blue) > RedThreshold && (colors.red / colors.green) < GreenThreshold){
+            return true;
+        }else{
+            return false;
+        }
+    }
     @Override
     public String getTelem(double time)
     {

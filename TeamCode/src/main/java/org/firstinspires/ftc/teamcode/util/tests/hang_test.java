@@ -5,10 +5,12 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServoImplEx;
+import com.qualcomm.robotcore.hardware.PwmControl;
+import com.qualcomm.robotcore.hardware.ServoImplEx;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Config
-@TeleOp(name = "intake servo tester")
+@TeleOp(name = "hang servo tester")
 public class hang_test extends LinearOpMode {
 
     private AnalogInput leftwinchencoder;
@@ -16,6 +18,7 @@ public class hang_test extends LinearOpMode {
 
     private CRServoImplEx winchL;
     private CRServoImplEx winchR;
+    private ServoImplEx pto;
 
 
     private double leftdelta;
@@ -25,6 +28,8 @@ public class hang_test extends LinearOpMode {
 
     public static double pos = 55;
 
+    public static double ptoPos = 0.5;
+
     public static double posdiviser = 150;
 
     private double leftwinchprevious = 0;
@@ -32,17 +37,21 @@ public class hang_test extends LinearOpMode {
 
     private double leftwinchpos;
     private double rightwinchpos;
-    public static boolean move = false;
+    public static boolean move = true;
     public static boolean auto = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
         ElapsedTime timer = new ElapsedTime();
         leftwinchencoder = hardwareMap.get(AnalogInput.class, "leftwinchencoder");
+
+        pto = hardwareMap.get(ServoImplEx.class, "PTO");
         rightwinchencoder = hardwareMap.get(AnalogInput.class, "rightwinchencoder");
         winchL = hardwareMap.get(CRServoImplEx.class, "hangL");
         winchR = hardwareMap.get(CRServoImplEx.class, "hangR");
         winchL.setDirection(CRServoImplEx.Direction.REVERSE);
+        //pto.setPwmRange(new PwmControl.PwmRange(500,2400));
+        pto.setPosition(0.5);
 
 
 
@@ -53,6 +62,7 @@ public class hang_test extends LinearOpMode {
         while (!isStopRequested()) {
             telemetry.update();
             if (move) {
+                pto.setPosition(ptoPos);
                 if (!auto) {
                     if (gamepad1.right_trigger > 0.1) {
                         winchL.setPower(-1 * gamepad1.right_trigger);

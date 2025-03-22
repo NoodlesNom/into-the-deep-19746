@@ -69,9 +69,9 @@ public class deposit_lift_intake_tester extends LinearOpMode {
     public static int roll = 0;
 
     public static double pivot_pos = 0.5;
-    public static double claw_pos = 0.3;
-    public static double intake_claw_pos = 0;
-    public static double intakepos = 0.1;
+    public static double claw_pos = 0.7;
+    public static double intake_claw_pos = 0.2;
+    public static double intakepos = 0.3;
     public static boolean move = false;
 
     private Lift lift;

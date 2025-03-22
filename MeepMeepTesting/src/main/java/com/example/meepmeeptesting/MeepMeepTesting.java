@@ -31,25 +31,20 @@ public class MeepMeepTesting {
 
 
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(16+Math.sin(Math.toRadians(angle-90))*5, 38-5*Math.cos(Math.toRadians(angle-90))-72, Math.toRadians(angle)))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(16, 7, Math.toRadians(0)))
                 //.splineTo(new Vector2d(48-72,60.5-72), Math.toRadians(0),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-45, 80))
                 //.splineToLinearHeading(new Pose2d(44-72,60.5-72, Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))z
-                        //.setTangent(Math.toRadians(70))
+                //.setTangent(Math.toRadians(70))
                 //.setReversed(true)
                 //.setTangent(Math.toRadians(100-180))
                 //.splineToLinearHeading(new Pose2d(8.5, 32-72 ,Math.toRadians(90)), Math.toRadians(315),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-
+                                //.setReversed(true)
                 //.splineToLinearHeading(new Pose2d(33, 20-72 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
                 //.splineToLinearHeading(new Pose2d(39, 12-72 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
                 //.splineTo(new Vector2d( 36, 8-72), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                //.splineTo(new Vector2d(18+20*0.5, 38-20*Math.sqrt(3)/2-72), Math.toRadians(120),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
                         .setReversed(true)
-                .setTangent(Math.toRadians(angle-180))
-                .splineToSplineHeading(new Pose2d(36-Math.sin(Math.toRadians(angle-90))*10, 6.5+10*Math.cos(Math.toRadians(angle-90))-72, Math.toRadians(90)), Math.toRadians(angle-180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-
-                .splineToSplineHeading(new Pose2d(36, 6.5-72, Math.toRadians(90)), Math.toRadians(angle-180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-
-
+                .splineTo(new Vector2d(-40, 8), Math.toRadians(180),new TranslationalVelConstraint(70 ), new ProfileAccelConstraint(-45, 95))
+                .splineTo(new Vector2d(-55, 6), Math.toRadians(210),new TranslationalVelConstraint(70 ), new ProfileAccelConstraint(-45, 95))
 
 
 
@@ -60,7 +55,7 @@ public class MeepMeepTesting {
 //                .splineToSplineHeading(new Pose2d(16+Math.sin(Math.toRadians(angle-90))*10, 38-10*Math.cos(Math.toRadians(angle-90))-72, Math.toRadians(angle)), Math.toRadians(angle),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
 //
 //                .splineToSplineHeading(new Pose2d(16+Math.sin(Math.toRadians(angle-90))*5, 38-5*Math.cos(Math.toRadians(angle-90))-72, Math.toRadians(angle)), Math.toRadians(angle),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-//
+
 
 
 

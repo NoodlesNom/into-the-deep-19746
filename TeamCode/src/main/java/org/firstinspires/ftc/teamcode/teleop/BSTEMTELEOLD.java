@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.PoseVelocity2d;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -23,6 +24,7 @@ import org.firstinspires.ftc.teamcode.util.StickyButton;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@Disabled
 @Config
 @TeleOp(name = "OLD TELE (NO AUTO SPEC)", group = "opMode")
 public class BSTEMTELEOLD extends OpMode {

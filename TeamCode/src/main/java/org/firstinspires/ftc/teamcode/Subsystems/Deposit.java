@@ -22,7 +22,7 @@ public class Deposit extends Subsystem {
     private ServoImplEx pivotL;
     private TimedProfiledServo pivotLTimed;
 
-    private RevBlinkinLedDriver led;
+    //private RevBlinkinLedDriver led;
     private ServoImplEx pivotR;
     private TimedProfiledServo pivotRTimed;
 
@@ -55,7 +55,7 @@ public class Deposit extends Subsystem {
     // private double[] pivotPositions = new double[]{.46, .78}; // TELEOP PIVOTS
     // private double[] pivotPositions = new double[]{.47, .78, .52}; // Regionals Gobilda Pivot
     //0.467 straight up
-    public static double[] pivotPositions = new double[]{0.96,0.71,0.46, 0.07, 0.509, 0.79, 0.835, 0.86, 0.353, 0.273,0.47,0.88,0.59,0.69, 0.75, 0.93, 0.45}; // Double Wide Axon Pivot
+    public static double[] pivotPositions = new double[]{0.96,0.71,0.46, 0.07, 0.509, 0.79, 0.835, 0.86, 0.353, 0.765,0.47,0.88,0.59,0.69, 0.75, 0.15, 0.45, 0.84, 0.34, 0.7, 0.49}; // Double Wide Axon Pivot
 
     public enum PIVOT_POS
     {
@@ -77,7 +77,11 @@ public class Deposit extends Subsystem {
         SPECPUSH(13),
         AUTOCLEAR(14),
         HANG(15),
-        AUTOSAMPLESAFE(16);
+        AUTOSAMPLESAFE(16),
+        SPECSLAM(17),
+        TALLAUTOSAMPLE(18),
+        TALLSPEC(19),
+        AUTOSAMPLENOSLAM(20);
 
 
         //Instance variable
@@ -95,7 +99,7 @@ public class Deposit extends Subsystem {
         }
     }
 
-    private double[] clawPositions = new double[]{0.69, 0.51, 0.69, 0.69};
+    private double[] clawPositions = new double[]{0.69, 0.5, 0.69, 0.69};
 
     public enum CLAW_POS
     {
@@ -155,7 +159,7 @@ public class Deposit extends Subsystem {
     {
         mPeriodicIO = new PeriodicIO();
 
-        led = map.get(RevBlinkinLedDriver.class, "blinkin");
+        //led = map.get(RevBlinkinLedDriver.class, "blinkin");
 
         pivotL = map.get(ServoImplEx.class, "pivotL");
         pivotL.setPwmRange(new PwmControl.PwmRange(500, PwmControl.PwmRange.usPulseUpperDefault));
@@ -256,7 +260,7 @@ public class Deposit extends Subsystem {
     public void setLiveLed(RevBlinkinLedDriver.BlinkinPattern pattern)
     {
 
-        led.setPattern(pattern);
+        //led.setPattern(pattern);
 
     }
 
@@ -286,7 +290,7 @@ public class Deposit extends Subsystem {
         writeDiffyOutputs();
         if (mPeriodicIO.ledstate!=mPeriodicIO.prevledstate){
             mPeriodicIO.prevledstate = mPeriodicIO.ledstate;
-            led.setPattern(mPeriodicIO.ledstate);
+            //led.setPattern(mPeriodicIO.ledstate);
         }
     }
 
