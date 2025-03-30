@@ -43,6 +43,8 @@ public class BSTEMTELE extends OpMode {
 
     private Robot robot;
     public static int rejectingTime = 500;
+
+    public static int transferendheight = 390;
     private Deadline rejecting = new Deadline(rejectingTime, TimeUnit.MILLISECONDS);
 
     private boolean reject = true;
@@ -1001,9 +1003,9 @@ public class BSTEMTELE extends OpMode {
                 }else if (robot.mLift.getLiftTargetPos() != Lift.LIFT_POS.SAMPLE.getVal()){
                     transfertimer.reset();
                 }
-                if (transfertimer.seconds()>0.7&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.SAMPLE.getVal()){
+                if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.SAMPLE.getVal()&&robot.mLift.getLiftTicks()>transferendheight){
                     //robot.mIntake.setIntakeOpenLoop(0);
-                    robot.mIntake.setExtendoPos(0,timer.seconds());
+                    robot.mIntake.setExtendoPos(2,timer.seconds());
                     prevtelestate = teleFSM;
                     teleFSM = teleState.SAMPLE;
                     transfertimer.reset();
@@ -1035,27 +1037,31 @@ public class BSTEMTELE extends OpMode {
                 gamepad2.rumble(100);
                 robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.HOT_PINK);
                 if (liftRezeroing) {
-                    if (rezero1.seconds() > 0.7) {
+                    if (rezero1.seconds() > 1.1) {
                         robot.mLift.zerofinish(timer.seconds());
                         robot.mLift.setTargetPos(0,timer.seconds());
-                    } else if (rezero1.seconds() > 0.2) {
+                    } else if (rezero1.seconds() > 0.6) {
                         robot.mLift.rezero();
+                    } else if (rezero1.seconds() > 0.2) {
+                        robot.mLift.setOpenLoop(0);
                     } else {
                         robot.mLift.setOpenLoop(-0.7);
                     }
                 }
 
                 if (intakeRezeroing) {
-                    if (rezero2.seconds() > 0.7) {
+                    if (rezero2.seconds() > 1.1) {
                         robot.mIntake.zerofinish(timer.seconds());
                         robot.mIntake.setExtendoPos(0,timer.seconds());
-                    } else if (rezero2.seconds() > 0.2) {
+                    } else if (rezero2.seconds() > 0.6) {
                         robot.mIntake.rezero();
+                    } else if (rezero2.seconds() > 0.2) {
+                        robot.mIntake.setExtendoOpenLoop(0);
                     } else {
                         robot.mIntake.setExtendoOpenLoop(-0.5);
                     }
                 }
-                if (rezero1.seconds()>0.7&& rezero2.seconds()>0.7) {
+                if (rezero1.seconds()>1.2&& rezero2.seconds()>1.2) {
                     prevtelestate = teleFSM;
                     teleFSM = teleState.IDLE;
                     intakeRezeroing = false;
@@ -1137,7 +1143,7 @@ public class BSTEMTELE extends OpMode {
                 break;
             }
             case SAMPLE:{
-                if (transfertimer.seconds()>0.3){
+                if (transfertimer.seconds()>0.4){
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                     robot.mIntake.setIntakeOpenLoop(0);
                     robot.mIntake.setExtendoPos(0, timer.seconds());
@@ -1145,42 +1151,26 @@ public class BSTEMTELE extends OpMode {
 
                 }
                 if (lowsample){
-                    robot.mLift.setTargetPos(Lift.LIFT_POS.DOWN.getVal(), timer.seconds());
-                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 500, new double[] {2,3,3,3,3,3,3,2,1,1});
-                    robot.mDeposit.setDiffyPos(-60, -90);
-                }else if (samplesafe){
-                    robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLESAFE.getVal(), timer.seconds());
-                    if (robot.mLift.getLiftTicks()>500) {
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 500, new double[] {2,3,3,3,3,3,3,2,1,1});
-
-                        if (robot.mLift.closeEnough()){
-                            robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.GREEN);
-                        }else{
-                            robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.YELLOW);
-
-                        }
-                        robot.mDeposit.setDiffyPos(-60, -90);
-                    }else{
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.IDLE.getVal(), 600, new double[] {2,3,3,3,3,3,3,2,1,1});
-
-                        robot.mDeposit.setDiffyPos(0, -90);
-                    }
+                    robot.mLift.setTargetPos(Lift.LIFT_POS.SPECIMEN_PLACE.getVal(), timer.seconds());
                 }else {
-                    robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(), timer.seconds());
-                    if (robot.mLift.getLiftTicks()>700) {
-                        if (robot.mLift.closeEnough()){
-                            robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.GREEN);
-                        }else{
-                            robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.YELLOW);
-                        }
+                    if (samplesafe){
+                        robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLESAFE.getVal(), timer.seconds());
+                    }else {
+                        robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(), timer.seconds());
                     }
-                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 700, new double[] {2,3,3,3,3,3,3,2,1,1});
-
-                    robot.mDeposit.setDiffyPos(-60, -90);
 
                 }
+                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 650, new double[] {2,3,3,3,3,3,3,2,1,1});
+                robot.mDeposit.setDiffyPos(-60, -90);
 
-
+                if(gamepad1.x){
+                    prevtelestate = teleFSM;
+                    teleFSM = teleState.IDLE;
+                    sampletimer.reset();
+                    robot.mDeposit.setDiffyPos(-90, -90);
+                    gamepad1.rumble(200);
+                    gamepad2.rumble(200);
+                }
                 if (gamepad1.a){
                     prevtelestate = teleFSM;
                     teleFSM = teleState.IDLE;
@@ -1220,7 +1210,7 @@ public class BSTEMTELE extends OpMode {
                         hangtimer.reset();
                     }
                     if (hanging&&hangtimer.seconds()>2.5){
-                        robot.mIntake.setExtendoTicks(300, timer.seconds());
+                        robot.mIntake.setExtendoTicks(200, timer.seconds());
                     }
                 }
 

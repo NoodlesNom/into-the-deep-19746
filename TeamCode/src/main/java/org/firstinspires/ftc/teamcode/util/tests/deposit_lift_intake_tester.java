@@ -84,7 +84,7 @@ public class deposit_lift_intake_tester extends LinearOpMode {
     private int smallTicks = 10;
     private int bigTicks = 50;
     private int liftPosIdx = 0;
-    private boolean idxMode = true;
+    private boolean idxMode = false;
 
     private Deadline telemTimer = new Deadline(100, TimeUnit.MILLISECONDS);
 
@@ -209,7 +209,7 @@ public class deposit_lift_intake_tester extends LinearOpMode {
                 telemetry.addData("lift Ticks : ", liftTicks);
             }
 
-            telemetry.addData("lift Enc: ", lift.getLiveLiftPosition());
+            telemetry.addData("lift Enc: ", lift.getLiveRightLiftPosition());
             telemetry.addLine();
 
             telemetry.addLine("R: "+ color.red());

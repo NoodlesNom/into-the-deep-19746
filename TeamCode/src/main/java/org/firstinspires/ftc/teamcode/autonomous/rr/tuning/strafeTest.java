@@ -1,18 +1,14 @@
 package org.firstinspires.ftc.teamcode.autonomous.rr.tuning;
 
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.ProfileAccelConstraint;
-import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.teamcode.autonomous.rr.drive.MecanumDrivePeriodic;
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.TankDrive;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.PinpointDrive;
 
-public final class SplineTest extends LinearOpMode {
+public final class strafeTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         Pose2d beginPose = new Pose2d(0, 0, Math.toRadians(90));
@@ -34,11 +30,40 @@ public final class SplineTest extends LinearOpMode {
 //                        .setReversed(true)
 //                        .splineTo(new Vector2d(30, 30), 3*Math.PI / 2)
 //                        .splineTo(new Vector2d(30, 0), 3*Math.PI / 2)
-//                        .strafeToLinearHeading(new Vector2d(0,0), Math.toRadians(0))
-                        .splineTo(new Vector2d(24, 60), Math.toRadians(90))
-                        .waitSeconds(0.01)
-                        .setReversed(true)
-                        .splineTo(new Vector2d(0, 0), Math.toRadians(-90))
+                        .strafeTo(new Vector2d(60,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(0,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(60,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(0,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(60,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(0,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(60,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(0,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(60,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(0,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(60,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(0,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(60,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(0,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(60,0))
+                        .waitSeconds(0.1)
+                        .strafeTo(new Vector2d(0,0))
+                        .waitSeconds(0.1)
+
+
 
 
 

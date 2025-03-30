@@ -1059,7 +1059,7 @@ public class spec6_1 extends LinearOpMode {
 
         Action human5 = drive.actionBuilder(new Pose2d(6,30.7, Math.toRadians(107)))
                 .afterTime(0.5, controller.extendoPrepareInstant())
-                .afterDisp(Math.sqrt((Math.pow(8-16, 2)+Math.pow(30.7-7, 2)))-2 , new SequentialAction(
+                .afterDisp(Math.sqrt((Math.pow(8-16, 2)+Math.pow(30.7-7, 2)))-1 , new SequentialAction(
                         controller.resetTimer(),
                         controller.intakeingSample()
                 ))
@@ -1221,10 +1221,10 @@ public class spec6_1 extends LinearOpMode {
                 .build();
         Action intake1 = drive.actionBuilder(new Pose2d(57.5, 17, Math.toRadians(90)))
                 .setReversed(false)
-                .strafeToLinearHeading(new Vector2d(57.5,22), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 95))
+                .strafeToLinearHeading(new Vector2d(58,22), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 95))
                 .build();
 
-        Action shoot2 = drive.actionBuilder(new Pose2d(57.5, 22, Math.toRadians(90)))
+        Action shoot2 = drive.actionBuilder(new Pose2d(58, 22, Math.toRadians(90)))
                 .setReversed(false)
                 .strafeToLinearHeading(new Vector2d(61,17), Math.toRadians(76),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 95))
                 .build();

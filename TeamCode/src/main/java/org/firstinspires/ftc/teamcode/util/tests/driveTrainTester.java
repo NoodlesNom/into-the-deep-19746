@@ -6,10 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.internal.system.Deadline;
-import org.firstinspires.ftc.teamcode.Subsystems.Lift;
+import org.firstinspires.ftc.teamcode.Subsystems.Drive;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.StickyButton;
@@ -17,10 +16,9 @@ import org.firstinspires.ftc.teamcode.util.StickyButton;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
-@Disabled
 @TeleOp(name = "drive train tester")
 public class driveTrainTester extends LinearOpMode {
-    private Robot robot;
+    private Drive drive;
     private ElapsedTime myTimer;
     private StickyButton button = new StickyButton();
     private Deadline telemTimer = new Deadline(100, TimeUnit.MILLISECONDS);
@@ -39,7 +37,7 @@ public class driveTrainTester extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        robot = new Robot(this);
+        drive = new Drive(hardwareMap);
         myTimer = new ElapsedTime();
 
         //lift.teleopInit();
@@ -56,7 +54,7 @@ public class driveTrainTester extends LinearOpMode {
         telemTimer.reset();
 
         while (!isStopRequested()) {
-            robot.update(myTimer.seconds());
+            drive.update(myTimer.seconds());
             button.update(gamepad1.a);
             double driveInput = -gamepad1.left_stick_y;
             double strafeInput = -gamepad1.left_stick_x;
@@ -82,7 +80,7 @@ public class driveTrainTester extends LinearOpMode {
                 strafeInput=0;
 
             }
-            robot.mDrive.drive.setDrivePowers(new PoseVelocity2d(new Vector2d(driveInput, strafeInput), turnInput));
+            drive.drive.setDrivePowers(new PoseVelocity2d(new Vector2d(driveInput, strafeInput), turnInput));
             switch (auto)
             {
                 case accel:
@@ -104,7 +102,7 @@ public class driveTrainTester extends LinearOpMode {
                     }
                     if (started) {
                         times.add(myTimer.seconds());
-                        vel.add(robot.mDrive.drive.mPeriodicIO.vel.linearVel.norm());
+                        vel.add(drive.drive.mPeriodicIO.vel.linearVel.norm());
                     }else{
                         times.clear();
                         vel.clear();
@@ -120,6 +118,7 @@ public class driveTrainTester extends LinearOpMode {
                         vel.clear();
                         myTimer.reset();
                         started=false;
+                        auto = State.accel;
                     }
                     break;
                 }

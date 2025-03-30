@@ -50,5 +50,5 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.7'
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'org.openftc:easyopencv:1.7.3'
-    implementation "page.j5155.roadrunner:ftc-otos:0.1.2+0.1.14"
+    implementation "page.j5155.roadrunner:ftc-otos:0.1.14+0.3.1"
 }

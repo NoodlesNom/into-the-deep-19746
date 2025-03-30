@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.autonomous.rr.Drawing;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.PinpointDrive;
-@Disabled
+
 
 public class LocalizationTest extends LinearOpMode {
     @Override

@@ -88,7 +88,7 @@ public class Intake extends Subsystem {
         }
     }
     //0.565 with fixed intake
-    public static double[] pivotPos = new double[] {0, 0.58, 0.12, 0.255, 0.255, 0.255, 0.45, 0.35, 0.51, 0.11, 0.52, 0.1};
+    public static double[] pivotPos = new double[] {0, 0.58, 0.12, 0.255, 0.255, 0.255, 0.45, 0.35, 0.51, 0.11, 0.58, 0.1};
     public enum PIVOT_POS
     {
         //Constants with values

@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.autonomous.rr.drive.TankDrive;
 import org.firstinspires.ftc.teamcode.autonomous.rr.localizer.PinpointDrive;
-@Disabled
+
 public final class TurnTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
@@ -31,7 +31,39 @@ public final class TurnTest extends LinearOpMode {
 //                        .setReversed(true)
 //                        .splineTo(new Vector2d(30, 30), 3*Math.PI / 2)
 //                        .splineTo(new Vector2d(30, 0), 3*Math.PI / 2)
-                        .turn(360)
+                        .turn(12)
+                        .waitSeconds(0.01)
+                        .turn(12)
+                        .waitSeconds(0.01)
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+                        .waitSeconds(0.01)
+
+                        .turn(12)
+
 
 
 

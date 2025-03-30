@@ -142,7 +142,7 @@ public class liftPIDTuner extends LinearOpMode {
                 telemetry.addData("lift Ticks : ", liftTicks);
             }
 
-            telemetry.addData("lift Enc: ", lift.getLiveLiftPosition());
+            telemetry.addData("lift Enc: ", lift.getLiveRightLiftPosition());
             telemetry.addLine();
 
             telemetry.update();
