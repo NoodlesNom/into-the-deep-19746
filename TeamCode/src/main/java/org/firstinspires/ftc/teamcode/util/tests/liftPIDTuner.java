@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.util.tests;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -13,7 +14,7 @@ import org.firstinspires.ftc.teamcode.util.StickyButton;
 
 import java.util.concurrent.TimeUnit;
 
-@Disabled
+@Config
 @TeleOp(name = "liftPIDTuner")
 public class liftPIDTuner extends LinearOpMode {
 
@@ -50,7 +51,7 @@ public class liftPIDTuner extends LinearOpMode {
     private Lift lift;
     private ElapsedTime myTimer;
 
-    private int liftTicks = 1;
+    public static int liftTicks = 1;
     private int liftTicksMax = 900;
     private int smallTicks = 100;
     private int bigTicks = 200;
@@ -161,6 +162,7 @@ public class liftPIDTuner extends LinearOpMode {
                 if( telemTimer.hasExpired() )
                 {
                     BotLog.logD("LiftTuner", lift.getTelem(myTimer.seconds()));
+                    BotLog.logD("Lift Debug",lift.getTelem(myTimer.seconds()));
                     telemTimer.reset();
                 }
             }

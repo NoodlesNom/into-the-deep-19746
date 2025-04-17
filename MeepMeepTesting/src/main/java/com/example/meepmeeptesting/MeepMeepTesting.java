@@ -14,7 +14,7 @@ import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
 public class MeepMeepTesting {
 
     public static void main(String[] args) {
-        int angle = 123;
+        int angle = 53;
         int blocky =-2;
         MeepMeep meepMeep = new MeepMeep(800);
 
@@ -31,24 +31,12 @@ public class MeepMeepTesting {
 
 
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(16, 7, Math.toRadians(0)))
-                //.splineTo(new Vector2d(48-72,60.5-72), Math.toRadians(0),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-45, 80))
-                //.splineToLinearHeading(new Pose2d(44-72,60.5-72, Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))z
-                //.setTangent(Math.toRadians(70))
-                //.setReversed(true)
-                //.setTangent(Math.toRadians(100-180))
-                //.splineToLinearHeading(new Pose2d(8.5, 32-72 ,Math.toRadians(90)), Math.toRadians(315),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                                //.setReversed(true)
-                //.splineToLinearHeading(new Pose2d(33, 20-72 ,Math.toRadians(90)), Math.toRadians(145-180),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
-                //.splineToLinearHeading(new Pose2d(39, 12-72 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                //.splineTo(new Vector2d( 36, 8-72), Math.toRadians(90),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(49-72, 60.5-72+5, Math.toRadians(0)))
                         .setReversed(true)
-                .splineTo(new Vector2d(-40, 8), Math.toRadians(180),new TranslationalVelConstraint(70 ), new ProfileAccelConstraint(-45, 95))
-                .splineTo(new Vector2d(-55, 6), Math.toRadians(210),new TranslationalVelConstraint(70 ), new ProfileAccelConstraint(-45, 95))
+                .splineTo(new Vector2d(46-72,60.5-72+(5)), Math.toRadians(0-180))
 
-
-
-
+                .splineTo(new Vector2d(20-72,40-72+(5)*0.2), Math.toRadians(62+(5)*(0.5)-180))
+                .splineTo(new Vector2d(13-72,23-72), Math.toRadians(70-180))
 
                 .build());
 //        .setTangent(Math.toRadians(angle))

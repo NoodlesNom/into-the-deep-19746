@@ -7,8 +7,8 @@
             <goBILDA5202SeriesMotor name="br" port="2" />
             <goBILDA5202SeriesMotor name="fr" port="3" />
             <LynxEmbeddedIMU name="imuCH" port="0" bus="0" />
-            <goBILDAPinpointRR name="pinpoint" port="1" bus="0" />
-            <RevColorSensorV3 name = "color" port = "1" bus = "1" />
+            <goBILDAPinpoint name="pinpoint" port="1" bus="0" />
+            <RevColorSensorV3 name = "color" port = "0" bus = "1" />
             <ContinuousRotationServo name="hangR" port="0" />
             <Servo name="pivot" port="4" />
             <Servo name="claw" port="1" />
@@ -27,7 +27,7 @@
 
             <Servo name="gate" port="1" />
             <Servo name="diffyL" port="2" />
-            <Servo name="pivotL" port="0" />
+            <Servo name="pivotL" port="3" />
             <Servo name="diffyR" port="4" />
             <Servo name="pivotR" port="5" />
             <LynxEmbeddedIMU name="imuEH" port="0" bus="0" />

@@ -4,6 +4,8 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.rev.RevColorSensorV3;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
@@ -46,7 +48,7 @@ public class deposit_lift_intake_tester extends LinearOpMode {
 
     private StickyButton liftIncStickyButton = new StickyButton();
     private StickyButton liftDecStickyButton = new StickyButton();
-
+    public static double intakePow = 0;
     private StickyButton liftMiniIncStickyButton = new StickyButton();
     private StickyButton liftMiniDecStickyButton = new StickyButton();
 
@@ -58,8 +60,9 @@ public class deposit_lift_intake_tester extends LinearOpMode {
     private ServoImplEx intakeclaw;
     private ServoImplEx pivotL;
     private ServoImplEx pivotR;
+    private DcMotorEx intake;
 
-    private ServoImplEx intake;
+    private ServoImplEx intakepivot;
     private ServoImplEx diffyL;
     private ServoImplEx diffyR;
     public static double upper = 2400;
@@ -144,7 +147,7 @@ public class deposit_lift_intake_tester extends LinearOpMode {
         ElapsedTime timer = new ElapsedTime();
         pivotL = hardwareMap.get(ServoImplEx .class, "pivotL");
         pivotR = hardwareMap.get(ServoImplEx .class, "pivotR");
-        intake = hardwareMap.get(ServoImplEx.class, "pivot");
+        intakepivot = hardwareMap.get(ServoImplEx.class, "pivot");
         pivotR.setDirection(ServoImplEx.Direction.REVERSE);
         pivotL.setPosition(0.447);
         pivotR.setPosition(0.467);
@@ -161,6 +164,9 @@ public class deposit_lift_intake_tester extends LinearOpMode {
         diffyR.setDirection(ServoImplEx.Direction.REVERSE);
         diffyL.setPosition(0.5);
         diffyR.setPosition(0.5);
+        intake = hardwareMap.get(DcMotorEx.class, "intake");
+        intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        intake.setDirection(DcMotorEx.Direction.REVERSE);
 
 
         waitForStart();
@@ -176,15 +182,18 @@ public class deposit_lift_intake_tester extends LinearOpMode {
             mapControls();
             if (move) {
                 claw.setPosition(claw_pos);
+                intake.setPower(intakePow);
                 intakeclaw.setPosition(intake_claw_pos);
                 pivotL.setPosition(pivot_pos - 0.02);
                 pivotR.setPosition(pivot_pos);
 
                 double targetL = 0.5+((pitch/340.0)+(roll/320.0));
                 double targetR = 0.5+((pitch/340.0)-(roll/320.0));
-                intake.setPosition(intakepos);
+                intakepivot.setPosition(intakepos);
                 diffyL.setPosition(targetL);
                 diffyR.setPosition(targetR);
+            }else{
+                intake.setPower(0);
             }
             pivotL.setPwmRange(new PwmControl.PwmRange(lower,upper));
             pivotR.setPwmRange(new PwmControl.PwmRange(lower,upper));

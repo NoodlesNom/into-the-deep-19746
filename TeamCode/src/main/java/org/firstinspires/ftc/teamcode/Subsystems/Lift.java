@@ -29,6 +29,7 @@ public class Lift extends Subsystem {
     public PeriodicIO mPeriodicIO;
     private double tgtTicks;
     private double pidTgtTicks;
+    private boolean rezeroed = false;
     private double PIDTime = 0.025;
     //private double PIDTime = 0.05;    // "we need to look at the changes" -/@ coach todd
     private double nextPID;
@@ -50,7 +51,7 @@ public class Lift extends Subsystem {
     // private final double I = 0.00003;                 // integral scaling
     // private final double D = 0.0009;                  // derivative scaling
 
-    public static double P = 0.0075 / 1 ;
+    public static double P = 0.01 / 1 ;
     public static double I = 0.0015 / 1;
     public static double D = 0.045 / 1;
     public static double F = 0;
@@ -73,7 +74,7 @@ public class Lift extends Subsystem {
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
     //
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-    public static int[] liftPositions = new int[]{1,130 ,225,330,760,1040,340,830, 335,335, 730, 280, 150, 380, 930};
+    public static int[] liftPositions = new int[]{1,165 ,225,365,820,1040,340,870, 370,370, 730, 280, 150, 415, 950};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
     //120 spec place normal, changed for mega
     //1.25mm per tick
@@ -147,7 +148,7 @@ public class Lift extends Subsystem {
 
         middlelift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         middlelift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        middlelift.setDirection(DcMotorEx.Direction.REVERSE);
+        rightlift.setDirection(DcMotorEx.Direction.REVERSE);
 
         pid = new MiniPID(P, I, D, F);
         pid.reset();
@@ -243,8 +244,14 @@ public class Lift extends Subsystem {
 
     public  void setTargetPos(int tgtPosArg, double timestamp)
     {
+
         tgtPosArg = Math.min(tgtPosArg,(liftPositions.length-1));
-        double tgtPosArgTicks = liftPositions[tgtPosArg];
+        double tgtPosArgTicks;
+        if (rezeroed&&(tgtPosArg==9||tgtPosArg==8)){
+            tgtPosArgTicks= 1*liftPositions[tgtPosArg]+5;
+        }else{
+            tgtPosArgTicks= 1*liftPositions[tgtPosArg];
+        }
 
         mLiftControlState = LiftControlState.PID_CONTROL;
         mPeriodicIO.liftPos = tgtPosArg;
@@ -264,6 +271,9 @@ public class Lift extends Subsystem {
     public void setTargetTicks(int tgtTicksArg, double timestamp)
     {
         mLiftControlState = LiftControlState.PID_CONTROL;
+        if (rezeroed){
+            tgtTicksArg= (int) (tgtTicksArg*1)+5;
+        }
 
         if (tgtTicksArg != tgtTicks)
         {
@@ -292,6 +302,7 @@ public class Lift extends Subsystem {
         setOpenLoop(0);
         rightlift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         middlelift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rezeroed = true;
     }
     public  void zerofinish(double time)
     {
@@ -467,10 +478,16 @@ public class Lift extends Subsystem {
     }
 
     public void writeLiftOutputs()
-    {   if (ptoEnabled){
+    {
+        if (ptoEnabled){
             pid.reset();
             //lift.setPower(0);
-        }
+            middlelift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            rightlift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }else if(middlelift.getZeroPowerBehavior()!= DcMotor.ZeroPowerBehavior.FLOAT){
+            middlelift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            rightlift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+    }
         if (mPeriodicIO.prevDemand != mPeriodicIO.demand) {
             rightlift.setPower(mPeriodicIO.demand);
             middlelift.setPower(mPeriodicIO.demand);
@@ -483,7 +500,7 @@ public class Lift extends Subsystem {
     @Override
     public String getTelem(double time)
     {
-        boolean debug = false;
+        boolean debug = true;
         pid.logging = debug;
         String output = "";
         if( debug ) {

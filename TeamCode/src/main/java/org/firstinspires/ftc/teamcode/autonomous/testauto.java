@@ -125,7 +125,8 @@ public class testauto extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SPEC.getVal());
+                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.IDLE.getVal(), 500, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
+
                 return false;
             }
         }
@@ -821,7 +822,7 @@ public class testauto extends LinearOpMode {
             switchblock.update(gamepad1.x);
             robot.update(timer.seconds());
             timer.reset();
-            robot.teleopInit();
+            robot.autoInit();
             robot.mDeposit.setLiveLed(team);
             telemetry.addLine("PRESS A (BOTTOM) FOR BLUE");
             telemetry.addLine("PRESS B (RIGHT) FOR RED");
@@ -955,8 +956,14 @@ public class testauto extends LinearOpMode {
                 new ParallelAction(
                         controller.updateRobot(),
                         new SequentialAction(
-                                controller.resetTimer(),
-                                controller.pull()
+                                controller.pivotUp(),
+                                controller.extendoPrepareInstant(),
+                                controller.liftUpInstant(),
+                                controller.closeClaw(),
+                                controller.diffyPlace(),
+                                controller.pivotUp(),
+                                controller.pivotUp(),
+                                controller.pivotUp()
 
                         )
 

@@ -42,11 +42,14 @@ public class BSTEMTELE extends OpMode {
     private List<Action> runningActions = new ArrayList<>();
 
     private Robot robot;
+    public static double hangpwr = 1;
+
     public static int rejectingTime = 500;
 
     public static int transferendheight = 390;
     private Deadline rejecting = new Deadline(rejectingTime, TimeUnit.MILLISECONDS);
-
+    private ElapsedTime closetimer = new ElapsedTime();
+    private boolean autoclose = false;
     private boolean reject = true;
     private boolean autoSpec=false;
     private int angle = 108;
@@ -245,7 +248,7 @@ public class BSTEMTELE extends OpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 robot.mIntake.setOutputLimits(-1,0.8);
-                if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()){
+                if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFER.getVal()){
                     if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
                         if (generaltimer.seconds()>1||(intaken&&generaltimer.seconds()>0.1)){
                             robot.mIntake.setIntakeOpenLoop(0);
@@ -545,6 +548,9 @@ public class BSTEMTELE extends OpMode {
     private boolean samplemode = false;
 
     private StickyButton angledbutton = new StickyButton();
+
+    private StickyButton winchUpButton = new StickyButton();
+    private StickyButton winchDownButton = new StickyButton();
     private StickyButton autoSpecButton = new StickyButton();
     private StickyButton mode = new StickyButton();
 
@@ -608,13 +614,14 @@ public class BSTEMTELE extends OpMode {
         robot = new Robot(this);
         if(!firstTeleopLoop){
             controller = new robotController();
-            sub = robot.mDrive.drive.actionBuilder(new Pose2d(39,6.5, Math.toRadians(90)))
+            sub = robot.mDrive.drive.actionBuilder(new Pose2d(39,8, Math.toRadians(90)))
                     .setReversed(false)
                     //.setTangent(Math.toRadians(angle))
                     //.splineToLinearHeading(new Pose2d(16+Math.sin(Math.toRadians(angle-90))*10, 38-10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(angle)), Math.toRadians(angle),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
 
-                    .splineToLinearHeading(new Pose2d(16, 29.75, Math.toRadians(angle-10)), Math.toRadians(angle),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-50, 85))
-                    .splineToSplineHeading(new Pose2d(15, 30.25, Math.toRadians(angle)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-50, 85))
+
+                    .splineToLinearHeading(new Pose2d(16, 29.75, Math.toRadians(angle-10)), Math.toRadians(angle),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40,100))
+                    .splineToSplineHeading(new Pose2d(15, 30.25, Math.toRadians(angle)), Math.toRadians(0),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40,100))
 
 
                     .stopAndAdd(new SequentialAction(
@@ -627,10 +634,10 @@ public class BSTEMTELE extends OpMode {
             human = robot.mDrive.drive.actionBuilder(new Pose2d(15, 30.25, Math.toRadians(angle)))
                     .setReversed(true)
                     //.setTangent(Math.toRadians(angle-180))
-                    //.splineToLinearHeading(new Pose2d(39-Math.sin(Math.toRadians(angle-90))*10, 6.5+10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(90)), Math.toRadians(angle-180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                    //.splineToLinearHeading(new Pose2d(39-Math.sin(Math.toRadians(angle-90))*10, 8+10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(90)), Math.toRadians(angle-180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
 
-                    .splineToLinearHeading(new Pose2d(39, 10 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
-                    .splineToSplineHeading(new Pose2d(39, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(30 ), new ProfileAccelConstraint(-45, 85))
+                    .splineToLinearHeading(new Pose2d(39, 10 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40,100))
+                    .splineToSplineHeading(new Pose2d(39, 8 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(30 ), new ProfileAccelConstraint(-40,100))
 
                     .stopAndAdd(new SequentialAction(
                             controller.closeClaw()
@@ -692,6 +699,8 @@ public class BSTEMTELE extends OpMode {
         clawButton.update(gamepad1.a||gamepad2.b);
         rejectToggle.update(gamepad1.start);
         autoSpecButton.update(gamepad1.dpad_right);
+        winchUpButton.update(gamepad1.dpad_up);
+        winchDownButton.update(gamepad1.dpad_down);
 
         if (rejectToggle.getState()){
             reject = !reject;
@@ -734,7 +743,7 @@ public class BSTEMTELE extends OpMode {
                         if (samplemode) {
                             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                             robot.mDeposit.setDiffyPos(30, -90);
-                            robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
+                            robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
                             robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRAP.getVal());
                         } else {
                             robot.mLift.setTargetPos(Lift.LIFT_POS.DOWN.getVal(), timer.seconds());
@@ -749,7 +758,7 @@ public class BSTEMTELE extends OpMode {
                 }else if (samplemode) {
                     //if sample mode go to transfer pos
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
-                    robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
+                    robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
                     robot.mDeposit.setDiffyPos(30, -90);
                     clawToggleHits = 0;
                 }else{
@@ -763,11 +772,11 @@ public class BSTEMTELE extends OpMode {
                         //if idle+samplemode, prep for transfer
                         if (samplemode) {
                             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
-                            robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
+                            robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
                             robot.mDeposit.setDiffyPos(30, -90);
-                        } else if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal() || robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.SPECANGLED.getVal()) {
+                        } else if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFER.getVal() || robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.SPECANGLED.getVal()) {
                             //leave transfer pos
-                            if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFERPREP.getVal()) {
+                            if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFER.getVal()) {
                                 robot.mLift.setTargetPos(Lift.LIFT_POS.SPECANGLED.getVal(), timer.seconds());
                             }
                             if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.SPECANGLED.getVal() && robot.mLift.closeEnough()) {
@@ -801,7 +810,7 @@ public class BSTEMTELE extends OpMode {
                             if (samplemode) {
                                 robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                                 robot.mDeposit.setDiffyPos(30, -90);
-                                robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
+                                robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
                                 robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRAP.getVal());
                             } else {
                                 robot.mLift.setTargetPos(Lift.LIFT_POS.DOWN.getVal(), timer.seconds());
@@ -910,12 +919,19 @@ public class BSTEMTELE extends OpMode {
 
                 if (robot.mIntake.detectedYellow()||(robot.mIntake.detectedBlue()&&team.name().equals("BLUE"))||(robot.mIntake.detectedRed()&&team.name().equals("RED"))){
                     gamepad1.rumble(100);
+//                    if (closetimer.seconds()>0.1&&autoclose){
+//                        autoclose=false;
+//                        //robot.mIntake.setClawPos(1);
+//                    }
+//                }else{
+//                    closetimer.reset();
+//                    autoclose = true;
                 }
                 if (samplemode) {
                     clawToggleHits=2;
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[] {2,3,3,3,3,3,3,2,1,1});
 
-                    robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
+                    robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
                     robot.mDeposit.setDiffyPos(30, -90);
                 }
                 if (gamepad1.right_trigger>0.2&& robot.mIntake.getExtendoPosition()<615) {
@@ -939,6 +955,7 @@ public class BSTEMTELE extends OpMode {
                     robot.mIntake.setClawPos(0);
                     robot.mIntake.setGatePos(Intake.GATE_POS.OPEN.getVal());
                     stalledintaking = false;
+                    autoclose = true;
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                     robot.mIntake.setIntakeOpenLoop(-0.6);
                 }else if(gamepad1.y){
@@ -984,20 +1001,18 @@ public class BSTEMTELE extends OpMode {
                 robot.mDeposit.setLed(RevBlinkinLedDriver.BlinkinPattern.VIOLET);
                 robot.mDeposit.setDiffyPos(30, -90);
                 if (robot.mIntake.closeEnoughAuto()&&robot.mLift.closeEnough()){
-                    if (transfertimer.seconds()>0.4){
+                    if (transfertimer.seconds()>0.3){
                         robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(), timer.seconds());
-                    }else if (transfertimer.seconds()>0.3){
-                        robot.mIntake.setIntakeOpenLoop(-0.8);
-                    }
-                    else if (transfertimer.seconds()>0.2){
+                    }else if (transfertimer.seconds()>0.2){
+                        robot.mIntake.setIntakeOpenLoop(-1);
                         robot.mIntake.setClawPos(0);
                     }else if (transfertimer.seconds()>0.1){
                         clawToggleHits = 1;
                         robot.mIntake.setIntakeOpenLoop(0);
                     }
                     else{
-                        robot.mIntake.setExtendoOpenLoop(-0.75);
-//                        robot.mIntake.setIntakeOpenLoop(-1);
+                        robot.mIntake.setExtendoOpenLoop(-0.65);
+                        //robot.mIntake.setIntakeOpenLoop(-1);
                         robot.mIntake.setClawPos(1);
                     }
                 }else if (robot.mLift.getLiftTargetPos() != Lift.LIFT_POS.SAMPLE.getVal()){
@@ -1005,6 +1020,7 @@ public class BSTEMTELE extends OpMode {
                 }
                 if (robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.SAMPLE.getVal()&&robot.mLift.getLiftTicks()>transferendheight){
                     //robot.mIntake.setIntakeOpenLoop(0);
+
                     robot.mIntake.setExtendoPos(2,timer.seconds());
                     prevtelestate = teleFSM;
                     teleFSM = teleState.SAMPLE;
@@ -1083,10 +1099,10 @@ public class BSTEMTELE extends OpMode {
                     human = robot.mDrive.drive.actionBuilder(new Pose2d(15, 30.25+offset, Math.toRadians(angle)))
                             .setReversed(true)
                             //.setTangent(Math.toRadians(angle-180))
-                           // .splineToLinearHeading(new Pose2d(39+offset-Math.sin(Math.toRadians(angle-90))*10, 6.5+10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(90)), Math.toRadians(angle-180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                           // .splineToLinearHeading(new Pose2d(39+offset-Math.sin(Math.toRadians(angle-90))*10, 8+10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(90)), Math.toRadians(angle-180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
 
-                            .splineToLinearHeading(new Pose2d(39, 10+offset ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
-                            .splineToSplineHeading(new Pose2d(39, 6.5+offset ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(30 ), new ProfileAccelConstraint(-45, 85))
+                            .splineToLinearHeading(new Pose2d(39, 10+offset ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40,100))
+                            .splineToSplineHeading(new Pose2d(39, 8+offset ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(30 ), new ProfileAccelConstraint(-40,100))
 
                             .stopAndAdd(new SequentialAction(
                                     controller.closeClaw()
@@ -1116,13 +1132,13 @@ public class BSTEMTELE extends OpMode {
                                             controller.intakeReset()
                                     )
                             ));
-                    sub = robot.mDrive.drive.actionBuilder(new Pose2d(39,6.5+offset, Math.toRadians(90)))
+                    sub = robot.mDrive.drive.actionBuilder(new Pose2d(39,8+offset, Math.toRadians(90)))
                             .setReversed(false)
                             //.setTangent(Math.toRadians(angle))
                            // .splineToLinearHeading(new Pose2d(16+offset+Math.sin(Math.toRadians(angle-90))*10, 38-10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(angle)), Math.toRadians(angle),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
 
-                            .splineToLinearHeading(new Pose2d(16, 29.75+offset, Math.toRadians(angle-10)), Math.toRadians(angle),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-50, 85))
-                            .splineToSplineHeading(new Pose2d(15, 30.25+offset, Math.toRadians(angle)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-50, 85))
+                            .splineToLinearHeading(new Pose2d(16, 29.75+offset, Math.toRadians(angle-10)), Math.toRadians(angle),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40,100))
+                            .splineToSplineHeading(new Pose2d(15, 30.25+offset, Math.toRadians(angle)), Math.toRadians(0),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40,100))
 
 
                             .stopAndAdd(new SequentialAction(
@@ -1146,7 +1162,6 @@ public class BSTEMTELE extends OpMode {
                 if (transfertimer.seconds()>0.4){
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                     robot.mIntake.setIntakeOpenLoop(0);
-                    robot.mIntake.setExtendoPos(0, timer.seconds());
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
 
                 }
@@ -1161,7 +1176,7 @@ public class BSTEMTELE extends OpMode {
 
                 }
                 robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 650, new double[] {2,3,3,3,3,3,3,2,1,1});
-                robot.mDeposit.setDiffyPos(-60, -90);
+                robot.mDeposit.setDiffyPos(-85, -90);
 
                 if(gamepad1.x){
                     prevtelestate = teleFSM;
@@ -1182,15 +1197,15 @@ public class BSTEMTELE extends OpMode {
             }
             case HANG:{
 
-                robot.mDeposit.setDiffyPos(130,0);
+                robot.mDeposit.setDiffyPos(-130,0);
                 clawToggleHits = 1;
                 robot.mIntake.setIntakeOpenLoop(0);
                 robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.HANG.getVal(), 1200, new double[] {2,3,3,3,3,3,3,2,1,1});
+                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 1200, new double[] {2,3,3,3,3,3,3,2,1,1});
                 if (!hangReady) {
                     if (robot.mIntake.closeEnough()) {
                         if(hangtimer.seconds()>0.5) {
-                            robot.mLift.setTargetPos(Lift.LIFT_POS.HANG.getVal(), timer.seconds());
+                            robot.mLift.setTargetPos(Lift.LIFT_POS.TALLAUTOSAMPLE.getVal(), timer.seconds());
                             hangReady = true;
                         }
                     } else {
@@ -1198,20 +1213,47 @@ public class BSTEMTELE extends OpMode {
                         robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
                     }
                 }else {
-                    if (gamepad1.dpad_up) {
-                        robot.mDrive.setWinchPos(1);
-                        robot.mIntake.setExtendoPos(0, timer.seconds());
-                    } else if (gamepad1.dpad_down) {
-                        robot.mDrive.setWinchPos(2);
-                        hanging=true;
+                    if (winchUpButton.getState()) {
+                        if (!hanging) {
+                            robot.mDrive.setWinchPos(1);
+                            robot.mIntake.setExtendoPos(0, timer.seconds());
+                        }else{
+                            robot.mDrive.setWinchTicks(robot.mDrive.winchTarget+20);
+                        }
+                    } else if (winchDownButton.getState()) {
+                        if (!hanging) {
+                            robot.mDrive.setWinchPos(2);
+                            hanging = true;
+                        }else{
+                            robot.mDrive.setWinchTicks(robot.mDrive.winchTarget-20);
+                        }
+                    }
+                    if (robot.mLift.getLiftTicks()<700){
+                        if (hangtimer.seconds()>0.2){
+                            robot.mDrive.setWinchPos(3);
+                        }else{
+                            robot.mDrive.setWinchPos(1);
+                        }
+                    }else{
+                        hangtimer.reset();
+                    }
+                    if (robot.mDrive.ptoReady) {
+                        if (gamepad1.left_stick_y > 0.1) {
+                            robot.mLift.setOpenLoop(-hangpwr);
+                        }else if(gamepad1.left_stick_y < -0.1){
+                            robot.mLift.setOpenLoop(hangpwr);
+                        }else{
+                            robot.mLift.setOpenLoop(-0.1);
+                        }
+                    }
 
+                    if (gamepad1.dpad_right){
+                        robot.mDrive.engagePto();
                     }
                     if (!hanging){
                         hangtimer.reset();
                     }
-                    if (hanging&&hangtimer.seconds()>2.5){
-                        robot.mIntake.setExtendoTicks(200, timer.seconds());
-                    }
+
                 }
 
                 //-110 diffy pitch
@@ -1242,16 +1284,17 @@ public class BSTEMTELE extends OpMode {
             robot.mLift.setTargetPos(Lift.LIFT_POS.SPECCLEAR.getVal(), timer.seconds());
         }
         if (gamepad1.right_trigger>0.2&&teleFSM!= teleState.INTAKING){
-
+            autoclose=true;
             robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
             prevtelestate = teleFSM;
             teleFSM = teleState.INTAKING;
+            closetimer.reset();
         }
 
         if ((gamepad1.a&&teleFSM== teleState.INTAKING&&samplemode)){
             robot.mIntake.setClawPos(1);
             robot.mIntake.setExtendoPos(Intake.EXTEND_POS.STOWED.getVal(), timer.seconds());
-            robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFERPREP.getVal(), timer.seconds());
+            robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
             robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(), 750, new double[] {2,3,3,3,3,3,3,2,1,1});
             prevtelestate = teleFSM;
             teleFSM = teleState.TRANSFER;
@@ -1318,7 +1361,7 @@ public class BSTEMTELE extends OpMode {
             }else{
                 robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
             }
-            robot.mIntake.setIntakeOpenLoop(0);
+            //robot.mIntake.setIntakeOpenLoop(0);
         }
 
         if (straighten){
@@ -1354,13 +1397,13 @@ public class BSTEMTELE extends OpMode {
             if (ResetAutoSpec){
                 ResetAutoSpec=false;
                 offset=0;
-                sub = robot.mDrive.drive.actionBuilder(new Pose2d(39,6.5, Math.toRadians(90)))
+                sub = robot.mDrive.drive.actionBuilder(new Pose2d(39,8, Math.toRadians(90)))
                         .setReversed(false)
                         //.setTangent(Math.toRadians(angle))
                         //.splineToLinearHeading(new Pose2d(16+Math.sin(Math.toRadians(angle-90))*10, 38-10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(angle)), Math.toRadians(angle),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
 
-                        .splineToLinearHeading(new Pose2d(16, 29.75, Math.toRadians(angle-10)), Math.toRadians(angle),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-50, 85))
-                        .splineToSplineHeading(new Pose2d(15, 30.25, Math.toRadians(angle)), Math.toRadians(0),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-50, 85))
+                        .splineToLinearHeading(new Pose2d(16, 29.75, Math.toRadians(angle-10)), Math.toRadians(angle),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40,100))
+                        .splineToSplineHeading(new Pose2d(15, 30.25, Math.toRadians(angle)), Math.toRadians(0),new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40,100))
 
 
                         .stopAndAdd(new SequentialAction(
@@ -1373,9 +1416,9 @@ public class BSTEMTELE extends OpMode {
                 human = robot.mDrive.drive.actionBuilder(new Pose2d(15, 30.25, Math.toRadians(angle)))
                         .setReversed(true)
                         //.setTangent(Math.toRadians(angle-180))
-                        //.splineToLinearHeading(new Pose2d(39-Math.sin(Math.toRadians(angle-90))*10, 6.5+10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(90)), Math.toRadians(angle-180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
-                        .splineToLinearHeading(new Pose2d(39, 10 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-45, 85))
-                        .splineToSplineHeading(new Pose2d(39, 6.5 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(30 ), new ProfileAccelConstraint(-45, 85))
+                        //.splineToLinearHeading(new Pose2d(39-Math.sin(Math.toRadians(angle-90))*10, 8+10*Math.cos(Math.toRadians(angle-90)), Math.toRadians(90)), Math.toRadians(angle-180),new TranslationalVelConstraint(60 ), new ProfileAccelConstraint(-40, 85))
+                        .splineToLinearHeading(new Pose2d(39, 10 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(55 ), new ProfileAccelConstraint(-40, 100))
+                        .splineToSplineHeading(new Pose2d(39, 8 ,Math.toRadians(90)), Math.toRadians(270),  new TranslationalVelConstraint(30 ), new ProfileAccelConstraint(-40,100))
                         .stopAndAdd(new SequentialAction(
                                 controller.closeClaw()
                         ))
@@ -1451,7 +1494,7 @@ public class BSTEMTELE extends OpMode {
 
         if (autoSpecButton.getState()&&robot.mDeposit.getPivotPos()==3){
             clawToggleHits=1;
-            robot.mDrive.drive.pose= new Pose2d(39,6.5,Math.toRadians(90));
+            robot.mDrive.drive.pose= new Pose2d(39,8,Math.toRadians(90));
             //robot.mDrive.drive.pinpoint.setPosition(new Pose2d(39,6,Math.toRadians(90)));
             //robot.mDrive.drive.pinpoint.setPositionRR(new Pose2d(39,6,Math.toRadians(90)));
             runningActions.add(

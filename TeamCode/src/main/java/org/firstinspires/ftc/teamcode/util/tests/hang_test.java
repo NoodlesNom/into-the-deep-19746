@@ -28,15 +28,15 @@ public class hang_test extends LinearOpMode {
 
     public static double pos = 55;
 
-    public static double ptoPos = 0.5;
+    public static double ptoPos = 0.81;
 
     public static double posdiviser = 150;
 
     private double leftwinchprevious = 0;
     private double rightwinchprevious = 0;
 
-    private double leftwinchpos;
-    private double rightwinchpos;
+    private double leftwinchpos = -720;
+    private double rightwinchpos = -720;
     public static boolean move = true;
     public static boolean auto = false;
 
@@ -51,7 +51,7 @@ public class hang_test extends LinearOpMode {
         winchR = hardwareMap.get(CRServoImplEx.class, "hangR");
         winchL.setDirection(CRServoImplEx.Direction.REVERSE);
         //pto.setPwmRange(new PwmControl.PwmRange(500,2400));
-        pto.setPosition(0.5);
+        pto.setPosition(0.81);
 
 
 
@@ -75,13 +75,23 @@ public class hang_test extends LinearOpMode {
                         winchR.setPower(gamepad1.right_stick_y);
                     }
                 }else{
-                    winchL.setPower(-(pos - leftwinchadjusted) / posdiviser);
-                    winchR.setPower(-(pos - rightwinchadjusted) / posdiviser);
+                    winchL.setPower(-(pos - (leftwinchadjusted)) / posdiviser);
+                    winchR.setPower(-(pos - (rightwinchadjusted+20)) / posdiviser);
 
                 }
             }
-            leftwinchpos = -(leftwinchencoder.getVoltage() / 3.3 * 360)+360;
-            rightwinchpos = (rightwinchencoder.getVoltage() / 3.3 * 360);
+            if  (leftwinchpos==-720){
+                leftwinchpos = -(leftwinchencoder.getVoltage() / 3.3 * 360)+360;
+                rightwinchpos = (rightwinchencoder.getVoltage() / 3.3 * 360);
+                leftwinchprevious=leftwinchpos;
+                leftwinchadjusted=leftwinchpos;
+                rightwinchprevious=rightwinchpos;
+                rightwinchadjusted=rightwinchpos;
+            }else {
+                leftwinchpos = -(leftwinchencoder.getVoltage() / 3.3 * 360) + 360;
+                rightwinchpos = (rightwinchencoder.getVoltage() / 3.3 * 360);
+            }
+
             leftdelta = leftwinchpos - leftwinchprevious;
 
             if (leftdelta > 180) leftdelta -= 360;

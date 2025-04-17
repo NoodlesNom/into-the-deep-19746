@@ -88,7 +88,7 @@ public class Intake extends Subsystem {
         }
     }
     //0.565 with fixed intake
-    public static double[] pivotPos = new double[] {0, 0.58, 0.12, 0.255, 0.255, 0.255, 0.45, 0.35, 0.51, 0.11, 0.58, 0.1};
+    public static double[] pivotPos = new double[] {0, 0.61, 0.15, 0.30, 0.30, 0.30, 0.495, 0.395, 0.55, 0.155, 0.625, 0.145};
     public enum PIVOT_POS
     {
         //Constants with values
@@ -119,7 +119,7 @@ public class Intake extends Subsystem {
         }
     }
 
-    private double[] clawPos = new double[]{0.05, 0.21};
+    private double[] clawPos = new double[]{0.31, 0.49};
 
     public enum CLAW_POS
     {
@@ -232,7 +232,7 @@ public class Intake extends Subsystem {
         extendo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         extendo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         setGatePos(GATE_POS.CATCH.getVal());
-        setPivotPos(PIVOT_POS.AUTOINIT.getVal());
+        setPivotPos(PIVOT_POS.LAUNCH.getVal());
     }
 
     @Override
