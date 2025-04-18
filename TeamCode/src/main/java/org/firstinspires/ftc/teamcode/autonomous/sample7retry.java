@@ -70,7 +70,7 @@ public class sample7retry extends LinearOpMode {
     private int block = 0;
     ElapsedTime generaltimer = new ElapsedTime();
     Deadline logging = new Deadline(250, TimeUnit.MILLISECONDS);
-    boolean debug = false;
+    boolean debug = true;
     ElapsedTime loopTimer = new ElapsedTime();
     public class CustomAction implements Action {
         private Action a, b;
@@ -121,6 +121,7 @@ public class sample7retry extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
                 robot.mDeposit.setClawPos(2);
+                robot.mDeposit.setDiffyPos(-100, -90);
                 return false;
             }
         }
@@ -327,13 +328,13 @@ public class sample7retry extends LinearOpMode {
                         robot.mIntake.pwmenable();
                         //robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKEPREP.getVal());
 
-                        if (generaltimer.seconds() > 0.2) {
+                        if (generaltimer.seconds() > 0.3) {
                             robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
                             robot.mIntake.setExtendoPos(0, timer.seconds());
                             robot.mIntake.setIntakeOpenLoop(-1);
                             block++;
                             return false;
-                        }else if (generaltimer.seconds() > 0.1) {
+                        }else if (generaltimer.seconds() > 0.2) {
                             robot.mIntake.setClawPos(1);
                         }else{
                             robot.mIntake.setIntakeOpenLoop(1);
@@ -371,7 +372,7 @@ public class sample7retry extends LinearOpMode {
                     } else if (generaltimer.seconds() > 0.7) {
 
                         robot.mIntake.setOutputLimits(-1, 1);
-                        if (!reject) robot.mIntake.setClawPos(1);
+                        //if (!reject) robot.mIntake.setClawPos(1);
                     }else if (generaltimer.seconds() > 0.5) {
                         if (!reject) {
                             robot.mIntake.setIntakeOpenLoop(1);
@@ -460,10 +461,10 @@ public class sample7retry extends LinearOpMode {
                 if (robot.mIntake.closeEnoughAuto()&&robot.mLift.closeEnough()){
                     if (generaltimer.seconds()>0.3){
                         robot.mLift.setTargetPos(Lift.LIFT_POS.AUTOSAMPLE.getVal(), timer.seconds());
-                        robot.mIntake.setIntakeOpenLoop(-0.8);
+
                     }else if (generaltimer.seconds()>0.2){
                         robot.mIntake.setClawPos(0);
-
+                        robot.mIntake.setIntakeOpenLoop(-1);
                     }else if (generaltimer.seconds()>0.1){
                         robot.mDeposit.setClawPos(1);
                         robot.mIntake.setIntakeOpenLoop(0);
@@ -484,12 +485,31 @@ public class sample7retry extends LinearOpMode {
                 }
 
                 if (robot.mLift.getLiftTicks()>transferendheight&&robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.AUTOSAMPLE.getVal()){
-                    robot.mIntake.setIntakeOpenLoop(0);
-                    robot.mIntake.setExtendoPos(2,timer.seconds());
+                    robot.mIntake.setIntakeOpenLoop(1);
+                    robot.mIntake.setClawPos(1);
                     generaltimer.reset();
-                    return false;
+                    if  (false){//robot.mIntake.detectedYellow()||(robot.mIntake.detectedBlue()&&team.name().equals("BLUE"))||(robot.mIntake.detectedRed()&&team.name().equals("RED"))){
+                        robot.mLift.setTargetPos(Lift.LIFT_POS.TRANSFER.getVal(), timer.seconds());
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal());
+                        robot.mIntake.setGatePos(Intake.GATE_POS.CLAMP.getVal());
+                        generaltimer.reset();
+                        robot.mIntake.setIntakeOpenLoop(-1);
+                        robot.mIntake.setClawPos(1);
+                        robot.mIntake.setPivotPos(Intake.PIVOT_POS.TRANSFER.getVal());
+                        robot.mIntake.setExtendoPos(0,timer.seconds());
+                        robot.mDeposit.setClawPos(0);
+                    }else{
+                        robot.mIntake.setClawPos(0);
+                        robot.mIntake.setIntakeOpenLoop(0);
+                        robot.mIntake.setExtendoPos(2,timer.seconds());
+                        return false;
+                    }
                 }
+                robot.mIntake.detectedYellow();
+                robot.mIntake.detectedRed();
+                robot.mIntake.detectedBlue();
                 return true;
+
             }
         }
 
@@ -577,11 +597,14 @@ public class sample7retry extends LinearOpMode {
                             return false;
                         }else if (generaltimer.seconds()>0.15){
                             robot.mDeposit.setClawPos(2);
+
                             //robot.mIntake.setIntakeOpenLoop(1);
                             //robot.mIntake.setExtendoPos(Intake.EXTEND_POS.INTAKING.getVal(), timer.seconds());
                             robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                             robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
                             robot.mIntake.setClawPos(0);
+                        }else if (generaltimer.seconds()>0.1){
+                            robot.mDeposit.setDiffyPos(-100,-90);
                         }
                     }else{
                         generaltimer.reset();
@@ -628,6 +651,9 @@ public class sample7retry extends LinearOpMode {
                             //robot.mIntake.setExtendoPos(Intake.EXTEND_POS.INTAKING.getVal(), timer.seconds());
                             robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                             robot.mIntake.setClawPos(0);
+
+                        }else if (generaltimer.seconds()>0.1){
+                            robot.mDeposit.setDiffyPos(-100,-90);
                         }
                     }else{
                         generaltimer.reset();
@@ -652,7 +678,7 @@ public class sample7retry extends LinearOpMode {
                 if (robot.mLift.getLiftTicks()>390||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFER.getVal()){
                     if (!genericboolean) {
                         //robot.mIntake.setExtendoPos(Intake.EXTEND_POS.AUTOINTAKEPREPARE.getVal(), timer.seconds());
-                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLEFLAT.getVal(), 700, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
+                        robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLEFLAT.getVal(), 900, new double[]{1, 2, 3, 4, 4, 4, 3, 2, 1, 1});
                         robot.mDeposit.setDiffyPos(0,-90);
                         generaltimer.reset();
                         //robot.mIntake.setPivotPos(Intake.PIVOT_POS.INTAKING.getVal());
@@ -679,7 +705,7 @@ public class sample7retry extends LinearOpMode {
         public class SampleFinish implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                if (generaltimer.seconds()>0.1){
+                if (generaltimer.seconds()>0.15){
                     robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                     robot.mIntake.setExtendoPos(0, timer.seconds());
 
@@ -689,12 +715,13 @@ public class sample7retry extends LinearOpMode {
                     robot.mIntake.setClawPos(0);
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TRANSFER.getVal(),1200, new double[] {1,2,3,4,4,4,3,2,1,1});
                     return false;
-                }else if (generaltimer.seconds()>0.05){
+                }else if (generaltimer.seconds()>0.1){
                     //robot.mDeposit.setClawPos(2);
+                    robot.mDeposit.setClawPos(2);
                     //robot.mDeposit.setDiffyPos(-50,-90);
                 }else if (generaltimer.seconds()>0){
-                    robot.mDeposit.setClawPos(2);
-                    robot.mDeposit.setDiffyPos(-20,-90);
+
+                    robot.mDeposit.setDiffyPos(-30,-90);
                 }
                 return true;
             }
@@ -708,10 +735,7 @@ public class sample7retry extends LinearOpMode {
         public class SampleFinishLast implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket packet) {
-                if(generaltimer.seconds()>0.3){
-                    return false;
-                }
-                else if (generaltimer.seconds()>0.15){
+                if (generaltimer.seconds()>0.2){
                     robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.AUTOEND.getVal(),800, new double[] {1,2,3,4,4,4,3,2,1,1});
                     robot.mIntake.setExtendoPos(0,timer.seconds());
                     robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
@@ -720,12 +744,13 @@ public class sample7retry extends LinearOpMode {
                     robot.mLift.setTargetPos(Lift.LIFT_POS.DOWN.getVal(), timer.seconds());
                     //robot.mDeposit.setClawPos(1);
                     robot.mIntake.setClawPos(0);
+                    return false;
                 }else if (generaltimer.seconds()>0.1){
                     robot.mDeposit.setClawPos(2);
                     //robot.mDeposit.setDiffyPos(-50,-90);
                 }else if (generaltimer.seconds()>0){
                     //robot.mDeposit.setClawPos(2);
-                    robot.mDeposit.setDiffyPos(-20,-90);
+                    robot.mDeposit.setDiffyPos(-30,-90);
                 }
                 return true;
             }
@@ -880,7 +905,7 @@ public class sample7retry extends LinearOpMode {
                 if (robot.mLift.closeEnough()||robot.mLift.getLiftTargetPos() == Lift.LIFT_POS.TRANSFER.getVal()){
                     if (robot.mDeposit.servoDone()||robot.mDeposit.getPivotPos() == Deposit.PIVOT_POS.TRANSFER.getVal()){
                         if (generaltimer.seconds()>0.9||(intaken&&generaltimer.seconds()>0.1)){
-                            robot.mIntake.setIntakeOpenLoop(0);
+                            robot.mIntake.setIntakeOpenLoop(-1);
                             robot.mIntake.setClawPos(1);
                             return false;
                         }else if (generaltimer.seconds()>0.8||(intaken)){
@@ -1228,12 +1253,12 @@ public class sample7retry extends LinearOpMode {
                 .build();
 
         Action intake3 = drive.actionBuilder(new Pose2d(8, 12, Math.toRadians(60)))
-                .afterTime(0.5,controller.extendoOutInstant())
+                .afterTime(0.6,controller.extendoOutInstant())
 
-                .strafeToLinearHeading(new Vector2d(11,20), Math.toRadians(108))
+                .strafeToLinearHeading(new Vector2d(11,20), Math.toRadians(110))
                 .build();
 
-        Action sample3 = drive.actionBuilder(new Pose2d(11,20, Math.toRadians(108)))
+        Action sample3 = drive.actionBuilder(new Pose2d(11,20, Math.toRadians(110)))
                 .strafeToLinearHeading(new Vector2d(9, 11), Math.toRadians(60))
                 .build();
 
@@ -1241,6 +1266,7 @@ public class sample7retry extends LinearOpMode {
 
         int block = 0;
         has_adjust_2 = false;
+        robot.autoInit();
         while (!isStopRequested() && !opModeIsActive()) {
             intakeposleft.update(gamepad1.dpad_left);
             intakeposright.update(gamepad1.dpad_right);
@@ -1249,7 +1275,7 @@ public class sample7retry extends LinearOpMode {
             switchblock.update(gamepad1.x);
             robot.update(timer.seconds());
             timer.reset();
-            robot.autoInit();
+
             robot.mDeposit.setLiveLed(team);
             telemetry.addLine("PRESS A (BOTTOM) FOR BLUE");
             telemetry.addLine("PRESS B (RIGHT) FOR RED");
@@ -1275,6 +1301,7 @@ public class sample7retry extends LinearOpMode {
                 }else if (intakeposleft.getState()&& blockx1 >0){
                     blockx1 -=1;
                 }else if (intakeposright.getState()){
+                    blockx1 +=1;
                     blockx1 +=1;
                 }
             }else if  (block % 3 == 1){
@@ -1328,56 +1355,56 @@ public class sample7retry extends LinearOpMode {
 
                 .splineToSplineHeading(new Pose2d(46,60.5+(blocky1), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 //.splineToSplineHeading(new Pose2d(47,60.5, Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
-                .splineToSplineHeading(new Pose2d(49,60.5+(blocky1), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineToSplineHeading(new Pose2d(48,60.5+(blocky1), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 //.splineTo(new Vector2d(55,60.5+ blocky1 ), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 .build();
 
-        Action sample5 = drive.actionBuilder(new Pose2d(49,60.5+ blocky1 , Math.toRadians(0)))
+        Action sample5 = drive.actionBuilder(new Pose2d(48,60.5+ blocky1 , Math.toRadians(0)))
                 .setReversed(true)
                 .splineTo(new Vector2d(46,60.5+(blocky1)), Math.toRadians(0-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
 
-                .splineTo(new Vector2d(20,40+(blocky1)*0.7), Math.toRadians(62+blocky1/2-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
-                .splineTo(new Vector2d(13,23), Math.toRadians(70-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineTo(new Vector2d(20,40+(blocky1)*0.2), Math.toRadians(65+blocky1*0.5-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineTo(new Vector2d(13,20), Math.toRadians(72-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-35, accelscale*85))
 
                 .build();
 
 
-        Action sub2 = drive.actionBuilder(new Pose2d(13,23, Math.toRadians(70)))
+        Action sub2 = drive.actionBuilder(new Pose2d(13,20, Math.toRadians(72)))
                 .setReversed(false)
                 .splineToSplineHeading(new Pose2d(18,40+(blocky2)*0.2, Math.toRadians(62+(blocky2)/2)), Math.toRadians(62+(blocky2)/2),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 .afterDisp(30,controller.extendoPrepare2())
                 .splineToSplineHeading(new Pose2d(46,60.5+(blocky2), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 //.splineToSplineHeading(new Pose2d(47,60.5, Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 //.afterDisp(0.01,controller.extendoPrepare2())
-                .splineToSplineHeading(new Pose2d(49,60.5+(blocky2), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineToSplineHeading(new Pose2d(48,60.5+(blocky2), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 //.splineTo(new Vector2d(55,60.5+ blocky1 ), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 .build();
-        Action sample6 = drive.actionBuilder(new Pose2d(49,60.5+ blocky2 , Math.toRadians(0)))
+        Action sample6 = drive.actionBuilder(new Pose2d(48,60.5+ blocky2 , Math.toRadians(0)))
                 .setReversed(true)
                 .splineTo(new Vector2d(46,60.5+(blocky2)), Math.toRadians(0-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
 
-                .splineTo(new Vector2d(20,40+(blocky2)*0.2), Math.toRadians(62+blocky2/2-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
-                .splineTo(new Vector2d(13,23), Math.toRadians(70-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineTo(new Vector2d(20,40+(blocky2)*0.2), Math.toRadians(65+blocky2*0.5-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineTo(new Vector2d(13,20), Math.toRadians(72-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-35, accelscale*85))
                 .build();
-        Action sub3 = drive.actionBuilder(new Pose2d(13,23, Math.toRadians(70)))
+        Action sub3 = drive.actionBuilder(new Pose2d(13,20, Math.toRadians(72)))
                 .setReversed(false)
                 .splineToSplineHeading(new Pose2d(18,40+(blocky3)*0.7, Math.toRadians(62+(blocky3)/2)), Math.toRadians(62+(blocky1)/2),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 .afterDisp(30,controller.extendoPrepare3())
                 .splineToSplineHeading(new Pose2d(46,60.5+(blocky3), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 //.splineToSplineHeading(new Pose2d(47,60.5, Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 //.afterDisp(0.01,controller.extendoPrepare1())
-                .splineToSplineHeading(new Pose2d(49,60.5+(blocky3), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineToSplineHeading(new Pose2d(48,60.5+(blocky3), Math.toRadians(0)), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 //.splineTo(new Vector2d(55,60.5+ blocky1 ), Math.toRadians(0),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
                 .build();
-        Action sample7 = drive.actionBuilder(new Pose2d(49,60.5+ blocky3 , Math.toRadians(0)))
+        Action sample7 = drive.actionBuilder(new Pose2d(48,60.5+ blocky3 , Math.toRadians(0)))
                 .setReversed(true)
                 .splineTo(new Vector2d(46,60.5+(blocky3)), Math.toRadians(0-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
 
-                .splineTo(new Vector2d(20,40+(blocky3)*0.7), Math.toRadians(62+blocky3/2-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
-                .splineTo(new Vector2d(13,23), Math.toRadians(70-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineTo(new Vector2d(20,40+(blocky3)*0.2), Math.toRadians(65+blocky3*0.5-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                .splineTo(new Vector2d(13,20), Math.toRadians(72-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-35, accelscale*85))
 
                 .build();
-        Action park = drive.actionBuilder(new Pose2d(9, 7, Math.toRadians(70)))
+        Action park = drive.actionBuilder(new Pose2d(13, 23, Math.toRadians(70)))
                 .setReversed(false)
                 .splineToSplineHeading(new Pose2d(18,40, Math.toRadians(62)), Math.toRadians(62),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
 
@@ -1532,7 +1559,8 @@ public class sample7retry extends LinearOpMode {
                                             controller.resetTimer(),
                                             controller.sampleFinishLast(),
                                             controller.resetTimer(),
-                                            controller.teleopPrep()
+                                            controller.teleopPrep(),
+                                            park
                                     )
                             )
                     );
@@ -1547,13 +1575,12 @@ public class sample7retry extends LinearOpMode {
                 //failed01
                 failedtimes="01";
                 BotLog.logD("reached: ", "failed 01");
-                sample6 = drive.actionBuilder(new Pose2d(49,60.5+ blocky3 , Math.toRadians(0)))
-                        .setReversed(true)
+                sample6 = drive.actionBuilder(new Pose2d(48,60.5+ blocky3 , Math.toRadians(0)))
                         .setReversed(true)
                         .splineTo(new Vector2d(46,60.5+(blocky3)), Math.toRadians(0-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
 
-                        .splineTo(new Vector2d(18,40+(blocky3)*0.7), Math.toRadians(62+blocky3/2-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
-                        .splineTo(new Vector2d(8,10), Math.toRadians(65-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                        .splineTo(new Vector2d(20,40+(blocky3)*0.2), Math.toRadians(65+blocky3*0.5-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                        .splineTo(new Vector2d(13,20), Math.toRadians(72-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-35, accelscale*85))
                         .build();
                 Actions.runBlocking(
                             new CustomAction(
@@ -1604,13 +1631,12 @@ public class sample7retry extends LinearOpMode {
         }else{
             failedtimes="1";
             BotLog.logD("reached: ", "failed 1");
-            sample5 = drive.actionBuilder(new Pose2d(49,60.5+ blocky3 , Math.toRadians(0)))
-                    .setReversed(true)
+            sample5 = drive.actionBuilder(new Pose2d(48,60.5+ blocky3 , Math.toRadians(0)))
                     .setReversed(true)
                     .splineTo(new Vector2d(46,60.5+(blocky3)), Math.toRadians(0-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
 
-                    .splineTo(new Vector2d(18,40+(blocky3)*0.7), Math.toRadians(62+blocky3/2-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
-                    .splineTo(new Vector2d(8,10), Math.toRadians(65-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                    .splineTo(new Vector2d(20,40+(blocky3)*0.3), Math.toRadians(65+blocky3*0.5-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                    .splineTo(new Vector2d(13,20), Math.toRadians(72-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-35, accelscale*85))
                     .build();
 
             Actions.runBlocking(
@@ -1685,14 +1711,12 @@ public class sample7retry extends LinearOpMode {
                 //failed11
                 failedtimes="11";
                 BotLog.logD("reached: ", "failed 11");
-                sample6 = drive.actionBuilder(new Pose2d(49,60.5+ blocky2 , Math.toRadians(0)))
-                        .setReversed(true)
+                sample6 = drive.actionBuilder(new Pose2d(48,60.5+ blocky2 , Math.toRadians(0)))
                         .setReversed(true)
                         .splineTo(new Vector2d(46,60.5+(blocky2)), Math.toRadians(0-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
 
-                        .splineTo(new Vector2d(18,40+(blocky2)*0.2), Math.toRadians(62+blocky2/2-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
-                        .splineTo(new Vector2d(8,10), Math.toRadians(65-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
-
+                        .splineTo(new Vector2d(20,40+(blocky2)*0.2), Math.toRadians(65+blocky2*0.5-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-40, accelscale*85))
+                        .splineTo(new Vector2d(13,20), Math.toRadians(72-180),new TranslationalVelConstraint(velscale*60 ), new ProfileAccelConstraint(decelscale*-35, accelscale*85))
                         .build();
 
                 Actions.runBlocking(

@@ -315,14 +315,14 @@ public class Robot {
     public String getTelem(double seconds)
     {
         String output = "";
-//        for (Subsystem subsystem : subsystems)
-//        {
-//            output += subsystem.getTelem(seconds);
-//        }
         for (Subsystem subsystem : subsystems)
         {
-            output += subsystem.getDemands();
+            output += subsystem.getTelem(seconds);
         }
+//        for (Subsystem subsystem : subsystems)
+//        {
+//            output += subsystem.getDemands();
+//        }
 
         boolean debug = true;
         if(debug)

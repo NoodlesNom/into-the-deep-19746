@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.util.BotLog;
 import org.firstinspires.ftc.teamcode.util.MiniPID;
 @Config
@@ -57,7 +58,7 @@ public class Lift extends Subsystem {
     public static double F = 0;
     private double vF = F;
     public static double MAX_LIFT_PWR = 1;
-    public static double MIN_LIFT_PWR = -0.6;
+    public static double MIN_LIFT_PWR = -0.8;
 
     // This are from Center Stage (no external encoder)
     //    private final double P = 0.0075 / 1.3;
@@ -74,10 +75,11 @@ public class Lift extends Subsystem {
     // Old values private int[] liftPositions = new int[]{1, 300, 380, 460, 540, 620, 700, 720, 500, 758, 758, 758, 100, 60};
     //
     //                                      0  1    2    3    4    5    6    7    8    9    10   11   12   13  14   15   16,  17,  18,  19
-    public static int[] liftPositions = new int[]{1,165 ,225,365,820,1040,340,870, 370,370, 730, 280, 150, 415, 950};
+    public static int[] liftPositions = new int[]{1,    165 ,215,365,770,1040,340,810, 345,345, 730, 280, 150, 415, 960,190};
     // private int[] liftPositions = new int[]{1, 300, 380, 475, 560, 635, 720, 758, 500, 758, 758, 758};
     //120 spec place normal, changed for mega
     //1.25mm per tick
+    //TODO:change for real bucket height
     public final double SAFE_HEIGHT = 200;
 
     public enum LIFT_POS
@@ -97,7 +99,8 @@ public class Lift extends Subsystem {
         TRANSFERDOWN(11),
         HANG(12),
         AUTOSPECANGLED(13),
-        TALLAUTOSAMPLE(14);
+        TALLAUTOSAMPLE(14),
+        LOWSAMPLE(15);
 
         //Instance variable
         private final int val;
@@ -508,6 +511,10 @@ public class Lift extends Subsystem {
             output += "   lift.pos  :: " + mPeriodicIO.lastReadTicks + "\n";
             output += "   lift.tgt  :: " + tgtTicks + "\n";
             output += "   lift.ptgt :: " + pidTgtTicks + "\n";
+            output += "   middle.lift.current :: " + middlelift.getCurrent(CurrentUnit.AMPS);
+            output += "   right.lift.current :: " + rightlift.getCurrent(CurrentUnit.AMPS);
+            output += "   middle.lift.pwr :: " + middlelift.getPower();
+            output += "   right.lift.pwr :: " + rightlift.getPower();
             if(pid.logging)
             {
                 output += "   lift.pid  :: " + pid.getTelem();

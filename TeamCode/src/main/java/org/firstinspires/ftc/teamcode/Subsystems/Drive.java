@@ -54,8 +54,8 @@ public class Drive extends Subsystem {
     public boolean hold = false;
 
     public PinpointDrivePeriodic drive;
-    private double[] winchPos = new double[] {300, 726, 380, 80};
-    //286 for right hang init
+    private double[] winchPos = new double[] {290, 692, 340, 80};
+    //513 for left hang deployed
     public double winchTarget = winchPos[0];
 
     public enum HANG_POS
@@ -217,8 +217,8 @@ public class Drive extends Subsystem {
         if (rightdelta < -180) rightdelta += 360;
         rightwinchadjusted += rightdelta;
         rightwinchprevious = rightwinchpos;
-        winchLdemand = Range.clip(-(winchTarget - (leftwinchadjusted)) / 150, -1, 1);
-        winchRdemand = Range.clip(-(winchTarget - (rightwinchadjusted+20)) / 150, -1, 1);
+        winchLdemand = Range.clip(-(winchTarget - (leftwinchadjusted+200)) / 150, -1, 1);
+        winchRdemand = Range.clip(-(winchTarget - (rightwinchadjusted)) / 150, -1, 1);
     }
 
     public void setWinchPosTicks(double pos){
@@ -265,8 +265,8 @@ public class Drive extends Subsystem {
         if (pto_count>20) {
             if (ptoEnabled){
                 ptoReady=true;
-                drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr *-100);
-                drive.leftBack.setPower(drive.mPeriodicIO.lf_pwr*-100);
+                drive.leftFront.setPower(drive.mPeriodicIO.lf_pwr *100);
+                drive.leftBack.setPower(drive.mPeriodicIO.lf_pwr*100);
                 drive.rightBack.setPower(0);
                 drive.rightFront.setPower(0);
             }else {

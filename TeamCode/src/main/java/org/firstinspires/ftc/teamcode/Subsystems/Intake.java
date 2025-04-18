@@ -55,7 +55,7 @@ public class Intake extends Subsystem {
     public static double F = 0;
     private double vF = F;
     public static double MAX_EXTENDO_PWR = 1;
-    public static double MIN_EXTENDO_PWR = -1;
+    public static double MIN_EXTENDO_PWR = -0.9;
     private Servo gate;
 
     // Hardware states
@@ -209,6 +209,7 @@ public class Intake extends Subsystem {
         color = map.get(RevColorSensorV3.class, "color");
         color.enableLed(true);
 
+
         nextPID = 0;
 
         setExtendoOpenLoop(0);
@@ -293,7 +294,7 @@ public class Intake extends Subsystem {
         {
             mExtendoControlState = ExtendoControlState.OPEN_LOOP;
         }
-
+        extendo.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         mPeriodicIO.extendo_demand = power;
     }
 
@@ -312,7 +313,7 @@ public class Intake extends Subsystem {
     public void setExtendoTicks(int tgtTicksArg, double timestamp)
     {
         mExtendoControlState = ExtendoControlState.PID_CONTROL;
-
+        extendo.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         if (tgtTicksArg != tgtTicks)
         {
             tgtTicks = tgtTicksArg;
@@ -350,7 +351,7 @@ public class Intake extends Subsystem {
         double tgtPosArgTicks = extendoPos[tgtPosArg];
 
         mExtendoControlState = ExtendoControlState.PID_CONTROL;
-
+        extendo.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         mPeriodicIO.extendo_pos = tgtPosArg;
 
         if (tgtPosArgTicks != tgtTicks)

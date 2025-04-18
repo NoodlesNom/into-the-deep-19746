@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.ServoImplEx;
+import com.qualcomm.robotcore.hardware.usb.RobotArmingStateNotifier;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
@@ -73,7 +74,7 @@ public class deposit_lift_intake_tester extends LinearOpMode {
 
     public static double pivot_pos = 0.5;
     public static double claw_pos = 0.7;
-    public static double intake_claw_pos = 0.2;
+    public static double intake_claw_pos = 0.31;
     public static double intakepos = 0.3;
     public static boolean move = false;
 
@@ -228,7 +229,7 @@ public class deposit_lift_intake_tester extends LinearOpMode {
             telemetry.addLine("redDetected: "+ detectedRed());
             telemetry.addLine("yellowDetected: "+ detectedYellow());
             telemetry.addLine("blueDetected: "+ detectedBlue());
-
+            telemetry.addLine("COLOR CONNECTION DATA: "+ color.getConnectionInfo());;
             telemetry.update();
 
             if (idxMode)
