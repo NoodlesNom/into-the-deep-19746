@@ -217,7 +217,7 @@ public class Drive extends Subsystem {
         if (rightdelta < -180) rightdelta += 360;
         rightwinchadjusted += rightdelta;
         rightwinchprevious = rightwinchpos;
-        winchLdemand = Range.clip(-(winchTarget - (leftwinchadjusted+200)) / 150, -1, 1);
+        winchLdemand = Range.clip(-(winchTarget - (leftwinchadjusted+120)) / 150, -1, 1);
         winchRdemand = Range.clip(-(winchTarget - (rightwinchadjusted)) / 150, -1, 1);
     }
 

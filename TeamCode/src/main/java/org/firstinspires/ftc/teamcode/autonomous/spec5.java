@@ -553,11 +553,11 @@ public class spec5 extends LinearOpMode {
 
         // actions that need to happen on init; for instance, a claw tightening.
 
-
+        robot.autoInit();
         while (!isStopRequested() && !opModeIsActive()) {
             robot.update(timer.seconds());
             timer.reset();
-            robot.autoInit();
+
             robot.mDeposit.setLiveLed(team);
             telemetry.addLine("PRESS A (BOTTOM) FOR BLUE");
             telemetry.addLine("PRESS B (RIGHT) FOR RED");

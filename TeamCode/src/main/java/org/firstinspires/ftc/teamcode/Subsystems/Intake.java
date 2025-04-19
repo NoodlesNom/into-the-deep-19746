@@ -61,7 +61,7 @@ public class Intake extends Subsystem {
     // Hardware states
     private PeriodicIO mPeriodicIO;
 
-    private double[] extendoPos = new double[] {1,170,350, 650, 440, 380};
+    private double[] extendoPos = new double[] {1,170,350, 650, 440, 380, 650-5/0.033};
 
     public enum EXTEND_POS
     {
@@ -71,7 +71,8 @@ public class Intake extends Subsystem {
         GETOUT(2),
         INTAKING(3),
         AUTOINTAKEPREPARE(4),
-        AUTOINTAKEPREPARESHORT(5);
+        AUTOINTAKEPREPARESHORT(5),
+        INTAKINGSHORT(6);
 
         //Instance variable
         private final int val;
@@ -88,7 +89,7 @@ public class Intake extends Subsystem {
         }
     }
     //0.565 with fixed intake
-    public static double[] pivotPos = new double[] {0, 0.61, 0.15, 0.30, 0.30, 0.30, 0.495, 0.395, 0.55, 0.155, 0.625, 0.145};
+    public static double[] pivotPos = new double[] {0, 0.63, 0.12, 0.30, 0.30, 0.30, 0.495, 0.395, 0.55, 0.155, 0.63, 0.145};
     public enum PIVOT_POS
     {
         //Constants with values

@@ -31,12 +31,11 @@ public class MeepMeepTesting {
 
 
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(49-72, 60.5-72, Math.toRadians(0)))
-                        .setReversed(true)
-                .splineTo(new Vector2d(46-72,60.5-72+(0)), Math.toRadians(0-180))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(90, 15, Math.toRadians(0)))
+                .setReversed(true)
 
-                .splineTo(new Vector2d(20-72,40-72+(0)*0.2), Math.toRadians(65+(0)*(0.5)-180))
-                .splineTo(new Vector2d(13-72,21-72), Math.toRadians(75-180))
+                .splineToLinearHeading(new Pose2d(48, 20, Math.toRadians(0)), Math.toRadians(180))
+                .splineToSplineHeading(new Pose2d(13, 20, Math.toRadians(72)), Math.toRadians(180))
 
                 .build());
 //        .setTangent(Math.toRadians(angle))

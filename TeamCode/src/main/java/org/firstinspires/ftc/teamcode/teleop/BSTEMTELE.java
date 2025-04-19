@@ -551,6 +551,10 @@ public class BSTEMTELE extends OpMode {
 
     private StickyButton winchUpButton = new StickyButton();
     private StickyButton winchDownButton = new StickyButton();
+
+
+    private StickyButton winchUpSecondButton = new StickyButton();
+    private StickyButton winchDownSecondButton = new StickyButton();
     private StickyButton autoSpecButton = new StickyButton();
     private StickyButton mode = new StickyButton();
 
@@ -701,6 +705,8 @@ public class BSTEMTELE extends OpMode {
         autoSpecButton.update(gamepad1.dpad_right);
         winchUpButton.update(gamepad1.dpad_up);
         winchDownButton.update(gamepad1.dpad_down);
+        winchUpSecondButton.update(gamepad2.dpad_up);
+        winchDownSecondButton.update(gamepad2.dpad_down);
 
         if (rejectToggle.getState()){
             reject = !reject;
@@ -754,6 +760,8 @@ public class BSTEMTELE extends OpMode {
                         robot.mIntake.setGatePos(Intake.GATE_POS.CATCH.getVal());
                         robot.mIntake.setIntakeOpenLoop(0);
                         robot.mIntake.setExtendoPos(0, timer.seconds());
+                    }else if (sampletimer.seconds()>0.2){
+                        robot.mDeposit.setDiffyPos(10,-90);
                     }
                 }else if (samplemode) {
                     //if sample mode go to transfer pos
@@ -1175,15 +1183,21 @@ public class BSTEMTELE extends OpMode {
                 }
                 robot.mDeposit.setDiffyPos(-70, -90);
                 if (lowsample){
+                    robot.mDeposit.setDiffyPos(-70, -90);
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 650, new double[] {2,3,3,3,3,3,3,2,1,1});
+
                     robot.mLift.setTargetPos(Lift.LIFT_POS.LOWSAMPLE.getVal(), timer.seconds());
                 }else if (samplesafe){
+                    robot.mDeposit.setDiffyPos(-40, -90);
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLESAFE.getVal(), timer.seconds());
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.TELESAMPLELONG.getVal(), 850, new double[] {2,3,3,3,3,3,3,2,1,1});
+
                 }else {
+                    robot.mDeposit.setDiffyPos(-70, -90);
                     robot.mLift.setTargetPos(Lift.LIFT_POS.SAMPLE.getVal(), timer.seconds());
+                    robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 650, new double[] {2,3,3,3,3,3,3,2,1,1});
+
                 }
-
-
-                robot.mDeposit.setPivotPos(Deposit.PIVOT_POS.SAMPLE.getVal(), 650, new double[] {2,3,3,3,3,3,3,2,1,1});
 
 
                 if(gamepad1.x){
@@ -1239,6 +1253,13 @@ public class BSTEMTELE extends OpMode {
                         }else{
                             robot.mDrive.setWinchTicks(robot.mDrive.winchTarget-20);
                         }
+                    }
+
+                    if (winchUpSecondButton.getState()) {
+                        robot.mDrive.setWinchTicks(robot.mDrive.winchTarget+20);
+
+                    } else if (winchDownSecondButton.getState()) {
+                        robot.mDrive.setWinchTicks(robot.mDrive.winchTarget-20);
                     }
                     if (robot.mLift.getLiftTicks()<700){
                         if (hangtimer.seconds()>2){
@@ -1409,9 +1430,9 @@ public class BSTEMTELE extends OpMode {
         double strafeInput = -gamepad1.left_stick_x;
         double turnInput = -gamepad1.right_stick_x;
         if (Math.abs(robot.mLift.mPeriodicIO.demand)+Math.abs(robot.mIntake.getPowerDemandSum())>2.0||teleFSM == teleState.TRANSFER){
-            driveInput*=0.7;
-            strafeInput*=0.7;
-            turnInput*=0.7;
+            driveInput*=0.85;
+            strafeInput*=0.85;
+            turnInput*=0.85;
         }
 
         if (driveInput<prevForwardPwr && teleFSM == teleState.SAMPLE){

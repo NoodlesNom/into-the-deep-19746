@@ -89,6 +89,22 @@ public class sample7retry extends LinearOpMode {
     }
     public class robotController {
 
+        public Action diffyRelease() {
+            return new DiffyRelease();
+        }
+        public class LiftDown implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket packet) {
+                robot.mLift.setTargetPos(0, timer.seconds());
+                return !robot.mLift.closeEnough();
+            }
+
+        }
+        public Action liftDown() {
+            return new LiftDown();
+        }
+
         public class Update implements Action {
 
             @Override
@@ -215,22 +231,6 @@ public class sample7retry extends LinearOpMode {
                 return false;
             }
         }
-        public Action diffyRelease() {
-            return new DiffyRelease();
-        }
-
-        public class LiftDown implements Action {
-
-            @Override
-            public boolean run(@NonNull TelemetryPacket packet) {
-                robot.mLift.setTargetPos(0, timer.seconds());
-                return !robot.mLift.closeEnough();
-            }
-        }
-
-        public Action liftDown() {
-            return new LiftDown();
-        }
 
         public class LiftUp implements Action {
 
@@ -338,7 +338,7 @@ public class sample7retry extends LinearOpMode {
                             robot.mIntake.setClawPos(1);
                         }else{
                             robot.mIntake.setIntakeOpenLoop(1);
-                            robot.mIntake.setOutputLimits(-1, 1);
+                            robot.mIntake.setOutputLimits(-0.9, 1);
 
                         }
                     }else if (generaltimer.seconds() > 1.3) {
@@ -371,7 +371,7 @@ public class sample7retry extends LinearOpMode {
 
                     } else if (generaltimer.seconds() > 0.7) {
 
-                        robot.mIntake.setOutputLimits(-1, 1);
+                        robot.mIntake.setOutputLimits(-0.9, 1);
                         //if (!reject) robot.mIntake.setClawPos(1);
                     }else if (generaltimer.seconds() > 0.5) {
                         if (!reject) {
@@ -427,7 +427,7 @@ public class sample7retry extends LinearOpMode {
 
                         genericboolean = true;
                         robot.mIntake.setPivotPos(Intake.PIVOT_POS.IDLE.getVal());
-                        robot.mIntake.setOutputLimits(-1, 0.9);
+                        robot.mIntake.setOutputLimits(-0.9, 0.9);
                     }
                     if (!stopresetting) {
                         generaltimer.reset();
